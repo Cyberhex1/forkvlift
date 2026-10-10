@@ -37,4 +37,3 @@ Failure semantics: 401 signed out, 403 unauthorized/blocked, 404 inaccessible pr
 ## Workaround until then
 
 Keep the existing stage badge. No takeover UI, fabricated applications, local ownership mutation, shared/core/DO/job edits. Sol implements owned feature UI and e2e after Opus lands the contracts/core. Fixtures and migration/authorization tests belong to Opus.
-
