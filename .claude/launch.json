@@ -1,6 +1,35 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "web", "runtimeExecutable": "pnpm", "runtimeArgs": ["dev"], "port": 8787, "url": "http://127.0.0.1:8787" }
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev"
+      ],
+      "port": 8787,
+      "url": "http://127.0.0.1:8787"
+    },
+    {
+      "name": "opus",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-C",
+        "C:\\code\\forkvlift-wt\\opus",
+        "dev"
+      ],
+      "port": 8787,
+      "url": "http://127.0.0.1:8787"
+    },
+    {
+      "name": "opus-alt",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "set PORT=8793&& pnpm -C C:\\code\\forkvlift-wt\\opus dev"
+      ],
+      "port": 8793,
+      "url": "http://127.0.0.1:8793"
+    }
   ]
 }
