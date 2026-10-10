@@ -1,6 +1,7 @@
 import type { MiddlewareHandler } from "hono";
 import type { AuthLevel } from "@forkvlift/shared";
 import type { AppEnv } from "../../env";
+import { noteActivity } from "../badges";
 import { HttpError } from "../errors";
 import { fixtureSessionUser, fixturesEnabled } from "../fixtures";
 import { verifyAccessJwt } from "./access";
@@ -14,6 +15,10 @@ export function authMiddleware(level: AuthLevel): MiddlewareHandler<AppEnv> {
     if (!user) user = await sessionUserFromCookie(c);
     c.set("user", user);
     c.set("adminActor", null);
+    if (user && !user.id.startsWith("fx_")) {
+      const ctx = executionCtx(c);
+      if (ctx) noteActivity(c.env.DB, user.id, (p) => ctx.waitUntil(p));
+    }
 
     if (level === "user" && !user) throw new HttpError("unauthorized", "Sign in to do that.");
 
@@ -24,6 +29,15 @@ export function authMiddleware(level: AuthLevel): MiddlewareHandler<AppEnv> {
     }
     return next();
   };
+}
+
+/** Hono throws when there is no ExecutionContext (e.g. app.request in tests). */
+function executionCtx(c: { readonly executionCtx: { waitUntil(p: Promise<unknown>): void } }): { waitUntil(p: Promise<unknown>): void } | null {
+  try {
+    return c.executionCtx;
+  } catch {
+    return null;
+  }
 }
 
 async function adminActor(env: Env, request: Request, user: { id: string; role: string } | null): Promise<string | null> {

@@ -43,6 +43,13 @@
       "when": 1791645349658,
       "tag": "0005_resource_ratings",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791669486542,
+      "tag": "0006_badge_events",
+      "breakpoints": true
     }
   ]
 }

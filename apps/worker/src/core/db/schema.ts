@@ -472,6 +472,21 @@ export const resourceRatings = sqliteTable(
   (t) => [primaryKey({ columns: [t.resourceId, t.userId] })],
 );
 
+/**
+ * Facts that count toward badges (task 3.12), one row per distinct thing:
+ * kind "bug_fixed" → ref is a card id moved out of Bug fix;
+ * kind "active_day" → ref is a UTC day (YYYY-MM-DD) the user was signed in.
+ */
+export const badgeEvents = sqliteTable(
+  "badge_events",
+  {
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    ref: text("ref").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind, t.ref] })],
+);
 /** "Proof": projects built with a resource. */
 export const resourceProjects = sqliteTable(
   "resource_projects",

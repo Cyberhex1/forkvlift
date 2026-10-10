@@ -35,7 +35,7 @@ Branch `opus/phase-3`. Sol and Flash were away, so Opus built every Phase 3 task
 - **3.7:** the Plaza uses positioned DOM/SVG avatars, not PixiJS. The plan allows plain rendering, and the DOM version keeps it accessible and light. Switch only if the room needs animation the DOM can't handle.
 - **3.8:** code blocks are monospace without syntax highlighting.
 - **3.5/3.9:** the API accepts uploaded resource files (`fileKeys`), but the share form doesn't offer uploads yet.
-- **Badges:** Bug Squasher and 7-day Streak aren't awarded yet. They need a Studio column-move hook and an activity log.
+- **Badges:** Bug Squasher and 7-day Streak are now awarded (follow-up PR): 10 distinct cards moved out of a "Bug fix" column, and signed-in activity on 7 consecutive UTC days. Both are recorded in `badge_events` (migration 0006).
 - **Admin moderation UI:** typechecked and built, but not exercised in a browser. The admin dev server needs Access, so it wasn't run locally.
 - **Tokens:** the art palette (`pixel-*`, `skin-*`, `hair-*`) moved into an `@theme static` block. Sprites build `var()` names at runtime, and Tailwind would otherwise drop unused ones.
 

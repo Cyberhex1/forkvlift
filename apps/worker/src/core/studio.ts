@@ -4,6 +4,7 @@
  * dense integers per column, rewritten on every move.
  */
 import { DEFAULT_BOARD_COLUMNS, type Board, type BoardCard, type BoardColumn, type ProjectPlan, type ProjectStage } from "@forkvlift/shared";
+import { afterBugFixed } from "./badges";
 import { HttpError, notFound } from "./errors";
 import { newId } from "./ids";
 import { PROJECT_SELECT, rowsToCards, type ProjectRow } from "./projects/rows";
@@ -293,6 +294,10 @@ export async function moveCard(db: D1Database, userId: string, cardId: string, c
     statements.push(...sourceCards.map((c, i) => db.prepare(`UPDATE board_cards SET position = ? WHERE id = ?`).bind(i, c.id)));
   }
   await db.batch(statements);
+  if (target.id !== card.column_id) {
+    const source = await db.prepare(`SELECT title FROM board_columns WHERE id = ?`).bind(card.column_id).first<{ title: string }>();
+    if (source && /^bug ?fix(es)?$/i.test(source.title.trim())) await afterBugFixed(db, userId, card.id);
+  }
   return oneCard(db, userId, cardId);
 }
 
