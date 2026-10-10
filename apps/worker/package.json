@@ -17,6 +17,7 @@
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.13",
     "jose": "^6.2.12",
+    "xss": "^1.0.15",
     "zod": "^4.6.5"
   },
   "devDependencies": {

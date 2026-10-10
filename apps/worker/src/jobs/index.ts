@@ -3,6 +3,8 @@
  * Opus (tasks 1.1, 1.7, 2.3, 3.4).
  */
 import { z } from "zod";
+import { HttpError } from "../core/errors";
+import { enqueueStatsRefresh, runRepoIngest } from "./refresh";
 
 export const JobMessage = z.discriminatedUnion("type", [
   z.object({ type: z.literal("discovery.run") }),
@@ -23,7 +25,7 @@ export async function handleScheduled(controller: ScheduledController, env: Env)
   if (jobs.length) await env.JOBS.sendBatch(jobs.map((body) => ({ body })));
 }
 
-export async function handleQueue(batch: MessageBatch<unknown>, _env: Env): Promise<void> {
+export async function handleQueue(batch: MessageBatch<unknown>, env: Env): Promise<void> {
   for (const message of batch.messages) {
     const parsed = JobMessage.safeParse(message.body);
     if (!parsed.success) {
@@ -31,14 +33,26 @@ export async function handleQueue(batch: MessageBatch<unknown>, _env: Env): Prom
       message.ack();
       continue;
     }
-    switch (parsed.data.type) {
-      case "discovery.run": // task 1.7
-      case "stats.refresh": // task 1.3
-      case "chat.snapshot": // task 3.4
-      case "repo.ingest": // task 1.1
-        console.log(`[jobs] ${parsed.data.type}: not built yet`);
-        break;
+    const job = parsed.data;
+    try {
+      switch (job.type) {
+        case "repo.ingest":
+          await runRepoIngest(env, job);
+          break;
+        case "stats.refresh":
+          await enqueueStatsRefresh(env);
+          break;
+        case "discovery.run": // task 1.7
+        case "chat.snapshot": // task 3.4
+          console.log(`[jobs] ${job.type}: not built yet`);
+          break;
+      }
+      message.ack();
+    } catch (err) {
+      console.error(`[jobs] ${job.type} failed`, err);
+      // Not-found / bad repos won't fix themselves; anything else is retried with backoff.
+      if (err instanceof HttpError && (err.code === "not_found" || err.code === "bad_request" || err.code === "invalid_request")) message.ack();
+      else message.retry({ delaySeconds: Math.min(60 * 2 ** message.attempts, 3600) });
     }
-    message.ack();
   }
 }
