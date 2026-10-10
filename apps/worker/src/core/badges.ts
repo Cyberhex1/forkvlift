@@ -49,3 +49,36 @@ export async function afterCollabAccepted(db: D1Database, senderId: string): Pro
   const n = await db.prepare(`SELECT count(*) AS n FROM collab_requests WHERE from_id = ? AND status = 'accepted'`).bind(senderId).first<{ n: number }>();
   if ((n?.n ?? 0) >= 5) await award(db, senderId, "collab-champion");
 }
+
+export const BUG_SQUASHER_CARDS = 10;
+export const STREAK_DAYS = 7;
+
+/** After a Studio card leaves a "Bug fix" column: Bug Squasher at 10 distinct cards. */
+export async function afterBugFixed(db: D1Database, userId: string, cardId: string): Promise<void> {
+  await db.prepare(`INSERT OR IGNORE INTO badge_events (user_id, kind, ref, created_at) VALUES (?, 'bug_fixed', ?, ?)`).bind(userId, cardId, Date.now()).run();
+  const n = await db.prepare(`SELECT count(*) AS n FROM badge_events WHERE user_id = ? AND kind = 'bug_fixed'`).bind(userId).first<{ n: number }>();
+  if ((n?.n ?? 0) >= BUG_SQUASHER_CARDS) await award(db, userId, "bug-squasher");
+}
+
+const utcDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+/** Signed-in activity, at most one write per user per day: 7-day Streak when the last 7 UTC days all count. */
+export async function recordActiveDay(db: D1Database, userId: string, now = Date.now()): Promise<void> {
+  const res = await db.prepare(`INSERT OR IGNORE INTO badge_events (user_id, kind, ref, created_at) VALUES (?, 'active_day', ?, ?)`).bind(userId, utcDay(now), now).run();
+  if (!res.meta.changes) return;
+  const since = utcDay(now - (STREAK_DAYS - 1) * 86_400_000);
+  const n = await db.prepare(`SELECT count(*) AS n FROM badge_events WHERE user_id = ? AND kind = 'active_day' AND ref >= ?`).bind(userId, since).first<{ n: number }>();
+  if ((n?.n ?? 0) >= STREAK_DAYS) await award(db, userId, "streak-7");
+}
+
+// Per-isolate memo so a busy user doesn't cost a D1 write per request.
+const seenToday = new Map<string, string>();
+
+/** Called from the auth middleware; never blocks or fails the request. */
+export function noteActivity(db: D1Database, userId: string, waitUntil: (p: Promise<unknown>) => void): void {
+  const day = utcDay(Date.now());
+  if (seenToday.get(userId) === day) return;
+  if (seenToday.size > 5000) seenToday.clear();
+  seenToday.set(userId, day);
+  waitUntil(recordActiveDay(db, userId).catch((e) => console.error("[badges] activity", e)));
+}
