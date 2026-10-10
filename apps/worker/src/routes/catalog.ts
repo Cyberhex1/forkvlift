@@ -2,7 +2,10 @@ import type { Hono } from "hono";
 import type { Comment } from "@forkvlift/shared";
 import type { AppEnv } from "../env";
 import { mount } from "../core/http";
-import { notFound } from "../core/errors";
+import { HttpError, notFound } from "../core/errors";
+import { audit } from "../core/curation/candidates";
+import { ingestRepo } from "../core/github/ingest";
+import { viewerOwnsRepo } from "../core/github/ownership";
 import { getProjectDetail } from "../core/projects/detail";
 import { decodeCursor, encodeCursor, listProjects } from "../core/projects/list";
 import { LISTED, parseJson } from "../core/projects/rows";
@@ -102,7 +105,23 @@ export function registerCatalog(app: Hono<AppEnv>) {
   mount(app, "createComment", () => todo("1.9"));
   mount(app, "getForkTree", () => todo("3.6"));
   mount(app, "forkProject", () => todo("2.2"));
-  mount(app, "claimProject", () => todo("1.7"));
+  mount(app, "claimProject", async ({ params }, c) => {
+    const user = c.get("user")!;
+    const db = c.env.DB;
+    const row = await db.prepare(`SELECT id, owner_id, repo_full_name FROM projects WHERE slug = ? AND deleted_at IS NULL`).bind(params.slug).first<{
+      id: string; owner_id: string | null; repo_full_name: string | null;
+    }>();
+    if (!row) throw notFound("Project not found");
+    if (row.owner_id) throw new HttpError("conflict", "This project already has an author.");
+    if (!row.repo_full_name) throw new HttpError("bad_request", "This project has no repository to verify.");
+    const repo = await ingestRepo(c.env, row.repo_full_name, { freshFor: 600 });
+    if (!(await viewerOwnsRepo(c.env, user.githubLogin, repo.owner, repo.ownerType))) {
+      throw new HttpError("forbidden", `Only the owner of ${repo.fullName} on GitHub can claim it. Sign in with that GitHub account.`);
+    }
+    await db.prepare(`UPDATE projects SET owner_id = ?, claimed_at = ?, updated_at = ? WHERE id = ? AND owner_id IS NULL`).bind(user.id, Date.now(), Date.now(), row.id).run();
+    await audit(db, user.id, "project.claim", "project", params.slug, { repo: repo.fullName });
+    return getProjectDetail(db, params.slug, user);
+  });
   mount(app, "voteRoadmapItem", () => todo("2.7"));
 
   mount(app, "createUpload", () => todo("1.5"));

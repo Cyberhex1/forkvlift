@@ -105,14 +105,58 @@ export async function createProject(env: Env, user: SessionUser, body: CreateBod
     parentId = parent.id;
   }
 
+  const { slug } = await insertProject(db, {
+    ...body,
+    ownerId: user.id,
+    source: "community",
+    snapshot,
+    forkedFromId: parentId,
+    foundViaUrl: null,
+  });
+  return getProjectDetail(db, slug, user);
+}
+
+export interface NewProject {
+  ownerId: string | null;
+  source: "community" | "curated";
+  snapshot: RepoSnapshot | null;
+  name: string;
+  tagline: string;
+  description: string;
+  categorySlug: string;
+  stage: "finished" | "wip" | "adoption";
+  isPublic: boolean;
+  liveUrl: string | null;
+  releaseUrl: string | null;
+  stack: string[];
+  platforms: string[];
+  difficulty: string | null;
+  aiTools: string[];
+  buildTime: string | null;
+  aiInvolvement: string | null;
+  isTemplate: boolean;
+  replaces: string[];
+  whatWorks: string | null;
+  whatsMissing: string | null;
+  lookingForHelp: string | null;
+  thumbnailKey: string | null;
+  thumbnailUrl?: string | null;
+  tags: string[];
+  forkedFromId: string | null;
+  foundViaUrl: string | null;
+}
+
+/** Insert a project row with tags, lineage, health and search index. Shared by submit and curation. */
+export async function insertProject(db: D1Database, p: NewProject): Promise<{ id: string; slug: string }> {
+  const snapshot = p.snapshot;
   const id = newId("prj");
-  const slug = await uniqueSlug(db, body.name);
+  const slug = await uniqueSlug(db, p.name);
   const now = Date.now();
   const health = snapshot
     ? computeHealth({ stars: snapshot.stars, forks: snapshot.forks, contributors: snapshot.contributors, lastCommitAt: snapshot.pushedAt, createdAt: snapshot.createdAt, archived: snapshot.archived })
     : null;
   // Only projects with a repo can be public; idea-only projects stay private for now.
-  const isPublic = body.isPublic && snapshot !== null;
+  const isPublic = p.isPublic && snapshot !== null;
 
   const statements = [
     db
@@ -122,28 +166,28 @@ export async function createProject(env: Env, user: SessionUser, body: CreateBod
            stars, forks, open_issues, contributors, last_commit_at, repo_created_at, readme_html,
            stack, platforms, difficulty, ai_tools, build_time, ai_involvement, is_template, replaces,
            what_works, whats_missing, looking_for_help, thumbnail_key, thumbnail_url, health_score, health,
-           published_at, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'community', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           found_via_url, published_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
-        id, slug, body.name.trim(), body.tagline.trim(), body.description.trim(), user.id, body.categorySlug, body.stage, isPublic ? 1 : 0,
+        id, slug, p.name.trim(), p.tagline.trim(), p.description.trim(), p.ownerId, p.source, p.categorySlug, p.stage, isPublic ? 1 : 0,
         snapshot?.htmlUrl ?? null, snapshot?.fullName ?? null, snapshot?.githubRepoId ?? null,
-        body.liveUrl ?? snapshot?.homepage ?? null, body.releaseUrl, snapshot?.license?.spdx ?? null, snapshot?.license?.name ?? null,
+        p.liveUrl ?? snapshot?.homepage ?? null, p.releaseUrl, snapshot?.license?.spdx ?? null, snapshot?.license?.name ?? null,
         snapshot?.stars ?? 0, snapshot?.forks ?? 0, snapshot?.openIssues ?? 0, snapshot?.contributors ?? 0,
         snapshot?.pushedAt ? Date.parse(snapshot.pushedAt) : null, snapshot ? Date.parse(snapshot.createdAt) : null, snapshot?.readmeHtml ?? null,
-        json(body.stack), json(body.platforms), body.difficulty, json(body.aiTools), body.buildTime, body.aiInvolvement, body.isTemplate ? 1 : 0, json(body.replaces),
-        body.whatWorks, body.whatsMissing, body.lookingForHelp,
+        json(p.stack), json(p.platforms), p.difficulty, json(p.aiTools), p.buildTime, p.aiInvolvement, p.isTemplate ? 1 : 0, json(p.replaces),
+        p.whatWorks, p.whatsMissing, p.lookingForHelp,
         // Uploaded thumbnails are wired up with task 1.5; until then the repo's OG card is the thumbnail.
-        body.thumbnailKey, snapshot?.socialPreviewUrl ?? null,
+        p.thumbnailKey, p.thumbnailUrl ?? snapshot?.socialPreviewUrl ?? null,
         health?.score ?? 0, health ? json(health) : null,
-        isPublic ? now : null, now, now,
+        p.foundViaUrl, isPublic ? now : null, now, now,
       ),
-    ...normTags(body.tags).map((tag) => db.prepare(`INSERT INTO project_tags (project_id, tag) VALUES (?, ?)`).bind(id, tag)),
+    ...normTags(p.tags).map((tag) => db.prepare(`INSERT INTO project_tags (project_id, tag) VALUES (?, ?)`).bind(id, tag)),
   ];
-  if (parentId) statements.push(db.prepare(`INSERT INTO forks (child_id, parent_id) VALUES (?, ?)`).bind(id, parentId));
+  if (p.forkedFromId) statements.push(db.prepare(`INSERT INTO forks (child_id, parent_id) VALUES (?, ?)`).bind(id, p.forkedFromId));
   await db.batch(statements);
   await syncProjectSearch(db, id);
-  return getProjectDetail(db, slug, user);
+  return { id, slug };
 }
 
 async function loadOwned(db: D1Database, slug: string, user: SessionUser) {

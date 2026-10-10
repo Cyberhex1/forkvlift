@@ -4,6 +4,9 @@
  */
 import { z } from "zod";
 import { HttpError } from "../core/errors";
+import { upsertCandidate } from "../core/curation/candidates";
+import { onlyNew, searchCandidates, watchlistCandidates } from "../core/curation/discovery";
+import { ingestRepo } from "../core/github/ingest";
 import { enqueueStatsRefresh, runRepoIngest } from "./refresh";
 
 export const JobMessage = z.discriminatedUnion("type", [
@@ -11,6 +14,11 @@ export const JobMessage = z.discriminatedUnion("type", [
   z.object({ type: z.literal("stats.refresh") }),
   z.object({ type: z.literal("chat.snapshot") }),
   z.object({ type: z.literal("repo.ingest"), repoFullName: z.string(), candidateId: z.string().nullable() }),
+  z.object({
+    type: z.literal("candidate.discover"),
+    repoFullName: z.string(),
+    foundVia: z.object({ kind: z.enum(["github_search", "watchlist"]), url: z.string().nullable() }),
+  }),
 ]);
 export type JobMessage = z.infer<typeof JobMessage>;
 
@@ -42,7 +50,12 @@ export async function handleQueue(batch: MessageBatch<unknown>, env: Env): Promi
         case "stats.refresh":
           await enqueueStatsRefresh(env);
           break;
-        case "discovery.run": // task 1.7
+        case "discovery.run":
+          await runDiscovery(env);
+          break;
+        case "candidate.discover":
+          await upsertCandidate(env, await ingestRepo(env, job.repoFullName), job.foundVia);
+          break;
         case "chat.snapshot": // task 3.4
           console.log(`[jobs] ${job.type}: not built yet`);
           break;
@@ -55,4 +68,17 @@ export async function handleQueue(batch: MessageBatch<unknown>, env: Env): Promi
       else message.retry({ delaySeconds: Math.min(60 * 2 ** message.attempts, 3600) });
     }
   }
+}
+
+/** Find new repos and queue them for ingestion. Needs GITHUB_TOKEN (search is too rate-limited without it). */
+export async function runDiscovery(env: Env): Promise<number> {
+  if (!env.GITHUB_TOKEN && env.ENVIRONMENT !== "local") {
+    console.warn("[jobs] discovery skipped: set the GITHUB_TOKEN secret to enable it");
+    return 0;
+  }
+  const found = await onlyNew(env.DB, [...(await searchCandidates(env)), ...(await watchlistCandidates(env))]);
+  if (found.length) {
+    await env.JOBS.sendBatch(found.map((d) => ({ body: { type: "candidate.discover", repoFullName: d.fullName, foundVia: d.foundVia } satisfies JobMessage })));
+  }
+  return found.length;
 }
