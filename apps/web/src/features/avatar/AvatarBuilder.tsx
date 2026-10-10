@@ -8,7 +8,13 @@ import { PageShell } from "../../app/kit";
 import { sessionKey, signInUrl, useSession } from "../../app/session";
 import { api } from "../../lib/api";
 
-const label = (s: string) => s.replace(/^pixel-/, "Color ").replace(/^skin-/, "Tone ").replace(/^\w/, (c) => c.toUpperCase());
+const label = (s: string) =>
+  s
+    .replace(/^pixel-/, "Color ")
+    .replace(/^skin-/, "Tone ")
+    .split("-")
+    .map((w) => (w.startsWith("Color ") || w.startsWith("Tone ") ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(" ");
 
 export function AvatarBuilderPage() {
   const { user, isLoading } = useSession();
