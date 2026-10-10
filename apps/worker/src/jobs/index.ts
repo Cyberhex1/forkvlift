@@ -7,12 +7,15 @@ import { HttpError } from "../core/errors";
 import { upsertCandidate } from "../core/curation/candidates";
 import { onlyNew, searchCandidates, watchlistCandidates } from "../core/curation/discovery";
 import { ingestRepo } from "../core/github/ingest";
+import { flushNotificationEmails, sendWeeklyDigests } from "../email/deliver";
 import { enqueueStatsRefresh, runRepoIngest } from "./refresh";
 
 export const JobMessage = z.discriminatedUnion("type", [
   z.object({ type: z.literal("discovery.run") }),
   z.object({ type: z.literal("stats.refresh") }),
   z.object({ type: z.literal("chat.snapshot") }),
+  z.object({ type: z.literal("email.flush") }),
+  z.object({ type: z.literal("email.digest") }),
   z.object({ type: z.literal("repo.ingest"), repoFullName: z.string(), candidateId: z.string().nullable() }),
   z.object({
     type: z.literal("candidate.discover"),
@@ -26,6 +29,8 @@ export type JobMessage = z.infer<typeof JobMessage>;
 const SCHEDULE: Record<string, JobMessage[]> = {
   "0 */6 * * *": [{ type: "discovery.run" }],
   "30 3 * * *": [{ type: "stats.refresh" }, { type: "chat.snapshot" }],
+  "*/15 * * * *": [{ type: "email.flush" }],
+  "0 15 * * 1": [{ type: "email.digest" }],
 };
 
 export async function handleScheduled(controller: ScheduledController, env: Env): Promise<void> {
@@ -55,6 +60,12 @@ export async function handleQueue(batch: MessageBatch<unknown>, env: Env): Promi
           break;
         case "candidate.discover":
           await upsertCandidate(env, await ingestRepo(env, job.repoFullName), job.foundVia);
+          break;
+        case "email.flush":
+          await flushNotificationEmails(env);
+          break;
+        case "email.digest":
+          await sendWeeklyDigests(env);
           break;
         case "chat.snapshot": // task 3.4
           console.log(`[jobs] ${job.type}: not built yet`);

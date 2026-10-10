@@ -9,6 +9,8 @@ import { randomToken, sha256Hex } from "../core/ids";
 import { clientIp, safeReturnTo, verifyTurnstile } from "../core/security";
 import { createSession, destroySession } from "../core/auth/session";
 import { upsertEmailUser, upsertGithubUser, type GithubProfile } from "../core/auth/users";
+import { renderMagicLink } from "../email/render";
+import { emailConfigured, sendEmail } from "../email/send";
 
 const GITHUB_UA = "ForkLift (+https://forklift.stream)";
 const MAGIC_LINK_MINUTES = 15;
@@ -89,10 +91,11 @@ export function registerAuth(app: Hono<AppEnv>) {
       .insert(schema.magicLinkTokens)
       .values({ id: await sha256Hex(token), email, returnTo: safeReturnTo(body.returnTo), expiresAt: new Date(Date.now() + MAGIC_LINK_MINUTES * 60_000) });
     const link = `${new URL(c.req.url).origin}/api/auth/magic-link/verify?token=${token}`;
-    if (c.env.ENVIRONMENT === "local") {
+    if (emailConfigured(c.env)) {
+      await sendEmail(c.env, { to: email, ...renderMagicLink(link) });
+    } else if (c.env.ENVIRONMENT === "local") {
       console.log(`[magic-link] ${email}: ${link}`);
     } else {
-      // Email sending (Cloudflare Email / Resend) lands with task 2.3.
       throw new HttpError("unavailable", "Email sign-in is not available yet. Use GitHub.");
     }
     // Same response whether or not the address has an account.

@@ -3,6 +3,7 @@ import { SITE_NAME } from "@forkvlift/shared";
 import type { AppEnv } from "../env";
 import { mount } from "../core/http";
 import { fixturesEnabled } from "../core/fixtures";
+import { emailConfigured } from "../email/send";
 
 export function registerMeta(app: Hono<AppEnv>) {
   mount(app, "health", (_, c) => ({ ok: true as const, name: SITE_NAME, environment: c.env.ENVIRONMENT, fixtures: fixturesEnabled(c) }));
@@ -12,7 +13,7 @@ export function registerMeta(app: Hono<AppEnv>) {
     environment: c.env.ENVIRONMENT,
     turnstileSiteKey: c.env.TURNSTILE_SITE_KEY || null,
     githubLogin: Boolean(c.env.GITHUB_CLIENT_ID),
-    magicLink: c.env.ENVIRONMENT === "local",
+    magicLink: c.env.ENVIRONMENT === "local" || emailConfigured(c.env),
     fixtures: fixturesEnabled(c),
   }));
 }

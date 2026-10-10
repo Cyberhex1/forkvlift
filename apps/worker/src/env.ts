@@ -11,6 +11,10 @@ declare global {
     /** Server token for the GitHub API (public repos only). Raises the limit to 5,000 requests/hour. */
     GITHUB_TOKEN?: string;
     TURNSTILE_SECRET?: string;
+    /** Email via Resend when the Cloudflare Email binding isn't available. */
+    RESEND_API_KEY?: string;
+    /** Override the sender, e.g. "ForkLift <hello@forklift.stream>". */
+    EMAIL_FROM?: string;
     USE_FIXTURES?: string;
     ALLOW_SESSION_ADMIN?: string;
     /** Test-only: skip the write rate limits (set in vitest.integration.config.ts). */
