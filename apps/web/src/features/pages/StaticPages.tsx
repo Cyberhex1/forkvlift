@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { SITE_NAME, SITE_TAGLINE } from "@forkvlift/shared";
-import { Badge, Button, Card } from "@forkvlift/ui";
+import { Badge, buttonClasses, Card } from "@forkvlift/ui";
 import { NoLicenseBanner } from "./NoLicenseDisclaimer";
 
 interface StaticPageLayoutProps {
@@ -189,15 +189,11 @@ export function AboutPage() {
           Start exploring projects on the feed or submit your own vibe-coded creation.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link to="/" className="focus:outline-none focus:ring-1 focus:ring-focus">
-            <Button variant="primary" size="md">
-              Explore the feed
-            </Button>
+          <Link to="/" className={buttonClasses("primary", "md")}>
+            Explore the feed
           </Link>
-          <Link to="/rules" className="focus:outline-none focus:ring-1 focus:ring-focus">
-            <Button variant="secondary" size="md">
-              Community rules
-            </Button>
+          <Link to="/rules" className={buttonClasses("secondary", "md")}>
+            Community rules
           </Link>
         </div>
       </section>
@@ -431,12 +427,14 @@ export function RulesPage() {
 
           <Card className="space-y-2 border-l-4 border-l-danger">
             <h3 className="font-display text-base font-semibold text-fg">
-              4. No committed secrets or leaked credentials
+              4. No committed secrets or unsafe install scripts
             </h3>
             <p className="text-sm text-muted">
               Check your repositories before submitting. Never commit live API keys, private tokens,
-              or credentials. If our automated scanner discovers committed secrets, the project will
-              be flagged to protect you and your users.
+              or credentials. If our automated scanner discovers committed secrets, we warn the author
+              privately rather than publicly exposing the leak. Repositories containing install scripts
+              that download and run code are flagged publicly with a &ldquo;Review before running&rdquo;
+              notice.
             </p>
           </Card>
 
@@ -513,9 +511,12 @@ export function PrivacyPage() {
             </h3>
             <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
               <li>
-                <strong className="text-fg">GitHub Profile:</strong> When signing in via GitHub OAuth,
-                we receive your public GitHub username, avatar, and GitHub user ID. We never receive or
-                store your GitHub password or private repository contents.
+                <strong className="text-fg">GitHub Profile & Email:</strong> When signing in via GitHub
+                OAuth, we request the <code className="font-mono text-xs">read:user user:email</code> scopes.
+                We store your public GitHub username, avatar, GitHub user ID, and your primary verified
+                GitHub email (used for account linking and magic-link sign-in). We do not keep your
+                GitHub access token, and we never receive or store your GitHub password or private
+                repository contents.
               </li>
               <li>
                 <strong className="text-fg">Content You Submit:</strong> Projects you submit, bookmarks,
@@ -567,9 +568,10 @@ export function PrivacyPage() {
               4. Your data rights (GDPR & CCPA)
             </h3>
             <p className="text-sm text-muted">
-              You retain ownership of your personal data. You have the right to export your account data
-              or delete your account at any time via Account Settings. Account deletion immediately
-              purges your personal records and sessions.
+              You retain ownership of your personal data. Self-service data export and account deletion
+              are planned and in active development (task 2.10). In the meantime, you can request an
+              export or deletion by opening an issue on our repository. When processed, account deletion
+              permanently purges your user record and active sessions.
             </p>
           </Card>
 
@@ -742,9 +744,19 @@ export function DmcaPage() {
             Designated copyright contact
           </h3>
           <p className="text-sm text-muted">
-            Send DMCA notices to our designated agent via email:
+            Until a dedicated takedown address is configured, submit takedown notices via our
+            repository issue tracker:
           </p>
-          <p className="font-mono text-sm text-accent">dmca@forkvlift.org</p>
+          <p>
+            <a
+              href="https://github.com/Cyberhex1/forkvlift/issues/new?title=Takedown:%20"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-sm text-accent hover:underline focus:outline-none focus:ring-1 focus:ring-focus"
+            >
+              github.com/Cyberhex1/forkvlift/issues (title prefix &ldquo;Takedown:&rdquo;) ↗
+            </a>
+          </p>
           <p className="text-xs text-muted">
             Notices that fail to include the required statutory elements may experience delays.
           </p>
