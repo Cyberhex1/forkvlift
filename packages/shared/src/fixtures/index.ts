@@ -96,7 +96,7 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   marker: FIXTURE_MARKER,
 
   health: () => ({ ok: true, name: SITE_NAME, environment: "local", fixtures: true }),
-  siteConfig: () => ({ siteName: SITE_NAME, environment: "local", turnstileSiteKey: "1x00000000000000000000AA", githubLogin: true, magicLink: true, fixtures: true }),
+  siteConfig: () => ({ siteName: SITE_NAME, environment: "local", turnstileSiteKey: "1x00000000000000000000AA", githubLogin: true, magicLink: true, fixtures: true, siteOrigin: "http://localhost:8787" }),
 
   me: (_, ctx) => ({ user: viewer(ctx) }),
   magicLinkRequest: () => ok,
@@ -297,8 +297,12 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
     rejectReason: body.action === "reject" ? body.reason : null,
   }),
   bulkDecideCandidates: ({ body }) => ({ updated: body.ids.length }),
-  listReports: () => ({ items: [], nextCursor: null }),
-  resolveReport: ({ params, body }) => ({ id: params.id, targetType: "project", targetId: "fx_prj_1", reason: "spam", note: "", status: body.outcome, reporter: null, createdAt: NOW }),
+  listReports: () => ({
+    items: [{ id: "fx_rep_1", targetType: "comment", targetId: "fx_cmt_1", reason: "spam", note: "Fixture report", status: "open", reporter: fxUsers.bo, targetLabel: "Comment on Fixture: Pixel Planner", targetHref: "/p/fixture-pixel-planner", createdAt: NOW }],
+    nextCursor: null,
+  }),
+  moderateChat: () => ({ ok: true, slowModeSeconds: 0 }),
+  resolveReport: ({ params, body }) => ({ id: params.id, targetType: "project", targetId: "fx_prj_1", reason: "spam", note: "", status: body.outcome, reporter: null, targetLabel: "Fixture: Pixel Planner", targetHref: "/p/fixture-pixel-planner", createdAt: NOW }),
   upsertCategory: ({ params, body }) => ({ slug: params.slug, name: body.name, parentSlug: body.parentSlug, iconKey: body.iconKey, description: body.description, projectCount: 0 }),
   setStaffPick: () => ok,
   setResourceProven: () => ok,

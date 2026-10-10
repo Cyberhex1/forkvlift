@@ -9,6 +9,7 @@ import { viewerOwnsRepo } from "../core/github/ownership";
 import { createComment } from "../core/projects/comments";
 import { getProjectDetail } from "../core/projects/detail";
 import { continueProject } from "../core/projects/fork";
+import { getForkTree } from "../core/projects/forktree";
 import { decodeCursor, encodeCursor, listProjects } from "../core/projects/list";
 import { LISTED, parseJson } from "../core/projects/rows";
 import { createProject, deleteProject, previewSubmission, updateProject } from "../core/projects/submit";
@@ -110,7 +111,7 @@ export function registerCatalog(app: Hono<AppEnv>) {
     await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));
     return createComment(c.env.DB, c.get("user")!, params.slug, body.body, body.parentId);
   });
-  mount(app, "getForkTree", () => todo("3.6"));
+  mount(app, "getForkTree", ({ params }, c) => getForkTree(c.env.DB, params.slug, c.get("user")?.id ?? null));
   mount(app, "forkProject", ({ params }, c) => continueProject(c.env, c.get("user")!, params.slug));
   mount(app, "claimProject", async ({ params }, c) => {
     const user = c.get("user")!;

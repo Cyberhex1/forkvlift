@@ -161,19 +161,19 @@ Every feature in the product plan maps to one task with one owner. Within a phas
 
 | ID | Task | Owner | Needs | Status |
 | --- | --- | --- | --- | --- |
-| 3.1 | Chat-room Durable Object: WebSockets with hibernation, history, slow mode, mute and ban hooks | Opus 5.5 | P0 | Not started |
-| 3.2 | Presence and Plaza position sync (who's online and where they stand) | Opus 5.5 | 3.1 | Not started |
-| 3.3 | Live forum updates and typing indicator | Opus 5.5 | 3.1 | Not started |
-| 3.4 | Moderation backend: reports, bans, audit log, chat snapshots | Opus 5.5 | P0 | Not started |
-| 3.5 | Resources backend: uploads, script scanning, Proven badge rule, "worked for me" reports | Opus 5.5 | 1.6 | Not started |
-| 3.6 | Fork tree graph API | Opus 5.5 | 2.2 | Not started |
-| 3.7 | Plaza client: PixiJS room, walking, speech bubbles, click for profile, mobile strip | Sol 6.1 | 3.2 | Not started |
-| 3.8 | Forum UI: boards, threads, markdown and code highlighting, project embeds, solved marking | Sol 6.1 | 3.3 | Not started |
-| 3.9 | Resources library UI: copy and download, proof section, ratings | Sol 6.1 | 3.5 | Not started |
-| 3.10 | Fork tree visualizer; moderation queue UI in the admin console | Sol 6.1 | 3.4, 3.6 | Not started |
-| 3.11 | Avatar builder UI and layered 16-bit sprite sheets (hair, outfit, color, accessory) | Flash 3.8 | P0 | Not started |
-| 3.12 | Badge and achievement pixel icons; badge display on profiles | Flash 3.8 | P0 | Not started |
-| 3.13 | Forum board setup and community rules copy | Flash 3.8 | P0 | Not started |
+| 3.1 | Chat-room Durable Object: WebSockets with hibernation, history, slow mode, mute and ban hooks | Opus 5.5 | P0 | Done |
+| 3.2 | Presence and Plaza position sync (who's online and where they stand) | Opus 5.5 | 3.1 | Done |
+| 3.3 | Live forum updates and typing indicator | Opus 5.5 | 3.1 | Done |
+| 3.4 | Moderation backend: reports, bans, audit log, chat snapshots | Opus 5.5 | P0 | Done |
+| 3.5 | Resources backend: uploads, script scanning, Proven badge rule, "worked for me" reports | Opus 5.5 | 1.6 | Done |
+| 3.6 | Fork tree graph API | Opus 5.5 | 2.2 | Done |
+| 3.7 | Plaza client: PixiJS room, walking, speech bubbles, click for profile, mobile strip | Sol 6.1 (built by Opus) | 3.2 | Done |
+| 3.8 | Forum UI: boards, threads, markdown and code highlighting, project embeds, solved marking | Sol 6.1 (built by Opus) | 3.3 | Done |
+| 3.9 | Resources library UI: copy and download, proof section, ratings | Sol 6.1 (built by Opus) | 3.5 | Done |
+| 3.10 | Fork tree visualizer; moderation queue UI in the admin console | Sol 6.1 (built by Opus) | 3.4, 3.6 | Done |
+| 3.11 | Avatar builder UI and layered 16-bit sprite sheets (hair, outfit, color, accessory) | Flash 3.8 (built by Opus) | P0 | Done |
+| 3.12 | Badge and achievement pixel icons; badge display on profiles | Flash 3.8 (built by Opus) | P0 | Done |
+| 3.13 | Forum board setup and community rules copy | Flash 3.8 (built by Opus) | P0 | Done |
 
 **Phase 4 — Growth extras**
 

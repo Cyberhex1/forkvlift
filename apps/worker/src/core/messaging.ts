@@ -6,6 +6,7 @@
  * starting a conversation; muting only silences notifications.
  */
 import type { BlockedUser, CollabRequest, Conversation, DirectMessage, DmPolicy, SessionUser, UserSummary } from "@forkvlift/shared";
+import { afterCollabAccepted } from "./badges";
 import { HttpError, notFound } from "./errors";
 import { newId } from "./ids";
 import { notificationStatements } from "./notify";
@@ -296,6 +297,7 @@ export async function respondCollabRequest(db: D1Database, user: SessionUser, id
       { userId: row.from_id, type: "collab_request", actorId: user.id, title: `${user.displayName} ${status} your request`, href: "/messages?tab=requests" },
     ]),
   ]);
+  if (accept) await afterCollabAccepted(db, row.from_id);
   return toCollab((await db.prepare(`${COLLAB_SELECT} WHERE r.id = ?`).bind(id).first<CollabRow>())!);
 }
 

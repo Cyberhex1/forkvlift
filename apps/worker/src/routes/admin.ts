@@ -7,7 +7,8 @@ import { audit, decideCandidate, importByUrl, listCandidates } from "../core/cur
 import { decodeCursor, encodeCursor } from "../core/projects/list";
 import { parseJson } from "../core/projects/rows";
 import { syncProjectSearch } from "../core/projects/search";
-import { emptyPage, todo } from "./_stubs";
+import * as moderation from "../core/moderation";
+import { setProvenOverride } from "../core/resources";
 
 const DAY_MS = 86_400_000;
 
@@ -36,8 +37,15 @@ export function registerAdmin(app: Hono<AppEnv>) {
     return { updated };
   });
 
-  mount(app, "listReports", () => emptyPage());
-  mount(app, "resolveReport", () => todo("3.4"));
+  mount(app, "listReports", ({ query }, c) => moderation.listReports(c.env.DB, query.status ?? "open", query.cursor, query.limit));
+  mount(app, "resolveReport", ({ params, body }, c) => moderation.resolveReport(c.env, actor(c), params.id, body));
+  mount(app, "moderateChat", async ({ params, body }, c) => {
+    if (!moderation.CHAT_CHANNEL_SLUGS.includes(params.slug)) throw notFound("Channel not found");
+    const result = await moderation.chatAdmin(c.env, params.slug, body);
+    await c.env.CACHE.delete("chat:channels").catch(() => undefined);
+    await audit(c.env.DB, actor(c), `chat.${body.action}`, "channel", params.slug, { ...body });
+    return result;
+  });
 
   mount(app, "upsertCategory", async ({ params, body }, c) => {
     const db = c.env.DB;
@@ -77,8 +85,17 @@ export function registerAdmin(app: Hono<AppEnv>) {
     return { ok: true as const };
   });
 
-  mount(app, "setResourceProven", () => todo("3.5"));
-  mount(app, "banUser", () => todo("3.4"));
+  mount(app, "setResourceProven", async ({ params, body }, c) => {
+    await setProvenOverride(c.env.DB, params.slug, body.proven);
+    await audit(c.env.DB, actor(c), "resource.proven", "resource", params.slug, { proven: body.proven });
+    return { ok: true as const };
+  });
+  mount(app, "banUser", async ({ params, body }, c) => {
+    const user = await c.env.DB.prepare(`SELECT id FROM users WHERE lower(username) = lower(?)`).bind(params.username).first<{ id: string }>();
+    if (!user) throw notFound("User not found");
+    await moderation.setBanned(c.env, actor(c), user.id, body.banned, body.reason);
+    return { ok: true as const };
+  });
 
   mount(app, "adminStats", async (_, c) => {
     const weekAgo = Date.now() - 7 * DAY_MS;
@@ -89,7 +106,8 @@ export function registerAdmin(app: Hono<AppEnv>) {
          (SELECT count(*) FROM projects WHERE deleted_at IS NULL) AS projects_total,
          (SELECT count(*) FROM projects WHERE deleted_at IS NULL AND created_at >= ?1) AS projects_7d,
          (SELECT count(*) FROM projects WHERE deleted_at IS NULL AND license_spdx IS NULL) AS projects_unlicensed,
-         (SELECT count(*) FROM candidates WHERE status = 'pending' OR (status = 'snoozed' AND snoozed_until <= ?2)) AS queue_pending`,
+         (SELECT count(*) FROM candidates WHERE status = 'pending' OR (status = 'snoozed' AND snoozed_until <= ?2)) AS queue_pending,
+         (SELECT coalesce(sum(json_array_length(messages)), 0) FROM chat_snapshots WHERE created_at >= ?1) AS chat_7d`,
     )
       .bind(weekAgo, Date.now())
       .first<Record<string, number>>();
@@ -98,7 +116,7 @@ export function registerAdmin(app: Hono<AppEnv>) {
       projects: { total: row?.projects_total ?? 0, last7d: row?.projects_7d ?? 0, unlicensed: row?.projects_unlicensed ?? 0 },
       // Fork-click and chat counters arrive with tasks 2.2 and 3.1.
       forkClicks: { last7d: 0 },
-      chat: { messagesLast7d: 0 },
+      chat: { messagesLast7d: row?.chat_7d ?? 0 },
       queue: { pending: row?.queue_pending ?? 0 },
     };
   });

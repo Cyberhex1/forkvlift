@@ -460,6 +460,18 @@ export const resourceReports = sqliteTable(
   (t) => [uniqueIndex("resource_reports_one_per_user").on(t.resourceId, t.authorId)],
 );
 
+/** One rating per user per resource (1–5). */
+export const resourceRatings = sqliteTable(
+  "resource_ratings",
+  {
+    resourceId: text("resource_id").notNull().references(() => resources.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    stars: integer("stars").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.resourceId, t.userId] })],
+);
+
 /** "Proof": projects built with a resource. */
 export const resourceProjects = sqliteTable(
   "resource_projects",

@@ -471,6 +471,20 @@ export function RulesPage() {
         </div>
       </section>
 
+      <section className="space-y-4" id="forum-and-plaza">
+        <h2 className="font-display text-xl font-semibold text-fg sm:text-2xl">
+          Forum and Plaza
+        </h2>
+        <ul className="list-disc space-y-2 pl-6 text-muted">
+          <li>Post in the board that fits. Questions go in Help &amp; Debugging; finished or half-finished builds go in Show &amp; Tell.</li>
+          <li>When someone solves your problem, mark their reply as the answer so the next person finds it.</li>
+          <li>Share code and prompts you have the right to share, and say which license they&apos;re under.</li>
+          <li>No pasting secrets, tokens or other people&apos;s private info, even by accident. Report it if you see some.</li>
+          <li>In the Plaza, keep it friendly and on-topic for the room. New accounts can post links after their first day, and moderators may turn on slow mode when a room gets busy.</li>
+          <li>Disagree with ideas, not people. Self-promotion is fine when it&apos;s a project you built; repeated ads are not.</li>
+        </ul>
+      </section>
+
       <section className="space-y-4">
         <h2 className="font-display text-xl font-semibold text-fg sm:text-2xl">
           Reporting violations

@@ -46,7 +46,7 @@ export const router = createBrowserRouter([
     HydrateFallback: () => <Spinner label="Loading admin console" />,
     children: [
       { path: "/", lazy: async () => ({ Component: (await import("./ReviewQueue")).ReviewQueue }) },
-      { path: "/moderation", Component: soon("Moderation queue") },
+      { path: "/moderation", lazy: async () => ({ Component: (await import("./ModerationQueue")).ModerationQueue }) },
       { path: "/categories", Component: soon("Categories and tags") },
       { path: "/featured", Component: soon("Staff picks and featured slots") },
       { path: "/stats", Component: soon("Site stats") },

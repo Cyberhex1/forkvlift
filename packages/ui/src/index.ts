@@ -8,3 +8,4 @@ export { Modal, Drawer, type DialogShellProps, type DrawerSide } from "./compone
 export { Tabs, type TabItem, type TabsProps } from "./components/Tabs";
 export { ToastProvider, useToast, type ToastTone } from "./components/Toast";
 export { Spinner, Skeleton, StateMessage, type StateMessageProps } from "./components/States";
+export { PixelAvatar, AVATAR_PARTS, DEFAULT_AVATAR, fallbackLook, parseHair, type AvatarLook, type PixelAvatarProps } from "./sprites/PixelAvatar";

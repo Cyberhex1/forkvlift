@@ -8,6 +8,7 @@ import { upsertCandidate } from "../core/curation/candidates";
 import { onlyNew, searchCandidates, watchlistCandidates } from "../core/curation/discovery";
 import { ingestRepo } from "../core/github/ingest";
 import { flushNotificationEmails, sendWeeklyDigests } from "../email/deliver";
+import { snapshotChat } from "../core/moderation";
 import { enqueueStatsRefresh, runRepoIngest } from "./refresh";
 
 export const JobMessage = z.discriminatedUnion("type", [
@@ -67,8 +68,8 @@ export async function handleQueue(batch: MessageBatch<unknown>, env: Env): Promi
         case "email.digest":
           await sendWeeklyDigests(env);
           break;
-        case "chat.snapshot": // task 3.4
-          console.log(`[jobs] ${job.type}: not built yet`);
+        case "chat.snapshot":
+          await snapshotChat(env);
           break;
       }
       message.ack();

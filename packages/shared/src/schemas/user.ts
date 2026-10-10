@@ -8,6 +8,8 @@ export const AvatarConfig = z.object({
   outfit: z.string().max(40),
   color: z.string().max(40),
   accessory: z.string().max(40).nullable(),
+  /** Skin tone key (skin-1 … skin-5); older saves have none. */
+  skin: z.string().max(40).optional(),
 });
 export type AvatarConfig = z.infer<typeof AvatarConfig>;
 

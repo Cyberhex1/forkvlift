@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Profile } from "@forkvlift/shared";
-import { Avatar, Badge, Button, Modal, Spinner, StateMessage, Tabs, buttonClasses } from "@forkvlift/ui";
+import { Avatar, Badge, Button, Modal, PixelAvatar, Spinner, StateMessage, Tabs, buttonClasses } from "@forkvlift/ui";
+import { BadgeIcon } from "@forkvlift/ui/icons";
 import { PageShell } from "../../app/kit";
 import { usePreferences } from "../../app/preferences";
 import { signInUrl, useSession, useSiteConfig } from "../../app/session";
@@ -51,7 +52,10 @@ function ProfileView({ profile }: { profile: Profile }) {
   return (
     <PageShell>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <Avatar src={profile.user.avatarUrl} name={profile.user.displayName} size="xl" />
+        <div className="relative shrink-0">
+          <Avatar src={profile.user.avatarUrl} name={profile.user.displayName} size="xl" />
+          {profile.user.avatar ? <PixelAvatar look={profile.user.avatar} name={`${profile.user.displayName}'s Plaza avatar`} size={40} className="absolute -right-2 -bottom-2 rounded-pixel border border-border bg-surface" /> : null}
+        </div>
         <div className="min-w-0 flex-1 space-y-2">
           <h1 className="break-words font-display text-2xl">{profile.user.displayName}</h1>
           <p className="text-muted">
@@ -72,9 +76,14 @@ function ProfileView({ profile }: { profile: Profile }) {
             <div><dt className="text-muted">Built on by</dt><dd className="font-display">{profile.stats.forkedBy} people</dd></div>
           </dl>
           {profile.badges.length ? (
-            <div className="flex flex-wrap gap-2" aria-label="Badges">
-              {profile.badges.map((b) => <Badge key={b.badge.key} tone="accent" title={b.badge.description}>{b.badge.name}</Badge>)}
-            </div>
+            <ul className="flex flex-wrap gap-2" aria-label="Badges">
+              {profile.badges.map((b) => (
+                <li key={b.badge.key} className="flex items-center gap-1.5 rounded-pixel border border-border bg-surface-2 px-2 py-1 text-xs" title={`${b.badge.description} Earned ${new Date(b.awardedAt).toLocaleDateString()}.`}>
+                  <BadgeIcon iconKey={b.badge.iconKey} size={20} />
+                  {b.badge.name}
+                </li>
+              ))}
+            </ul>
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">

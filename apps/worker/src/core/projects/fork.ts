@@ -13,6 +13,7 @@ import type { SessionUser } from "@forkvlift/shared";
 import { HttpError, notFound } from "../errors";
 import { github } from "../github/client";
 import { ingestRepo } from "../github/ingest";
+import { afterFork } from "../badges";
 import { notify } from "../notify";
 import { createCard, ensureBoard } from "../studio";
 import { LISTED } from "./rows";
@@ -99,6 +100,7 @@ export async function continueProject(env: Env, user: SessionUser, slug: string)
     { columnId: ideaColumn!.id, title: `${original.name} (fork)`.slice(0, 100), idea: `Continuing ${original.name}`, projectId },
     { ignoreWipLimit: true },
   );
+  await afterFork(db, user.id, original.id);
   if (original.owner_id) {
     await notify(db, [
       { userId: original.owner_id, type: "fork", actorId: user.id, title: `${user.displayName} forked ${original.name}`, href: `/p/${original.slug}` },
