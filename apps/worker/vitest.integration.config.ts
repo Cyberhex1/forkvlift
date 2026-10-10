@@ -13,7 +13,17 @@ export default defineConfig(async () => {
     plugins: [
       cloudflareTest({
         wrangler: { configPath: "./wrangler.jsonc" },
-        miniflare: { bindings: { TEST_MIGRATIONS: migrations, ENVIRONMENT: "local" } },
+        // Pinned here so results never depend on a developer's .dev.vars.
+        miniflare: {
+          bindings: {
+            TEST_MIGRATIONS: migrations,
+            ENVIRONMENT: "local",
+            ALLOW_SESSION_ADMIN: "true",
+            TURNSTILE_SECRET: "1x0000000000000000000000000000000AA",
+            GITHUB_TOKEN: "",
+            USE_FIXTURES: "false",
+          },
+        },
       }),
     ],
     test: {
