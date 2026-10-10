@@ -148,14 +148,14 @@ Every feature in the product plan maps to one task with one owner. Within a phas
 | 2.3 | Notifications fan-out (Queues) and email digest sending | Opus 5.5 | P0 | Done |
 | 2.4 | DMs and collab requests backend, DM privacy rules, blocks | Opus 5.5 | P0 | Done |
 | 2.5 | Follows, bookmarks and collections API | Sol 6.1 | P0 | Done |
-| 2.6 | Kanban board UI: drag (mouse and keyboard), rename / collapse / recolor columns, WIP limits | Sol 6.1 | 2.1 | Not started |
-| 2.7 | Project planning panel: checklist, markdown notes, upvotable roadmap, "looking for help with" | Sol 6.1 | 2.1 | Not started |
-| 2.8 | Profile page: header, Collab and Message buttons, showcase pinning, tabs, stats | Sol 6.1 | 2.5 | Not started |
-| 2.9 | DM and collab request UI; notification center | Sol 6.1 | 2.3, 2.4 | Not started |
-| 2.10 | Settings pages: privacy, notifications, theme, music default, show-unlicensed preference (off by default), data export, delete account | Flash 3.8 | P0 | Not started |
-| 2.11 | Collections pages, plus "export as awesome-list markdown" | Flash 3.8 | 2.5 | Not started |
-| 2.12 | "Ask the author to add a license" prefilled GitHub issue link; owner-side link to GitHub's add-a-license page | Flash 3.8 | 1.9 | Not started |
-| 2.13 | Email templates: notifications and weekly digest | Flash 3.8 | 2.3 | Not started |
+| 2.6 | Kanban board UI: drag (mouse and keyboard), rename / collapse / recolor columns, WIP limits | Sol 6.1 | 2.1 | Done |
+| 2.7 | Project planning panel: checklist, markdown notes, upvotable roadmap, "looking for help with" | Sol 6.1 (built by Opus) | 2.1 | Done |
+| 2.8 | Profile page: header, Collab and Message buttons, showcase pinning, tabs, stats | Sol 6.1 (built by Opus) | 2.5 | Done |
+| 2.9 | DM and collab request UI; notification center | Sol 6.1 (built by Opus) | 2.3, 2.4 | Done |
+| 2.10 | Settings pages: privacy, notifications, theme, music default, show-unlicensed preference (off by default), data export, delete account | Flash 3.8 (built by Opus) | P0 | Done |
+| 2.11 | Collections pages, plus "export as awesome-list markdown" | Flash 3.8 (built by Opus) | 2.5 | Done |
+| 2.12 | "Ask the author to add a license" prefilled GitHub issue link; owner-side link to GitHub's add-a-license page | Flash 3.8 (built by Opus) | 1.9 | Done |
+| 2.13 | Email templates: notifications and weekly digest | Flash 3.8 (built by Opus) | 2.3 | Done |
 
 **Phase 3 — Community, live**
 
