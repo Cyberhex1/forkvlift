@@ -1,6 +1,6 @@
-# ForkvLift — Context Brief for Coding Agents
+# ForkLift — Context Brief for Coding Agents
 
-> Site name: **ForkvLift** (slug `forkvlift`; keep it in one constant). The docs were written under the working name "ForkYard"; read every "ForkYard" / `forkyard` there as ForkvLift / `forkvlift`.
+> Site name: **ForkLift** (domain `forklift.stream`; slug `forklift`; keep it in the `SITE_NAME` constant). Older docs say "ForkYard" or "ForkvLift": read both as ForkLift. **Internal identifiers keep `forkvlift` on purpose and must not be renamed**: the `@forkvlift/*` package scope, Cloudflare resource names (`forkvlift-preview`, D1, R2, KV, queues), the GitHub repo, and the folders `C:codeForkvLift` and `C:codeorkvlift-wt`.
 > Full specs live in `docs/`. Read this file first, then the two plans.
 
 ## What we're building
@@ -55,5 +55,5 @@ If this brief and those docs disagree, the docs win. Ask the owner if unsure.
 
 ## Open questions for the owner
 
-- Domain (via Cloudflare Registrar)
+- Domain `forklift.stream`: connect it as the production Worker's custom domain at the Phase 1 gate (needs its nameservers on Cloudflare)
 - GitHub account or org that owns the repo; public from day one?

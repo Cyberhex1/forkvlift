@@ -1,8 +1,8 @@
 /**
  * Site-wide constants. The site name lives here and nowhere else.
  */
-export const SITE_NAME = "ForkvLift";
-export const SITE_SLUG = "forkvlift";
+export const SITE_NAME = "ForkLift";
+export const SITE_SLUG = "forklift";
 export const SITE_TAGLINE = "Fork it, don't rebuild it.";
 
 /** Exact disclaimer text for unlicensed projects (product plan, "Trust, safety, licensing"). */
