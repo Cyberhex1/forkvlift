@@ -214,18 +214,18 @@ function PrivacySection({ user }: { user: SessionUser }) {
 function NotificationsSection({ user }: { user: SessionUser }) {
   const save = useSaveSettings();
   const prefs = user.settings.notifications;
-  const setPref = (type: NotificationType, channel: "email" | "push", on: boolean) => {
+  const setEmail = (type: NotificationType, on: boolean) => {
     const current = prefs[type] ?? { email: EMAIL_DEFAULT[type] ?? false, push: true };
-    save.mutate({ notifications: { ...prefs, [type]: { ...current, [channel]: on } } });
+    save.mutate({ notifications: { ...prefs, [type]: { ...current, email: on } } });
   };
   return (
     <Section id="notifications" title="Notifications">
+      <p className="text-sm text-muted">Everything shows up in your notification center. Choose what also comes by email. To silence a person, mute them from their profile.</p>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-muted">
             <th className="py-1 font-normal">Type</th>
             <th className="py-1 font-normal">Email</th>
-            <th className="py-1 font-normal">In-app</th>
           </tr>
         </thead>
         <tbody>
@@ -234,8 +234,7 @@ function NotificationsSection({ user }: { user: SessionUser }) {
             return (
               <tr key={type} className="border-t border-border">
                 <td className="py-2 pr-2">{NOTIFICATION_LABELS[type]}</td>
-                <td><input type="checkbox" aria-label={`Email: ${NOTIFICATION_LABELS[type]}`} checked={p.email} onChange={(e) => setPref(type, "email", e.target.checked)} /></td>
-                <td><input type="checkbox" aria-label={`In-app: ${NOTIFICATION_LABELS[type]}`} checked={p.push} onChange={(e) => setPref(type, "push", e.target.checked)} /></td>
+                <td><input type="checkbox" aria-label={`Email: ${NOTIFICATION_LABELS[type]}`} checked={p.email} onChange={(e) => setEmail(type, e.target.checked)} /></td>
               </tr>
             );
           })}
