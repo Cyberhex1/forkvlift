@@ -10,6 +10,7 @@ import { createComment } from "../core/projects/comments";
 import { getProjectDetail } from "../core/projects/detail";
 import { continueProject } from "../core/projects/fork";
 import { getForkTree } from "../core/projects/forktree";
+import { findSimilar } from "../core/projects/semantic";
 import { decodeCursor, encodeCursor, listProjects } from "../core/projects/list";
 import { LISTED, parseJson } from "../core/projects/rows";
 import { createProject, deleteProject, previewSubmission, updateProject } from "../core/projects/submit";
@@ -41,11 +42,8 @@ export function registerCatalog(app: Hono<AppEnv>) {
 
   mount(app, "listProjects", ({ query }, c) => listProjects(c.env.DB, query, c.get("user")?.id ?? null));
 
-  // Keyword version of "Has this been built?"; semantic search replaces it in task 4.1.
-  mount(app, "similarProjects", async ({ query }, c) => {
-    const { items } = await listProjects(c.env.DB, { q: query.q, limit: query.limit ?? 6 }, c.get("user")?.id ?? null);
-    return { items };
-  });
+  // "Has this been built?" (4.1): meaning first, keywords as a top-up.
+  mount(app, "similarProjects", async ({ query }, c) => ({ items: await findSimilar(c.env, query.q, query.limit ?? 6, c.get("user")) }));
 
   mount(app, "getProject", ({ params }, c) => getProjectDetail(c.env.DB, params.slug, c.get("user")));
 

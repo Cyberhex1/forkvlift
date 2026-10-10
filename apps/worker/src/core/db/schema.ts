@@ -178,6 +178,9 @@ export const projects = sqliteTable(
     safetyFlags: json<string[]>("safety_flags"),
     foundViaUrl: text("found_via_url"),
     hiddenAt: ts("hidden_at"),
+    /** Semantic search (4.1): when the vector was last written, and a hash of the text it was made from. */
+    embeddedAt: ts("embedded_at"),
+    embeddingHash: text("embedding_hash"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     publishedAt: ts("published_at"),
