@@ -143,11 +143,11 @@ Every feature in the product plan maps to one task with one owner. Within a phas
 
 | ID | Task | Owner | Needs | Status |
 | --- | --- | --- | --- | --- |
-| 2.1 | Studio API: boards, editable columns, card ordering, optimistic saves | Opus 5.5 | P0 | Not started |
-| 2.2 | "Fork to my GitHub" in one click, fork lineage records, auto-add to Studio as an Idea | Opus 5.5 | 1.1 | Not started |
-| 2.3 | Notifications fan-out (Queues) and email digest sending | Opus 5.5 | P0 | Not started |
-| 2.4 | DMs and collab requests backend, DM privacy rules, blocks | Opus 5.5 | P0 | Not started |
-| 2.5 | Follows, bookmarks and collections API | Sol 6.1 | P0 | Not started |
+| 2.1 | Studio API: boards, editable columns, card ordering, optimistic saves | Opus 5.5 | P0 | Done |
+| 2.2 | "Fork to my GitHub" in one click, fork lineage records, auto-add to Studio as an Idea | Opus 5.5 | 1.1 | Done |
+| 2.3 | Notifications fan-out (Queues) and email digest sending | Opus 5.5 | P0 | Done |
+| 2.4 | DMs and collab requests backend, DM privacy rules, blocks | Opus 5.5 | P0 | Done |
+| 2.5 | Follows, bookmarks and collections API | Sol 6.1 | P0 | Done |
 | 2.6 | Kanban board UI: drag (mouse and keyboard), rename / collapse / recolor columns, WIP limits | Sol 6.1 | 2.1 | Not started |
 | 2.7 | Project planning panel: checklist, markdown notes, upvotable roadmap, "looking for help with" | Sol 6.1 | 2.1 | Not started |
 | 2.8 | Profile page: header, Collab and Message buttons, showcase pinning, tabs, stats | Sol 6.1 | 2.5 | Not started |
