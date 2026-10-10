@@ -2,7 +2,7 @@
 
 - **From:** sol
 - **For task:** 1.8 / C.2
-- **Status:** open
+- **Status:** done (playwright 1.64.0 at the root, `pnpm test:e2e`, CI job `e2e` runs against the dev server on port 8788 with fixtures)
 
 ## What I need
 
