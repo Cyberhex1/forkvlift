@@ -5,6 +5,7 @@
  */
 import type { CandidateCheck } from "@forkvlift/shared";
 import type { RepoSnapshot } from "../github/ingest";
+import { describeSecrets, type ScanResult } from "../safety/scan";
 
 const WEEK_MS = 7 * 86_400_000;
 
@@ -14,7 +15,7 @@ export function starVelocity(s: Pick<RepoSnapshot, "stars" | "createdAt">, now =
   return Math.round((s.stars / weeks) * 10) / 10;
 }
 
-export function candidateChecks(s: RepoSnapshot): CandidateCheck[] {
+export function candidateChecks(s: RepoSnapshot, scan: ScanResult | null = null): CandidateCheck[] {
   return [
     { key: "license", label: "License detected", pass: s.license !== null, detail: s.license ? s.license.name : "No license (shown, not required)" },
     { key: "readme", label: "README exists", pass: s.readmeHtml !== null, detail: null },
@@ -25,13 +26,22 @@ export function candidateChecks(s: RepoSnapshot): CandidateCheck[] {
       detail: s.isFork ? `Fork of ${s.parentFullName ?? "unknown"}; compare manually` : null,
     },
     { key: "not_archived", label: "Not archived", pass: !s.archived, detail: null },
-    // Secret and malware scans arrive with task 1.6.
-    { key: "no_secrets", label: "No committed secrets", pass: null, detail: "Scan not run yet" },
-    { key: "not_malware", label: "Not malware-flagged", pass: null, detail: "Scan not run yet" },
+    {
+      key: "no_secrets",
+      label: "No committed secrets",
+      pass: scan ? scan.secrets.length === 0 : null,
+      detail: scan ? (scan.secrets.length ? describeSecrets(scan.secrets) : null) : "Scan not run",
+    },
+    {
+      key: "not_malware",
+      label: "Not malware-flagged",
+      pass: scan ? scan.flags.length === 0 : null,
+      detail: scan ? (scan.flags.length ? scan.flags.join("; ") : null) : "Scan not run",
+    },
   ];
 }
 
-export function candidateScore(s: RepoSnapshot, now = Date.now()): number {
+export function candidateScore(s: RepoSnapshot, now = Date.now(), scan: ScanResult | null = null): number {
   const velocity = starVelocity(s, now);
   const daysSincePush = s.pushedAt ? (now - Date.parse(s.pushedAt)) / 86_400_000 : Infinity;
   let score = 0;
@@ -44,6 +54,7 @@ export function candidateScore(s: RepoSnapshot, now = Date.now()): number {
   score += daysSincePush <= 30 ? 15 : daysSincePush <= 90 ? 8 : 0;
   if (s.archived) score -= 40;
   if (s.isFork) score -= 20;
+  if (scan?.flags.length) score -= 50;
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 

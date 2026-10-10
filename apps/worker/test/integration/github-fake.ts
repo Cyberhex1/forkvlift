@@ -8,6 +8,8 @@ export interface FakeRepo {
   archived?: boolean;
   homepage?: string | null;
   topics?: string[];
+  /** Files in the default branch (path → content), for the safety scan. */
+  files?: Record<string, string>;
 }
 
 /** Stub fetch with a tiny fake GitHub (+ always-pass Turnstile). */
@@ -15,7 +17,12 @@ export function fakeGithub(repos: Record<string, FakeRepo>, opts: { publicMember
   vi.stubGlobal("fetch", async (input: RequestInfo) => {
     const url = typeof input === "string" ? input : input.url;
     if (url.startsWith("https://challenges.cloudflare.com/")) return Response.json({ success: true });
-    const { pathname } = new URL(url);
+    const { hostname, pathname } = new URL(url);
+    if (hostname === "raw.githubusercontent.com") {
+      const [, owner, name, , ...rest] = pathname.split("/");
+      const content = repos[`${owner}/${name}`]?.files?.[rest.map(decodeURIComponent).join("/")];
+      return content === undefined ? new Response("", { status: 404 }) : new Response(content);
+    }
     if (pathname === "/search/repositories") {
       return Response.json({ items: (opts.search ?? []).map((full_name) => ({ full_name, stargazers_count: 10, archived: false, private: false })) });
     }
@@ -26,6 +33,9 @@ export function fakeGithub(repos: Record<string, FakeRepo>, opts: { publicMember
     const repo = m && repos[m[1]!];
     if (!repo) return new Response("{}", { status: 404 });
     if (m![2] === "/readme") return new Response("<p>Readme</p>");
+    if (m![2]?.startsWith("/git/trees/")) {
+      return Response.json({ truncated: false, tree: Object.entries(repo.files ?? {}).map(([path, content]) => ({ path, type: "blob", size: content.length })) });
+    }
     if (m![2]?.startsWith("/contributors")) return Response.json([{}]);
     const [owner, name] = m![1]!.split("/");
     return Response.json({

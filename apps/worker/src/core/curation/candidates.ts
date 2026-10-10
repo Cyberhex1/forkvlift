@@ -9,6 +9,7 @@ import { ingestRepo } from "../github/ingest";
 import { newId } from "../ids";
 import { decodeCursor, encodeCursor } from "../projects/list";
 import { insertProject } from "../projects/submit";
+import { scanRepo } from "../safety/scan";
 import { candidateChecks, candidateScore, proposedCard, starVelocity } from "./score";
 
 type FoundVia = Candidate["foundVia"]["kind"];
@@ -103,9 +104,10 @@ export async function upsertCandidate(
   const db = env.DB;
   const listed = await db.prepare(`SELECT 1 FROM projects WHERE lower(repo_full_name) = lower(?) AND deleted_at IS NULL`).bind(s.fullName).first();
   const existing = await db.prepare(`SELECT id, status FROM candidates WHERE lower(repo_full_name) = lower(?)`).bind(s.fullName).first<{ id: string; status: CandidateStatus }>();
+  const scan = await scanRepo(env, s).catch(() => null);
   const data = JSON.stringify(s);
-  const checks = JSON.stringify(candidateChecks(s));
-  const score = candidateScore(s);
+  const checks = JSON.stringify(candidateChecks(s, scan));
+  const score = candidateScore(s, Date.now(), scan);
 
   if (existing) {
     await db
@@ -193,6 +195,7 @@ export async function decideCandidate(
       tags: proposed.tags,
       forkedFromId: null,
       foundViaUrl: current.foundVia.url,
+      safetyFlags: (current.checks.find((k) => k.key === "not_malware")?.detail ?? "").split("; ").filter((f) => f && f !== "Scan not run"),
     });
     const status = d.action === "approve_publish" ? "published" : "draft";
     await db.prepare(`UPDATE candidates SET status = ?, project_id = ?, proposed = ?, decided_by = ?, decided_at = ?, updated_at = ? WHERE id = ?`)

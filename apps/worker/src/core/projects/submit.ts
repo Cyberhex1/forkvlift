@@ -11,6 +11,7 @@ import { ingestRepo, type RepoSnapshot } from "../github/ingest";
 import { viewerOwnsRepo } from "../github/ownership";
 import { parseRepoUrl } from "../github/repo-url";
 import { newId, slugify } from "../ids";
+import { describeSecrets, scanRepo, type SecretFinding } from "../safety/scan";
 import { getProjectDetail } from "./detail";
 import { computeHealth } from "./health";
 import { authorOf, PROJECT_SELECT, type ProjectRow } from "./rows";
@@ -98,6 +99,14 @@ export async function createProject(env: Env, user: SessionUser, body: CreateBod
     }
   }
 
+  await assertDailyLimit(db, user);
+  let safetyFlags: string[] = [];
+  if (snapshot) {
+    const scan = await scanRepo(env, snapshot);
+    safetyFlags = scan.flags;
+    if (scan.secrets.length) await warnAuthorAboutSecrets(db, user.id, snapshot.fullName, scan.secrets);
+  }
+
   let parentId: string | null = null;
   if (body.forkedFromSlug) {
     const parent = await db.prepare(`SELECT id FROM projects WHERE slug = ? AND deleted_at IS NULL`).bind(body.forkedFromSlug).first<{ id: string }>();
@@ -112,6 +121,7 @@ export async function createProject(env: Env, user: SessionUser, body: CreateBod
     snapshot,
     forkedFromId: parentId,
     foundViaUrl: null,
+    safetyFlags,
   });
   return getProjectDetail(db, slug, user);
 }
@@ -144,6 +154,8 @@ export interface NewProject {
   tags: string[];
   forkedFromId: string | null;
   foundViaUrl: string | null;
+  /** Public "review before running" flags from the safety scan. */
+  safetyFlags?: string[];
 }
 
 /** Insert a project row with tags, lineage, health and search index. Shared by submit and curation. */
@@ -166,8 +178,8 @@ export async function insertProject(db: D1Database, p: NewProject): Promise<{ id
            stars, forks, open_issues, contributors, last_commit_at, repo_created_at, readme_html,
            stack, platforms, difficulty, ai_tools, build_time, ai_involvement, is_template, replaces,
            what_works, whats_missing, looking_for_help, thumbnail_key, thumbnail_url, health_score, health,
-           found_via_url, published_at, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           found_via_url, safety_flags, published_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         id, slug, p.name.trim(), p.tagline.trim(), p.description.trim(), p.ownerId, p.source, p.categorySlug, p.stage, isPublic ? 1 : 0,
@@ -180,7 +192,7 @@ export async function insertProject(db: D1Database, p: NewProject): Promise<{ id
         // Uploaded thumbnails are wired up with task 1.5; until then the repo's OG card is the thumbnail.
         p.thumbnailKey, p.thumbnailUrl ?? snapshot?.socialPreviewUrl ?? null,
         health?.score ?? 0, health ? json(health) : null,
-        p.foundViaUrl, isPublic ? now : null, now, now,
+        p.foundViaUrl, json(p.safetyFlags ?? []), isPublic ? now : null, now, now,
       ),
     ...normTags(p.tags).map((tag) => db.prepare(`INSERT INTO project_tags (project_id, tag) VALUES (?, ?)`).bind(id, tag)),
   ];
@@ -256,4 +268,37 @@ export async function deleteProject(env: Env, user: SessionUser, slug: string): 
   const row = await loadOwned(env.DB, slug, user);
   await env.DB.prepare(`UPDATE projects SET deleted_at = ?, is_public = 0 WHERE id = ?`).bind(Date.now(), row.id).run();
   await syncProjectSearch(env.DB, row.id);
+}
+
+
+const DAY_MS = 86_400_000;
+
+/** New accounts (under a week old) can add 3 projects a day; everyone else 10. */
+async function assertDailyLimit(db: D1Database, user: SessionUser): Promise<void> {
+  const row = await db
+    .prepare(
+      `SELECT (SELECT created_at FROM users WHERE id = ?1) AS joined,
+              (SELECT count(*) FROM projects WHERE owner_id = ?1 AND created_at >= ?2) AS today`,
+    )
+    .bind(user.id, Date.now() - DAY_MS)
+    .first<{ joined: number; today: number }>();
+  const isNew = !row || Date.now() - row.joined < 7 * DAY_MS;
+  const limit = isNew ? 3 : 10;
+  if ((row?.today ?? 0) >= limit) {
+    throw new HttpError("rate_limited", isNew ? "New accounts can add 3 projects a day. Try again tomorrow." : "That's 10 projects today. Try again tomorrow.");
+  }
+}
+
+/** Committed secrets are reported to the author only, never shown publicly. */
+export async function warnAuthorAboutSecrets(db: D1Database, userId: string, repo: string, secrets: SecretFinding[]): Promise<void> {
+  await db
+    .prepare(`INSERT INTO notifications (id, user_id, type, title, href, created_at) VALUES (?, ?, 'system', ?, ?, ?)`)
+    .bind(
+      newId("ntf"),
+      userId,
+      `Possible secret committed in ${repo}: ${describeSecrets(secrets).slice(0, 150)}. Rotate it and remove it from the git history.`.slice(0, 200),
+      `https://github.com/${repo}`,
+      Date.now(),
+    )
+    .run();
 }
