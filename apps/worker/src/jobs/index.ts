@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { HttpError } from "../core/errors";
 import { upsertCandidate } from "../core/curation/candidates";
+import { backfillCandidateCategories } from "../core/curation/categorize";
 import { onlyNew, searchCandidates, watchlistCandidates } from "../core/curation/discovery";
 import { ingestRepo } from "../core/github/ingest";
 import { flushNotificationEmails, sendWeeklyDigests } from "../email/deliver";
@@ -58,6 +59,7 @@ export async function handleQueue(batch: MessageBatch<unknown>, env: Env): Promi
           break;
         case "discovery.run":
           await runDiscovery(env);
+          await backfillCandidateCategories(env, 50);
           break;
         case "candidate.discover":
           await upsertCandidate(env, await ingestRepo(env, job.repoFullName), job.foundVia);

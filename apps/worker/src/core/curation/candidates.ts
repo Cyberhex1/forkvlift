@@ -10,6 +10,7 @@ import { newId } from "../ids";
 import { decodeCursor, encodeCursor } from "../projects/list";
 import { insertProject } from "../projects/submit";
 import { scanRepo } from "../safety/scan";
+import { suggestCategory } from "./categorize";
 import { candidateChecks, candidateScore, proposedCard, starVelocity } from "./score";
 
 type FoundVia = Candidate["foundVia"]["kind"];
@@ -119,12 +120,13 @@ export async function upsertCandidate(
   if (listed && foundVia.kind !== "manual" && foundVia.kind !== "reddit_link") return null;
 
   const id = newId("cand");
+  const proposed = { ...proposedCard(s), categorySlug: await suggestCategory(env, s) };
   await db
     .prepare(
       `INSERT INTO candidates (id, repo_full_name, repo_url, data, proposed, score, checks, status, found_via_kind, found_via_url)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
     )
-    .bind(id, s.fullName, s.htmlUrl, data, JSON.stringify(proposedCard(s)), score, checks, foundVia.kind, foundVia.url)
+    .bind(id, s.fullName, s.htmlUrl, data, JSON.stringify(proposed), score, checks, foundVia.kind, foundVia.url)
     .run();
   return { id, created: true };
 }

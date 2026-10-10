@@ -297,6 +297,7 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
     rejectReason: body.action === "reject" ? body.reason : null,
   }),
   bulkDecideCandidates: ({ body }) => ({ updated: body.ids.length }),
+  suggestCandidateCategories: () => ({ updated: 0 }),
   listReports: () => ({
     items: [{ id: "fx_rep_1", targetType: "comment", targetId: "fx_cmt_1", reason: "spam", note: "Fixture report", status: "open", reporter: fxUsers.bo, targetLabel: "Comment on Fixture: Pixel Planner", targetHref: "/p/fixture-pixel-planner", createdAt: NOW }],
     nextCursor: null,

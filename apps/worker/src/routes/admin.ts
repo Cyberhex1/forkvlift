@@ -1,3 +1,4 @@
+import { backfillCandidateCategories } from "../core/curation/categorize";
 import type { Hono } from "hono";
 import type { AuditLogEntry } from "@forkvlift/shared";
 import type { AppEnv } from "../env";
@@ -23,6 +24,11 @@ export function registerAdmin(app: Hono<AppEnv>) {
     return candidate;
   });
   mount(app, "decideCandidate", ({ params, body }, c) => decideCandidate(c.env, actor(c), params.id, body));
+  mount(app, "suggestCandidateCategories", async (_, c) => {
+    const updated = await backfillCandidateCategories(c.env);
+    await audit(c.env.DB, actor(c), "candidates.categorize", "candidate", "*", { updated });
+    return { updated };
+  });
   mount(app, "bulkDecideCandidates", async ({ body }, c) => {
     let updated = 0;
     for (const id of body.ids) {

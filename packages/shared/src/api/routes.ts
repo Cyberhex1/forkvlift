@@ -823,6 +823,11 @@ export const routes = {
     body: z.object({ ids: z.array(Id).min(1).max(100), action: CandidateAction, reason: z.string().max(500).nullable() }),
     response: z.object({ updated: z.number().int() }),
   }),
+  suggestCandidateCategories: route({
+    method: "POST", path: "/api/admin/candidates/categorize", auth: "admin", kind: "json", area: "admin",
+    summary: "Fill in a suggested category for queued candidates that have none",
+    response: z.object({ updated: z.number().int() }),
+  }),
   listReports: route({
     method: "GET", path: "/api/admin/reports", auth: "admin", kind: "json", area: "admin",
     summary: "Moderation queue",
