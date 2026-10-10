@@ -376,6 +376,10 @@ export const routes = {
     summary: "Start a JSON export of everything you've made",
     response: z.object({ status: z.enum(["queued", "ready"]), downloadUrl: z.string().nullable() }),
   }),
+  downloadExport: route({
+    method: "GET", path: "/api/me/export", auth: "user", kind: "text", area: "me",
+    summary: "Download the export as a JSON file (built on request)",
+  }),
   deleteAccount: route({
     method: "DELETE", path: "/api/me", auth: "user", kind: "json", area: "me",
     summary: "Delete the account",
