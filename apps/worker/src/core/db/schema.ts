@@ -475,6 +475,21 @@ export const resourceRatings = sqliteTable(
   (t) => [primaryKey({ columns: [t.resourceId, t.userId] })],
 );
 
+/** Public API keys (task 4.3). Only a SHA-256 of the secret is stored. */
+export const apiKeys = sqliteTable(
+  "api_keys",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    prefix: text("prefix").notNull(),
+    keyHash: text("key_hash").notNull().unique(),
+    createdAt: createdAt(),
+    lastUsedAt: ts("last_used_at"),
+    revokedAt: ts("revoked_at"),
+  },
+  (t) => [index("api_keys_user_idx").on(t.userId)],
+);
 /**
  * Facts that count toward badges (task 3.12), one row per distinct thing:
  * kind "bug_fixed" → ref is a card id moved out of Bug fix;

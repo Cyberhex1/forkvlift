@@ -20,6 +20,7 @@ import { registerMeta } from "./routes/meta";
 import { registerSocial } from "./routes/social";
 import { registerStudio } from "./routes/studio";
 import { registerUsers } from "./routes/users";
+import { registerV1 } from "./routes/v1";
 
 export const app = new Hono<AppEnv>();
 
@@ -44,6 +45,7 @@ registerGrowth(app);
 registerFeeds(app);
 registerAdmin(app);
 registerMcp(app);
+registerV1(app);
 
 const missing = unmountedRoutes();
 if (missing.length) throw new Error(`Contract routes without a handler: ${missing.join(", ")}`);

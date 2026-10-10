@@ -77,3 +77,14 @@ export type Badge = z.infer<typeof Badge>;
 
 export const UserBadge = z.object({ badge: Badge, awardedAt: IsoDate });
 export type UserBadge = z.infer<typeof UserBadge>;
+
+/** Public API key (task 4.3). The secret itself is shown once, at creation. */
+export const ApiKey = z.object({
+  id: Id,
+  name: z.string().min(1).max(60),
+  /** First characters of the secret, so people can tell keys apart. */
+  prefix: z.string(),
+  createdAt: IsoDate,
+  lastUsedAt: IsoDate.nullable(),
+});
+export type ApiKey = z.infer<typeof ApiKey>;

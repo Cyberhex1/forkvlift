@@ -4,6 +4,7 @@ import { deleteCookie } from "hono/cookie";
 import { COOKIES, DEFAULT_USER_SETTINGS, SITE_SLUG, type UserSettings } from "@forkvlift/shared";
 import type { AppEnv } from "../env";
 import * as account from "../core/account";
+import { createKey, listKeys, revokeKey } from "../core/apikeys";
 import { getDb, schema } from "../core/db";
 import { HttpError, mount } from "../core/http";
 import { listProjects } from "../core/projects/list";
@@ -62,6 +63,13 @@ export function registerUsers(app: Hono<AppEnv>) {
       "content-type": "application/json; charset=utf-8",
       "content-disposition": `attachment; filename="${SITE_SLUG}-export-${date}.json"`,
     });
+  });
+
+  mount(app, "listApiKeys", async (_, c) => ({ items: await listKeys(c.env.DB, c.get("user")!.id) }));
+  mount(app, "createApiKey", ({ body }, c) => createKey(c.env.DB, c.get("user")!.id, body.name));
+  mount(app, "revokeApiKey", async ({ params }, c) => {
+    await revokeKey(c.env.DB, c.get("user")!.id, params.id);
+    return { ok: true as const };
   });
 
   mount(app, "deleteAccount", async ({ body }, c) => {
