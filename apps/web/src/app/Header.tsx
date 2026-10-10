@@ -3,6 +3,7 @@ import { SITE_NAME } from "@forkvlift/shared";
 import { cn } from "@forkvlift/ui";
 import { HeaderSearch } from "../features/catalog/HeaderSearch";
 import { MusicButton } from "../features/music/MusicButton";
+import { NotificationsButton } from "../features/profile/NotificationsButton";
 import { ProfileMenu } from "./ProfileMenu";
 
 const NAV = [
@@ -34,6 +35,7 @@ export function Header() {
           <HeaderSearch />
         </div>
         <MusicButton />
+        <NotificationsButton />
         <ProfileMenu />
       </div>
       <nav aria-label="Main (mobile)" className="flex gap-1 overflow-x-auto border-t border-border px-4 py-1.5 md:hidden">

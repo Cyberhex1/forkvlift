@@ -74,6 +74,11 @@ export function registerSocial(app: Hono<AppEnv>) {
     const user = c.get("user")!;
     if (body.targetType === "user" && body.targetId === user.id) throw new HttpError("bad_request", "You cannot follow yourself.");
     await followTarget(c.env.DB, body.targetType, body.targetId);
+    if (body.targetType === "user") {
+      const blocked = await c.env.DB.prepare(`SELECT 1 FROM blocks WHERE kind = 'block' AND ((blocker_id = ?1 AND blocked_id = ?2) OR (blocker_id = ?2 AND blocked_id = ?1))`)
+        .bind(user.id, body.targetId).first();
+      if (blocked) throw new HttpError("forbidden", "You can't follow this person.");
+    }
     await c.env.DB.prepare(`INSERT OR IGNORE INTO follows (follower_id, target_type, target_id) VALUES (?, ?, ?)`)
       .bind(user.id, body.targetType, body.targetId).run();
     return { ok: true as const };

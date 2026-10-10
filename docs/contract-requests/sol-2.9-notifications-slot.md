@@ -2,7 +2,7 @@
 
 - **From:** sol
 - **For task:** 2.9
-- **Status:** open
+- **Status:** done (Opus, contracts PR after #27)
 
 ## What I need
 Mount an exported `NotificationsButton` from `apps/web/src/features/profile/NotificationsButton.tsx` in `apps/web/src/app/Header.tsx`, next to MusicButton and ProfileMenu. Preserve the 375 px layout and keyboard order. The component takes no props and uses the shell's session/query providers.
