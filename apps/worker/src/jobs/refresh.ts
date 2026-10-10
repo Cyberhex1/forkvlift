@@ -2,11 +2,16 @@
 import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { getDb, schema } from "../core/db";
 import { ingestRepo, type RepoSnapshot } from "../core/github/ingest";
+import { computeHealth } from "../core/projects/health";
+import { syncProjectSearch } from "../core/projects/search";
 import type { JobMessage } from "./index";
 
 /** Columns a project takes from its repo snapshot. */
 export function projectFieldsFromSnapshot(s: RepoSnapshot) {
+  const health = computeHealth({ stars: s.stars, forks: s.forks, contributors: s.contributors, lastCommitAt: s.pushedAt, createdAt: s.createdAt, archived: s.archived });
   return {
+    health,
+    healthScore: health.score,
     repoFullName: s.fullName,
     githubRepoId: s.githubRepoId,
     repoUrl: s.htmlUrl,
@@ -37,7 +42,12 @@ export async function enqueueStatsRefresh(env: Env): Promise<number> {
 export async function runRepoIngest(env: Env, job: Extract<JobMessage, { type: "repo.ingest" }>): Promise<void> {
   const snapshot = await ingestRepo(env, job.repoFullName, { freshFor: 60 * 30 });
   const db = getDb(env);
-  await db.update(schema.projects).set(projectFieldsFromSnapshot(snapshot)).where(eq(schema.projects.repoFullName, job.repoFullName));
+  const updated = await db
+    .update(schema.projects)
+    .set(projectFieldsFromSnapshot(snapshot))
+    .where(eq(schema.projects.repoFullName, job.repoFullName))
+    .returning({ id: schema.projects.id });
+  for (const p of updated) await syncProjectSearch(env.DB, p.id);
   if (job.candidateId) {
     await db.update(schema.candidates).set({ data: snapshot as unknown as Record<string, unknown>, updatedAt: new Date() }).where(eq(schema.candidates.id, job.candidateId));
   }
