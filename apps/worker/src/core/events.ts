@@ -9,7 +9,7 @@ import type { EventEntry, GrowthEvent, GrowthEventDetail, GrowthEventKind, Growt
 import { HttpError, notFound } from "./errors";
 import { newId } from "./ids";
 import { decodeCursor, encodeCursor } from "./projects/list";
-import { LISTED, PROJECT_SELECT, parseJson, rowsToCards, type ProjectRow } from "./projects/rows";
+import { LISTED, parseJson, rowsToCards, type ProjectRow } from "./projects/rows";
 
 interface EventRow {
   id: string;
