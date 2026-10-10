@@ -10,7 +10,8 @@ export function clientIp(req: Request): string {
 /** Rate-limit every non-GET route: auth routes on RL_AUTH, the rest on RL_WRITE. */
 export function rateLimitWrites(def: RouteDef): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
-    if (def.method === "GET") return next();
+    // Integration tests make hundreds of writes a minute; only their config sets this.
+    if (def.method === "GET" || c.env.DISABLE_RATE_LIMITS === "true") return next();
     const limiter = def.area === "auth" ? c.env.RL_AUTH : c.env.RL_WRITE;
     if (limiter) {
       const who = c.get("user")?.id ?? clientIp(c.req.raw);

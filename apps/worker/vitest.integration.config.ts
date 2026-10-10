@@ -22,6 +22,7 @@ export default defineConfig(async () => {
             TURNSTILE_SECRET: "1x0000000000000000000000000000000AA",
             GITHUB_TOKEN: "",
             USE_FIXTURES: "false",
+            DISABLE_RATE_LIMITS: "true",
           },
         },
       }),

@@ -13,6 +13,8 @@ declare global {
     TURNSTILE_SECRET?: string;
     USE_FIXTURES?: string;
     ALLOW_SESSION_ADMIN?: string;
+    /** Test-only: skip the write rate limits (set in vitest.integration.config.ts). */
+    DISABLE_RATE_LIMITS?: string;
   }
 }
 
