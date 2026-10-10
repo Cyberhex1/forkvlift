@@ -12,6 +12,7 @@ import { viewerOwnsRepo } from "../github/ownership";
 import { parseRepoUrl } from "../github/repo-url";
 import { newId, slugify } from "../ids";
 import { describeSecrets, scanRepo, type SecretFinding } from "../safety/scan";
+import { assertOwnedUploads, mediaKindOf, mediaUrl } from "../uploads";
 import { getProjectDetail } from "./detail";
 import { computeHealth } from "./health";
 import { authorOf, PROJECT_SELECT, type ProjectRow } from "./rows";
@@ -100,6 +101,7 @@ export async function createProject(env: Env, user: SessionUser, body: CreateBod
   }
 
   await assertDailyLimit(db, user);
+  await assertOwnedUploads(env, user.id, [...(body.thumbnailKey ? [body.thumbnailKey] : []), ...body.mediaKeys], ["thumbnail", "media"]);
   let safetyFlags: string[] = [];
   if (snapshot) {
     const scan = await scanRepo(env, snapshot);
@@ -122,6 +124,8 @@ export async function createProject(env: Env, user: SessionUser, body: CreateBod
     forkedFromId: parentId,
     foundViaUrl: null,
     safetyFlags,
+    thumbnailUrl: body.thumbnailKey ? mediaUrl(body.thumbnailKey) : undefined,
+    mediaKeys: body.mediaKeys,
   });
   return getProjectDetail(db, slug, user);
 }
@@ -156,6 +160,8 @@ export interface NewProject {
   foundViaUrl: string | null;
   /** Public "review before running" flags from the safety scan. */
   safetyFlags?: string[];
+  /** Uploaded gallery items (already verified as the owner's). */
+  mediaKeys?: string[];
 }
 
 /** Insert a project row with tags, lineage, health and search index. Shared by submit and curation. */
@@ -189,7 +195,7 @@ export async function insertProject(db: D1Database, p: NewProject): Promise<{ id
         snapshot?.pushedAt ? Date.parse(snapshot.pushedAt) : null, snapshot ? Date.parse(snapshot.createdAt) : null, snapshot?.readmeHtml ?? null,
         json(p.stack), json(p.platforms), p.difficulty, json(p.aiTools), p.buildTime, p.aiInvolvement, p.isTemplate ? 1 : 0, json(p.replaces),
         p.whatWorks, p.whatsMissing, p.lookingForHelp,
-        // Uploaded thumbnails are wired up with task 1.5; until then the repo's OG card is the thumbnail.
+        // An uploaded thumbnail wins; otherwise the repo's GitHub OG card.
         p.thumbnailKey, p.thumbnailUrl ?? snapshot?.socialPreviewUrl ?? null,
         health?.score ?? 0, health ? json(health) : null,
         p.foundViaUrl, json(p.safetyFlags ?? []), isPublic ? now : null, now, now,
@@ -197,6 +203,7 @@ export async function insertProject(db: D1Database, p: NewProject): Promise<{ id
     ...normTags(p.tags).map((tag) => db.prepare(`INSERT INTO project_tags (project_id, tag) VALUES (?, ?)`).bind(id, tag)),
   ];
   if (p.forkedFromId) statements.push(db.prepare(`INSERT INTO forks (child_id, parent_id) VALUES (?, ?)`).bind(id, p.forkedFromId));
+  statements.push(...mediaStatements(db, id, p.mediaKeys ?? []));
   await db.batch(statements);
   await syncProjectSearch(db, id);
   return { id, slug };
@@ -254,7 +261,16 @@ export async function updateProject(env: Env, user: SessionUser, slug: string, b
   sets.push(`updated_at = ?`);
   binds.push(Date.now());
 
+  if (body.thumbnailKey) {
+    await assertOwnedUploads(env, user.id, [body.thumbnailKey], ["thumbnail", "media"]);
+    sets.push(`thumbnail_url = ?`);
+    binds.push(mediaUrl(body.thumbnailKey));
+  }
   const statements = [db.prepare(`UPDATE projects SET ${sets.join(", ")} WHERE id = ?`).bind(...binds, row.id)];
+  if (body.mediaKeys) {
+    await assertOwnedUploads(env, user.id, body.mediaKeys, ["media", "thumbnail"]);
+    statements.push(db.prepare(`DELETE FROM project_media WHERE project_id = ?`).bind(row.id), ...mediaStatements(db, row.id, body.mediaKeys));
+  }
   if (body.tags) {
     statements.push(db.prepare(`DELETE FROM project_tags WHERE project_id = ?`).bind(row.id));
     for (const tag of normTags(body.tags)) statements.push(db.prepare(`INSERT INTO project_tags (project_id, tag) VALUES (?, ?)`).bind(row.id, tag));
@@ -301,4 +317,12 @@ export async function warnAuthorAboutSecrets(db: D1Database, userId: string, rep
       Date.now(),
     )
     .run();
+}
+
+function mediaStatements(db: D1Database, projectId: string, keys: string[]) {
+  return keys.slice(0, 12).map((key, position) =>
+    db
+      .prepare(`INSERT INTO project_media (id, project_id, kind, key, url, alt, position) VALUES (?, ?, ?, ?, ?, '', ?)`)
+      .bind(newId("med"), projectId, mediaKindOf(key), key, mediaUrl(key), position),
+  );
 }

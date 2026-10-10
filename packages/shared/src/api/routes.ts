@@ -307,9 +307,15 @@ export const routes = {
   }),
   putUpload: route({
     method: "PUT", path: "/api/uploads/:key", auth: "user", kind: "json", area: "uploads",
-    summary: "Upload the bytes for a reserved key (raw body)",
+    summary: "Upload the bytes for a reserved key (raw body, Content-Type as reserved)",
     params: z.object({ key: z.string().max(200) }),
     response: z.object({ key: z.string(), url: z.string() }),
+  }),
+  getMedia: route({
+    method: "GET", path: "/api/media/:key", auth: "public", kind: "text", area: "uploads",
+    summary: "Serve an uploaded file. Images accept ?w= (resized when Cloudflare Images is enabled)",
+    params: z.object({ key: z.string().max(200) }),
+    query: z.object({ w: z.coerce.number().int().min(16).max(2048).optional() }),
   }),
 
   // users (public profiles)
