@@ -475,14 +475,49 @@ export function RulesPage() {
         <h2 className="font-display text-xl font-semibold text-fg sm:text-2xl">
           Forum and Plaza
         </h2>
-        <ul className="list-disc space-y-2 pl-6 text-muted">
-          <li>Post in the board that fits. Questions go in Help &amp; Debugging; finished or half-finished builds go in Show &amp; Tell.</li>
-          <li>When someone solves your problem, mark their reply as the answer so the next person finds it.</li>
-          <li>Share code and prompts you have the right to share, and say which license they&apos;re under.</li>
-          <li>No pasting secrets, tokens or other people&apos;s private info, even by accident. Report it if you see some.</li>
-          <li>In the Plaza, keep it friendly and on-topic for the room. New accounts can post links after their first day, and moderators may turn on slow mode when a room gets busy.</li>
-          <li>Disagree with ideas, not people. Self-promotion is fine when it&apos;s a project you built; repeated ads are not.</li>
-        </ul>
+        <div className="space-y-4">
+          <Card className="space-y-2 border-l-4 border-l-accent">
+            <h3 className="font-display text-base font-semibold text-fg">
+              Board etiquette &amp; solutions
+            </h3>
+            <p className="text-sm text-muted">
+              Post in the board that fits your topic: questions and troubleshooting in Help &amp; Debugging;
+              completed or work-in-progress projects in Show &amp; Tell; pairings in Collab &amp; Ideas. When
+              someone solves your problem, mark their reply as the answer so others find it easily.
+            </p>
+          </Card>
+
+          <Card className="space-y-2 border-l-4 border-l-accent">
+            <h3 className="font-display text-base font-semibold text-fg">
+              Sharing code, prompts &amp; resources
+            </h3>
+            <p className="text-sm text-muted">
+              Only share code, prompts, and assets you have the right to distribute, and always declare their license.
+              Never paste credentials, API tokens, or private personal information. If you encounter leaked secrets or
+              unsafe code, click Report immediately.
+            </p>
+          </Card>
+
+          <Card className="space-y-2 border-l-4 border-l-accent">
+            <h3 className="font-display text-base font-semibold text-fg">
+              Plaza live chat conduct
+            </h3>
+            <p className="text-sm text-muted">
+              Keep conversations friendly and on-topic for the active room. New accounts can share links after their
+              first day. Moderators may enable slow mode during busy events to keep discussions legible.
+            </p>
+          </Card>
+
+          <Card className="space-y-2 border-l-4 border-l-accent">
+            <h3 className="font-display text-base font-semibold text-fg">
+              Constructive discussion &amp; self-promotion
+            </h3>
+            <p className="text-sm text-muted">
+              Disagree with ideas, not people. Sharing your own vibe-coded projects, tools, and open-source alternatives
+              is warmly encouraged; repeated ads, unsolicited sales, or generic commercial spam are prohibited.
+            </p>
+          </Card>
+        </div>
       </section>
 
       <section className="space-y-4">
