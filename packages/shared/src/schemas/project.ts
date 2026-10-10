@@ -240,3 +240,63 @@ export const EventEntry = z.object({
   rank: z.number().int().positive().nullable(),
 });
 export type EventEntry = z.infer<typeof EventEntry>;
+
+// ── Build competitions (task 4.14) ───────────────────────────────────────
+
+export const CompetitionStatus = z.enum(["draft", "open", "judging", "published", "cancelled"]);
+export type CompetitionStatus = z.infer<typeof CompetitionStatus>;
+
+/** Display only: the site never takes or pays money. */
+export const Prize = z.object({
+  id: Id,
+  label: z.string().max(140),
+  descriptionMd: z.string().max(2000),
+  sponsorName: z.string().max(100).nullable(),
+  sponsorUrl: Url.nullable(),
+  place: z.number().int().positive().nullable(),
+});
+export type Prize = z.infer<typeof Prize>;
+
+export const Criterion = z.object({
+  id: Id,
+  label: z.string().max(80),
+  description: z.string().max(500),
+  maxScore: z.number().int().min(1).max(100),
+  weight: z.number().min(0.1).max(10),
+});
+export type Criterion = z.infer<typeof Criterion>;
+
+export const CompetitionRound = z.object({
+  id: Id,
+  slug: Slug,
+  eventSlug: Slug,
+  title: z.string().max(120),
+  rulesMd: z.string().max(20_000),
+  eligibilityMd: z.string().max(10_000),
+  submissionEndsAt: IsoDate,
+  judgingEndsAt: IsoDate,
+  publishedAt: IsoDate.nullable(),
+  status: CompetitionStatus,
+  prizes: z.array(Prize),
+  criteria: z.array(Criterion),
+  judges: z.array(UserSummary),
+  version: z.number().int().positive(),
+});
+export type CompetitionRound = z.infer<typeof CompetitionRound>;
+
+export const Scorecard = z.object({
+  entryId: Id,
+  scores: z.array(z.object({ criterionId: Id, score: z.number().int().min(0) })),
+  note: z.string().max(2000),
+  submittedAt: IsoDate.nullable(),
+});
+export type Scorecard = z.infer<typeof Scorecard>;
+
+export const Award = z.object({
+  id: Id,
+  prize: Prize,
+  entry: EventEntry,
+  rationaleMd: z.string().max(5000),
+  announcedAt: IsoDate,
+});
+export type Award = z.infer<typeof Award>;

@@ -11,7 +11,7 @@ import { newId } from "./ids";
 import { decodeCursor, encodeCursor } from "./projects/list";
 import { LISTED, parseJson, rowsToCards, type ProjectRow } from "./projects/rows";
 
-interface EventRow {
+export interface EventRow {
   id: string;
   slug: string;
   kind: GrowthEventKind;
@@ -55,6 +55,10 @@ function toEvent(r: EventRow, now = Date.now()): GrowthEvent {
     status: statusOf(r, now),
     entryCount: r.entry_count,
   };
+}
+
+export async function eventById(db: D1Database, id: string): Promise<EventRow | null> {
+  return db.prepare(`${EVENT_SELECT} WHERE e.id = ?`).bind(id).first<EventRow>();
 }
 
 async function eventBySlug(db: D1Database, slug: string): Promise<EventRow> {
@@ -137,7 +141,7 @@ interface EntryRow extends ProjectRow {
 
 
 /** Live entries with authoritative vote counts (banned or deleted voters don't count). */
-async function loadEntries(db: D1Database, e: EventRow, viewerId: string | null, opts: { sort: "newest" | "rank"; limit: number; offset: number; entryId?: string }) {
+export async function loadEntries(db: D1Database, e: EventRow, viewerId: string | null, opts: { sort: "newest" | "rank"; limit: number; offset: number; entryId?: string; includeWithdrawn?: boolean }) {
   const order = opts.sort === "rank" ? `votes DESC, ge.submitted_at ASC, ge.id ASC` : `ge.submitted_at DESC, ge.id DESC`;
   const { results } = await db
     .prepare(
@@ -154,7 +158,7 @@ async function loadEntries(db: D1Database, e: EventRow, viewerId: string | null,
        LEFT JOIN categories c ON c.slug = p.category_slug
        JOIN users su ON su.id = ge.submitted_by
        LEFT JOIN avatars sav ON sav.user_id = su.id
-       WHERE ge.event_id = ? AND ge.withdrawn_at IS NULL AND ${LISTED} AND p.license_spdx IS NOT NULL ${opts.entryId ? `AND ge.id = ?` : ""}
+       WHERE ge.event_id = ? ${opts.includeWithdrawn ? "" : "AND ge.withdrawn_at IS NULL"} AND ${LISTED} AND p.license_spdx IS NOT NULL ${opts.entryId ? `AND ge.id = ?` : ""}
        ORDER BY ${order} LIMIT ? OFFSET ?`,
     )
     .bind(...[e.id, ...(opts.entryId ? [opts.entryId] : []), opts.limit, opts.offset])

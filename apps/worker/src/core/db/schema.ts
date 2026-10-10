@@ -6,7 +6,7 @@
  * JSON in text columns, soft deletes via deleted_at where content can be reported.
  */
 import { sql } from "drizzle-orm";
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type {
   AiInvolvement,
   AiTool,
@@ -569,6 +569,83 @@ export const growthBallots = sqliteTable(
     updatedAt: integer("updated_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.eventId, t.voterId] }), index("growth_ballots_entry_idx").on(t.entryId)],
+);
+/**
+ * Build competitions (task 4.14) ride on a growth event: the event holds the
+ * entries and the submission window; the round adds rules, prizes (display
+ * only: the site never handles money), criteria, judges and published awards.
+ */
+export const competitionRounds = sqliteTable("competition_rounds", {
+  id: text("id").primaryKey(),
+  eventId: text("event_id").notNull().unique().references(() => growthEvents.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  rulesMd: text("rules_md").notNull().default(""),
+  eligibilityMd: text("eligibility_md").notNull().default(""),
+  judgingEndsAt: integer("judging_ends_at").notNull(),
+  /** null = draft (not public). */
+  openedAt: ts("opened_at"),
+  publishedAt: ts("published_at"),
+  cancelledAt: ts("cancelled_at"),
+  version: integer("version").notNull().default(1),
+  createdBy: text("created_by").notNull(),
+  createdAt: createdAt(),
+});
+
+export const competitionPrizes = sqliteTable("competition_prizes", {
+  id: text("id").primaryKey(),
+  roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  descriptionMd: text("description_md").notNull().default(""),
+  sponsorName: text("sponsor_name"),
+  sponsorUrl: text("sponsor_url"),
+  place: integer("place"),
+});
+
+export const competitionCriteria = sqliteTable("competition_criteria", {
+  id: text("id").primaryKey(),
+  roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  description: text("description").notNull().default(""),
+  maxScore: integer("max_score").notNull(),
+  weight: real("weight").notNull().default(1),
+});
+
+export const competitionJudges = sqliteTable(
+  "competition_judges",
+  {
+    roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+    judgeId: text("judge_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    conflictNote: text("conflict_note").notNull().default(""),
+  },
+  (t) => [primaryKey({ columns: [t.roundId, t.judgeId] })],
+);
+
+export const competitionScorecards = sqliteTable(
+  "competition_scorecards",
+  {
+    roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+    entryId: text("entry_id").notNull().references(() => growthEntries.id, { onDelete: "cascade" }),
+    judgeId: text("judge_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    scores: text("scores").notNull(),
+    note: text("note").notNull().default(""),
+    submittedAt: ts("submitted_at"),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.roundId, t.entryId, t.judgeId] })],
+);
+
+export const competitionAwards = sqliteTable(
+  "competition_awards",
+  {
+    id: text("id").primaryKey(),
+    roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+    prizeId: text("prize_id").notNull().references(() => competitionPrizes.id, { onDelete: "cascade" }),
+    entryId: text("entry_id").notNull().references(() => growthEntries.id, { onDelete: "cascade" }),
+    rationaleMd: text("rationale_md").notNull().default(""),
+    announcedAt: integer("announced_at").notNull(),
+  },
+  (t) => [uniqueIndex("competition_awards_prize_idx").on(t.prizeId)],
 );
 /** The Fork Report newsletter (task 4.10). Double opt-in; the token confirms and unsubscribes. */
 export const subscribers = sqliteTable("subscribers", {

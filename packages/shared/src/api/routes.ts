@@ -7,6 +7,11 @@
 import { z } from "zod";
 import {
   AdminStats,
+  Award,
+  CompetitionRound,
+  Criterion,
+  Prize,
+  Scorecard,
   EventEntry,
   GrowthEvent,
   GrowthEventDetail,
@@ -932,6 +937,38 @@ export const routes = {
     body: z.object({ entryId: Id.nullable() }),
     response: z.object({ entryId: Id.nullable() }),
   }),
+  // competitions (4.14)
+  listCompetitions: route({
+    method: "GET", path: "/api/competitions", auth: "public", kind: "json", area: "growth",
+    summary: "Build competitions (drafts are never listed)",
+    query: PageQuery,
+    response: page(CompetitionRound),
+  }),
+  getCompetition: route({
+    method: "GET", path: "/api/competitions/:slug", auth: "public", kind: "json", area: "growth",
+    summary: "Rules, prizes, criteria and judges. Enter through the event's entries route.",
+    params: SlugParams,
+    response: CompetitionRound,
+  }),
+  getCompetitionWinners: route({
+    method: "GET", path: "/api/competitions/:slug/winners", auth: "public", kind: "json", area: "growth",
+    summary: "Published awards (empty until the organizers publish)",
+    params: SlugParams,
+    response: z.object({ competition: CompetitionRound, awards: z.array(Award) }),
+  }),
+  getCompetitionJudging: route({
+    method: "GET", path: "/api/competitions/:slug/judging", auth: "user", kind: "json", area: "growth",
+    summary: "For assigned judges: entries you can score and your own scorecards",
+    params: SlugParams,
+    response: z.object({ competition: CompetitionRound, entries: z.array(EventEntry), scorecards: z.array(Scorecard), conflicts: z.array(Id) }),
+  }),
+  saveCompetitionScorecard: route({
+    method: "PUT", path: "/api/competitions/:slug/scorecards/:entryId", auth: "user", kind: "json", area: "growth",
+    summary: "Save (or submit) your scorecard for one entry",
+    params: z.object({ slug: Slug, entryId: Id }),
+    body: z.object({ scores: Scorecard.shape.scores, note: z.string().max(2000), submit: z.boolean() }),
+    response: Scorecard,
+  }),
   // admin (behind Cloudflare Access)
   listCandidates: route({
     method: "GET", path: "/api/admin/candidates", auth: "admin", kind: "json", area: "admin",
@@ -995,6 +1032,41 @@ export const routes = {
       cancelled: z.boolean().optional(),
     }),
     response: GrowthEvent,
+  }),  createCompetition: route({
+    method: "POST", path: "/api/admin/competitions", auth: "admin", kind: "json", area: "admin",
+    summary: "Draft a competition on an existing event",
+    body: z.object({
+      eventId: Id,
+      slug: Slug,
+      title: z.string().trim().min(3).max(120),
+      rulesMd: z.string().max(20_000),
+      eligibilityMd: z.string().max(10_000),
+      judgingEndsAt: IsoDate,
+      prizes: z.array(Prize.omit({ id: true })).max(20),
+      criteria: z.array(Criterion.omit({ id: true })).min(1).max(10),
+      judgeUsernames: z.array(Username).min(1).max(20),
+    }),
+    response: CompetitionRound,
+  }),
+  updateCompetition: route({
+    method: "PATCH", path: "/api/admin/competitions/:id", auth: "admin", kind: "json", area: "admin",
+    summary: "Open a draft, fix wording, or cancel. Prizes, criteria and judges freeze once open.",
+    params: IdParams,
+    body: z.object({ open: z.boolean().optional(), rulesMd: z.string().max(20_000).optional(), eligibilityMd: z.string().max(10_000).optional(), cancelled: z.boolean().optional() }),
+    response: CompetitionRound,
+  }),
+  getCompetitionScores: route({
+    method: "GET", path: "/api/admin/competitions/:id/scores", auth: "admin", kind: "json", area: "admin",
+    summary: "Weighted totals from submitted scorecards, best first",
+    params: IdParams,
+    response: z.object({ items: z.array(z.object({ entry: EventEntry, total: z.number(), scorecards: z.number().int(), judges: z.number().int() })) }),
+  }),
+  publishCompetitionWinners: route({
+    method: "POST", path: "/api/admin/competitions/:id/publish", auth: "admin", kind: "json", area: "admin",
+    summary: "Publish awards once, after judging closes",
+    params: IdParams,
+    body: z.object({ awards: z.array(z.object({ prizeId: Id, entryId: Id, rationaleMd: z.string().max(5000) })).min(1).max(20), expectedVersion: z.number().int().positive() }),
+    response: z.object({ competition: CompetitionRound, awards: z.array(Award) }),
   }),  listReports: route({
     method: "GET", path: "/api/admin/reports", auth: "admin", kind: "json", area: "admin",
     summary: "Moderation queue",
