@@ -1,9 +1,10 @@
 /** Owner: Sol (UI). Review queue (1.12), moderation queue (3.10). */
 import { createBrowserRouter, NavLink, Outlet } from "react-router";
-import { createApiClient, SITE_NAME } from "@forkvlift/shared";
-import { cn, StateMessage } from "@forkvlift/ui";
+import { SITE_NAME } from "@forkvlift/shared";
+import { cn, Spinner, StateMessage } from "@forkvlift/ui";
 
-export const api = createApiClient({ validateResponses: import.meta.env.DEV });
+export { api } from "./api";
+
 
 const NAV = [
   { to: "/", label: "Review queue" },
@@ -30,7 +31,7 @@ function Shell() {
           </NavLink>
         ))}
       </nav>
-      <main className="flex-1 p-4">
+      <main className="min-w-0 flex-1 p-4">
         <Outlet />
       </main>
     </div>
@@ -42,8 +43,9 @@ const soon = (title: string) => () => <StateMessage title={title}>Coming soon.</
 export const router = createBrowserRouter([
   {
     element: <Shell />,
+    HydrateFallback: () => <Spinner label="Loading admin console" />,
     children: [
-      { path: "/", Component: soon("Review queue") },
+      { path: "/", lazy: async () => ({ Component: (await import("./ReviewQueue")).ReviewQueue }) },
       { path: "/moderation", Component: soon("Moderation queue") },
       { path: "/categories", Component: soon("Categories and tags") },
       { path: "/featured", Component: soon("Staff picks and featured slots") },
@@ -53,3 +55,5 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+
