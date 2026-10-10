@@ -6,7 +6,7 @@ import { usePreferences } from "../../app/preferences";
 import "./project-card.css";
 
 /** One stationary action rail, two faces; hidden faces never receive focus. */
-export function ProjectCard({ project }: { project: ProjectCardData }) {
+export function ProjectCard({ project, includeUnlicensed = false }: { project: ProjectCardData; includeUnlicensed?: boolean }) {
   const { motionReduced, showUnlicensed } = usePreferences();
   const [flipped, setFlipped] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
@@ -15,7 +15,7 @@ export function ProjectCard({ project }: { project: ProjectCardData }) {
   const location = useLocation();
   const faceId = useId();
   const panelUrl = `/p/${encodeURIComponent(project.slug)}${location.search}`;
-  if (!project.license && !showUnlicensed) return null;
+  if (!project.license && !showUnlicensed && !includeUnlicensed) return null;
 
   async function copyClone() {
     try {
