@@ -198,10 +198,7 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   createApiKey: ({ body }) => ({ key: { id: "fx_key_2", name: body.name, prefix: "fl_live_cd34", createdAt: "2026-10-10T12:00:00.000Z", lastUsedAt: null }, secret: "fl_live_cd34_fixture_secret_not_real" }),
   revokeApiKey: () => ok,
   listGrowthEvents: () => ({ items: [fxEvent], nextCursor: null }),
-  getGrowthEvent: ({ params }) => {
-    if (params.slug !== fxEvent.slug) throw new FixtureError("not_found", "Event not found");
-    return { ...fxEvent, viewerCanSubmit: true, viewerCanVote: false, viewerBallot: null };
-  },
+  getGrowthEvent: () => ({ ...fxEvent, viewerCanSubmit: true, viewerCanVote: false, viewerBallot: null }),
   listGrowthEventEntries: () => ({ items: [fxEntry()], nextCursor: null }),
   submitGrowthEntry: () => fxEntry(),
   withdrawGrowthEntry: () => ok,
