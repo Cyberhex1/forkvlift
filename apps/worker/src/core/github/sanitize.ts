@@ -6,7 +6,11 @@
  * are removed, attributes are limited per tag, URLs must be http(s)/mailto or
  * in-page anchors, and relative links are resolved against the repo.
  */
-import { FilterXSS, type IWhiteList } from "xss";
+import * as xssModule from "xss";
+import type { IWhiteList } from "xss";
+
+// xss is CommonJS; depending on the bundler the class is on the namespace or on .default.
+const FilterXSS = (xssModule.FilterXSS ?? (xssModule as unknown as { default: typeof xssModule }).default.FilterXSS) as typeof xssModule.FilterXSS;
 
 const BLOCK_ATTRS = ["align"];
 const whiteList: IWhiteList = {

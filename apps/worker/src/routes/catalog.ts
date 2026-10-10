@@ -6,6 +6,8 @@ import { notFound } from "../core/errors";
 import { getProjectDetail } from "../core/projects/detail";
 import { decodeCursor, encodeCursor, listProjects } from "../core/projects/list";
 import { LISTED, parseJson } from "../core/projects/rows";
+import { createProject, deleteProject, previewSubmission, updateProject } from "../core/projects/submit";
+import { clientIp, verifyTurnstile } from "../core/security";
 import { todo } from "./_stubs";
 
 /** Categories, projects, uploads. Opus (tasks 1.1–1.7, 2.2). */
@@ -39,10 +41,16 @@ export function registerCatalog(app: Hono<AppEnv>) {
 
   mount(app, "getProject", ({ params }, c) => getProjectDetail(c.env.DB, params.slug, c.get("user")));
 
-  mount(app, "previewSubmission", () => todo("1.4"));
-  mount(app, "createProject", () => todo("1.4"));
-  mount(app, "updateProject", () => todo("1.4"));
-  mount(app, "deleteProject", () => todo("1.4"));
+  mount(app, "previewSubmission", ({ body }, c) => previewSubmission(c.env, c.get("user")!, body.repoUrl));
+  mount(app, "createProject", async ({ body }, c) => {
+    await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));
+    return createProject(c.env, c.get("user")!, body);
+  });
+  mount(app, "updateProject", ({ params, body }, c) => updateProject(c.env, c.get("user")!, params.slug, body));
+  mount(app, "deleteProject", async ({ params }, c) => {
+    await deleteProject(c.env, c.get("user")!, params.slug);
+    return { ok: true as const };
+  });
 
   mount(app, "voteProject", async ({ params, body }, c) => {
     const user = c.get("user")!;
