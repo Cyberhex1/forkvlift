@@ -7,6 +7,8 @@
 import { z } from "zod";
 import {
   AdminStats,
+  AdoptionRequest,
+  AdoptionRequestStatus,
   ApiKey,
   AiInvolvement,
   AiTool,
@@ -48,6 +50,7 @@ import {
   ProfileLinks,
   ProjectCard,
   ProjectDetail,
+  ProjectAdoption,
   ProjectPlan,
   ProjectSort,
   ProjectSource,
@@ -218,7 +221,46 @@ export const routes = {
     query: ListProjectsQuery,
     response: ListProjectsResponse,
   }),
-  similarProjects: route({
+  getProjectAdoption: route({
+    method: "GET", path: "/api/projects/:slug/adoption", auth: "public", kind: "json", area: "projects",
+    summary: "Adoption status (4.12)",
+    params: SlugParams,
+    response: ProjectAdoption,
+  }),
+  setProjectAdoption: route({
+    method: "PATCH", path: "/api/projects/:slug/adoption", auth: "user", kind: "json", area: "projects",
+    summary: "Open or close adoption (current maintainer only)",
+    params: SlugParams,
+    body: z.object({ open: z.boolean(), note: z.string().max(1000) }),
+    response: ProjectAdoption,
+  }),
+  requestProjectAdoption: route({
+    method: "POST", path: "/api/projects/:slug/adoption/requests", auth: "user", kind: "json", area: "projects",
+    summary: "Ask to take over a project that's up for adoption",
+    params: SlugParams,
+    body: z.object({ message: z.string().trim().min(1).max(2000), turnstileToken: TurnstileToken }),
+    response: AdoptionRequest,
+  }),
+  listProjectAdoptionRequests: route({
+    method: "GET", path: "/api/projects/:slug/adoption/requests", auth: "user", kind: "json", area: "projects",
+    summary: "Requests to adopt your project (maintainer only)",
+    params: SlugParams,
+    query: PageQuery.extend({ status: AdoptionRequestStatus.optional() }),
+    response: page(AdoptionRequest),
+  }),
+  withdrawProjectAdoptionRequest: route({
+    method: "DELETE", path: "/api/projects/:slug/adoption/requests/:id", auth: "user", kind: "json", area: "projects",
+    summary: "Withdraw your pending request",
+    params: z.object({ slug: Slug, id: Id }),
+    response: OkResponse,
+  }),
+  decideProjectAdoption: route({
+    method: "POST", path: "/api/projects/:slug/adoption/requests/:id/decision", auth: "user", kind: "json", area: "projects",
+    summary: "Approve (hands the project over) or decline a request",
+    params: z.object({ slug: Slug, id: Id }),
+    body: z.object({ decision: z.enum(["approve", "decline"]) }),
+    response: z.object({ request: AdoptionRequest, adoption: ProjectAdoption }),
+  }),  similarProjects: route({
     method: "GET", path: "/api/search/similar", auth: "public", kind: "json", area: "projects",
     summary: "\"Has this been built?\" check",
     query: z.object({ q: z.string().min(3).max(300), limit: QueryLimit.optional() }),

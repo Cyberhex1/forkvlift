@@ -166,3 +166,33 @@ export const SubmissionPreview = z.object({
   warnings: z.array(z.string()),
 });
 export type SubmissionPreview = z.infer<typeof SubmissionPreview>;
+
+// ── Adoption (task 4.12) ─────────────────────────────────────────────────
+
+export const AdoptionRequestStatus = z.enum(["pending", "approved", "declined", "withdrawn", "cancelled"]);
+export type AdoptionRequestStatus = z.infer<typeof AdoptionRequestStatus>;
+
+export const AdoptionRequest = z.object({
+  id: Id,
+  project: ProjectRef,
+  requester: UserSummary,
+  message: z.string().max(2000),
+  status: AdoptionRequestStatus,
+  createdAt: IsoDate,
+  decidedAt: IsoDate.nullable(),
+});
+export type AdoptionRequest = z.infer<typeof AdoptionRequest>;
+
+/** Public view of a project's adoption state. Applicants and their messages are never public. */
+export const ProjectAdoption = z.object({
+  open: z.boolean(),
+  note: z.string().max(1000),
+  openedAt: IsoDate.nullable(),
+  /** Who built it first (kept after a handover). null when it was never handed over and isn't open. */
+  originalAuthor: UserSummary.nullable(),
+  maintainer: UserSummary.nullable(),
+  /** The viewer's most recent request for this project, if any. */
+  viewerRequest: AdoptionRequest.nullable(),
+  canManage: z.boolean(),
+});
+export type ProjectAdoption = z.infer<typeof ProjectAdoption>;

@@ -50,6 +50,16 @@ type JsonRouteId = { [K in RouteId]: Routes[K]["kind"] extends "json" ? K : neve
 
 const NOW = "2026-10-10T12:00:00.000Z";
 const ok = { ok: true as const };
+const fxAdoptionRequest = {
+  id: "fx_adreq_1",
+  project: { id: "fx_prj_2", slug: "fixture-dungeon-toaster", name: "Fixture: Dungeon Toaster", author: null },
+  requester: fxUsers.ada,
+  message: "Dev fixture: I'd love to keep this going.",
+  status: "pending" as const,
+  createdAt: "2026-10-09T12:00:00.000Z",
+  decidedAt: null,
+};
+const fxAdoption = { open: true, note: "Dev fixture: looking for someone to take this on.", openedAt: "2026-10-01T12:00:00.000Z", originalAuthor: fxUsers.bo, maintainer: fxUsers.bo, viewerRequest: null, canManage: false };
 const ref = (p: ProjectCard): ProjectRef => ({ id: p.id, slug: p.slug, name: p.name, author: p.author });
 const viewer = (ctx: FixtureContext) => (ctx.viewerId ? fxSessionUser(ctx.viewerId) : null);
 const me = (ctx: FixtureContext) => {
@@ -178,6 +188,12 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   listApiKeys: () => ({ items: [{ id: "fx_key_1", name: "My script", prefix: "fl_live_ab12", createdAt: "2026-10-01T12:00:00.000Z", lastUsedAt: null }] }),
   createApiKey: ({ body }) => ({ key: { id: "fx_key_2", name: body.name, prefix: "fl_live_cd34", createdAt: "2026-10-10T12:00:00.000Z", lastUsedAt: null }, secret: "fl_live_cd34_fixture_secret_not_real" }),
   revokeApiKey: () => ok,
+  getProjectAdoption: () => fxAdoption,
+  setProjectAdoption: ({ body }) => ({ ...fxAdoption, open: body.open, note: body.note, canManage: true }),
+  requestProjectAdoption: ({ body }) => ({ ...fxAdoptionRequest, message: body.message }),
+  listProjectAdoptionRequests: () => ({ items: [fxAdoptionRequest], nextCursor: null }),
+  withdrawProjectAdoptionRequest: () => ok,
+  decideProjectAdoption: ({ body }) => ({ request: { ...fxAdoptionRequest, status: body.decision === "approve" ? ("approved" as const) : ("declined" as const), decidedAt: "2026-10-10T12:00:00.000Z" }, adoption: { ...fxAdoption, open: body.decision !== "approve" } }),
   subscribeNewsletter: () => ({ ok: true as const, status: "pending" as const }),
   confirmNewsletter: () => ok,
   unsubscribeNewsletter: () => ok,
