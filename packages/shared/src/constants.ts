@@ -4,6 +4,8 @@
 export const SITE_NAME = "ForkLift";
 export const SITE_SLUG = "forklift";
 export const SITE_TAGLINE = "Fork it, don't rebuild it.";
+export const SITE_DOMAIN = "forklift.stream";
+export const SITE_ORIGIN_PRODUCTION = `https://${SITE_DOMAIN}`;
 
 /** Exact disclaimer text for unlicensed projects (product plan, "Trust, safety, licensing"). */
 export const NO_LICENSE_DISCLAIMER = {
