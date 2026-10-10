@@ -11,3 +11,4 @@ export {
   UnlicensedHiddenNotice,
   type UnlicensedHiddenNoticeProps,
 } from "./States";
+export { AddLicenseLink, LicenseRequestActions, licenseIssueUrl } from "./LicenseRequestActions";

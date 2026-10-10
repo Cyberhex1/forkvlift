@@ -98,3 +98,4 @@ describe("collab requests", () => {
     expect((await request(cy, { kind: "build_permission", projectId: boProject, toUsername: "ada" })).status).toBe(400);
   });
 });
+
