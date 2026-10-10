@@ -305,7 +305,13 @@ export const routes = {
   createUpload: route({
     method: "POST", path: "/api/uploads", auth: "user", kind: "json", area: "uploads",
     summary: "Reserve an upload slot",
-    body: z.object({ kind: UploadKind, contentType: z.string().max(100), size: z.number().int().positive().max(25 * 1024 * 1024) }),
+    body: z.object({
+      kind: UploadKind,
+      contentType: z.string().max(100),
+      size: z.number().int().positive().max(25 * 1024 * 1024),
+      /** Original file name (resources only): display-only, kept so scripts keep their extension. */
+      filename: z.string().trim().regex(/^[A-Za-z0-9][A-Za-z0-9._ -]{0,99}$/, "Use letters, numbers, dots, dashes, underscores or spaces").optional(),
+    }),
     response: z.object({ key: z.string(), uploadUrl: z.string(), expiresAt: z.string() }),
   }),
   putUpload: route({
@@ -803,6 +809,34 @@ export const routes = {
     method: "GET", path: "/api/feeds/projects.rss", auth: "public", kind: "text", area: "feeds",
     summary: "RSS: new projects (?category= and ?user= filters)",
     query: z.object({ category: Slug.optional(), user: Username.optional() }),
+  }),
+  subscribeNewsletter: route({
+    method: "POST", path: "/api/newsletter/subscribe", auth: "public", kind: "json", area: "feeds",
+    summary: "Subscribe to The Fork Report (double opt-in: a confirmation email is sent)",
+    body: z.object({ email: z.string().trim().toLowerCase().email().max(254), turnstileToken: TurnstileToken }),
+    response: z.object({ ok: z.literal(true), status: z.enum(["pending", "confirmed"]) }),
+  }),
+  confirmNewsletter: route({
+    method: "POST", path: "/api/newsletter/confirm", auth: "public", kind: "json", area: "feeds",
+    summary: "Confirm a subscription with the token from the email",
+    body: z.object({ token: z.string().min(16).max(100) }),
+    response: z.object({ ok: z.literal(true) }),
+  }),
+  unsubscribeNewsletter: route({
+    method: "POST", path: "/api/newsletter/unsubscribe", auth: "public", kind: "json", area: "feeds",
+    summary: "Unsubscribe with the token from any newsletter email",
+    body: z.object({ token: z.string().min(16).max(100) }),
+    response: z.object({ ok: z.literal(true) }),
+  }),
+  categoryRss: route({
+    method: "GET", path: "/api/feeds/category/:slug/projects.rss", auth: "public", kind: "text", area: "feeds",
+    summary: "RSS: new projects in a category",
+    params: SlugParams,
+  }),
+  userRss: route({
+    method: "GET", path: "/api/feeds/users/:username/projects.rss", auth: "public", kind: "text", area: "feeds",
+    summary: "RSS: new projects by one person",
+    params: UsernameParams,
   }),
   readmeBadge: route({
     method: "GET", path: "/api/badge/:slug", auth: "public", kind: "text", area: "feeds",

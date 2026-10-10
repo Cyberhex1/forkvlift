@@ -26,11 +26,29 @@ const EXT: Record<string, string> = {
 };
 const RESERVATION_TTL = 15 * 60;
 
+/** Resource file names: the extension decides the content type (scripts are plain text). */
+const RESOURCE_EXT_TYPES: Record<string, string> = {
+  zip: "application/zip",
+  md: "text/markdown",
+  txt: "text/plain", sh: "text/plain", bash: "text/plain", ps1: "text/plain", bat: "text/plain", cmd: "text/plain",
+  js: "text/plain", mjs: "text/plain", ts: "text/plain", py: "text/plain", rb: "text/plain",
+  json: "text/plain", yaml: "text/plain", yml: "text/plain", toml: "text/plain",
+};
+const FILENAME_RE = /^[A-Za-z0-9][A-Za-z0-9._ -]{0,99}$/;
+
 interface Reservation {
   userId: string;
   kind: UploadKind;
   contentType: string;
   size: number;
+  filename?: string;
+}
+
+/** A display-safe file name, or null. Never trusted for anything but display and extension checks. */
+export function cleanFilename(name: string | undefined | null): string | null {
+  if (!name) return null;
+  const n = name.trim();
+  return FILENAME_RE.test(n) && !n.includes("..") ? n : null;
 }
 
 /** Keys are flat ("<kind>.<user>.<random>.<ext>") so they fit one URL segment. */
@@ -45,14 +63,23 @@ function bucket(env: Env): R2Bucket {
   return env.MEDIA;
 }
 
-export async function reserveUpload(env: Env, userId: string, kind: UploadKind, contentType: string, size: number) {
+export async function reserveUpload(env: Env, userId: string, kind: UploadKind, contentType: string, size: number, filename?: string) {
   const rule = RULES[kind];
   const type = contentType.split(";")[0]!.trim().toLowerCase();
+  let name: string | undefined;
+  if (filename !== undefined) {
+    if (kind !== "resource") throw new HttpError("invalid_request", "File names are only kept for resource files.");
+    name = cleanFilename(filename) ?? undefined;
+    const ext = name?.split(".").pop()?.toLowerCase();
+    if (!name || !ext || !name.includes(".") || RESOURCE_EXT_TYPES[ext] !== type) {
+      throw new HttpError("invalid_request", `"${filename}" doesn't match ${type}. Allowed: ${Object.keys(RESOURCE_EXT_TYPES).map((e) => "." + e).join(", ")}`);
+    }
+  }
   if (!rule.types.includes(type)) throw new HttpError("invalid_request", `Can't upload ${type} as a ${kind}. Allowed: ${rule.types.join(", ")}`);
   if (size > rule.maxBytes) throw new HttpError("invalid_request", `Too big: ${kind} uploads are limited to ${Math.round(rule.maxBytes / 1024 / 1024)} MB`);
   bucket(env);
   const key = `${kind}.${userId}.${randomToken(12)}.${EXT[type]}`;
-  const reservation: Reservation = { userId, kind, contentType: type, size };
+  const reservation: Reservation = { userId, kind, contentType: type, size, ...(name ? { filename: name } : {}) };
   await env.CACHE.put(`upload:${key}`, JSON.stringify(reservation), { expirationTtl: RESERVATION_TTL });
   return { key, uploadUrl: `/api/uploads/${key}`, expiresAt: new Date(Date.now() + RESERVATION_TTL * 1000).toISOString() };
 }
@@ -74,7 +101,7 @@ export async function storeUpload(env: Env, userId: string, key: string, request
 
   await bucket(env).put(key, bytes, {
     httpMetadata: { contentType: reservation.contentType, cacheControl: "public, max-age=31536000, immutable" },
-    customMetadata: { userId, kind: reservation.kind },
+    customMetadata: { userId, kind: reservation.kind, ...(reservation.filename ? { filename: reservation.filename } : {}) },
   });
   await env.CACHE.delete(`upload:${key}`);
   return { key, url: mediaUrl(key) };
@@ -102,7 +129,10 @@ export async function serveMedia(env: Env, key: string, width: number | undefine
     etag: object.httpEtag,
   });
   // Non-image files always download rather than render.
-  if (!type.startsWith("image/") && !type.startsWith("video/")) headers.set("content-disposition", `attachment; filename="${key}"`);
+  if (!type.startsWith("image/") && !type.startsWith("video/")) {
+    const name = cleanFilename(object.customMetadata?.filename) ?? key;
+    headers.set("content-disposition", `attachment; filename="${name}"`);
+  }
 
   const images = (env as { IMAGES?: ImagesBinding }).IMAGES;
   if (width && images && type.startsWith("image/") && type !== "image/gif") {

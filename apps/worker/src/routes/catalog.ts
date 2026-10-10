@@ -130,7 +130,7 @@ export function registerCatalog(app: Hono<AppEnv>) {
   });
   mount(app, "voteRoadmapItem", async ({ params }, c) => ({ votes: await voteRoadmapItem(c.env.DB, c.get("user")!.id, params.slug, params.itemId) }));
 
-  mount(app, "createUpload", ({ body }, c) => reserveUpload(c.env, c.get("user")!.id, body.kind, body.contentType, body.size));
+  mount(app, "createUpload", ({ body }, c) => reserveUpload(c.env, c.get("user")!.id, body.kind, body.contentType, body.size, body.filename));
   mount(app, "putUpload", ({ params }, c) => storeUpload(c.env, c.get("user")!.id, params.key, c.req.raw));
   mount(app, "getMedia", ({ params, query }, c) => serveMedia(c.env, params.key, query.w));
 }

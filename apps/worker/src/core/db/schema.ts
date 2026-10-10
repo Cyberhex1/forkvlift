@@ -490,6 +490,20 @@ export const apiKeys = sqliteTable(
   },
   (t) => [index("api_keys_user_idx").on(t.userId)],
 );
+
+/** The Fork Report newsletter (task 4.10). Double opt-in; the token confirms and unsubscribes. */
+export const subscribers = sqliteTable("subscribers", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  token: text("token").notNull().unique(),
+  status: text("status", { enum: ["pending", "confirmed", "unsubscribed"] }).notNull().default("pending"),
+  createdAt: createdAt(),
+  confirmedAt: ts("confirmed_at"),
+  unsubscribedAt: ts("unsubscribed_at"),
+  /** Last confirmation email, to throttle re-sends. */
+  lastSentAt: ts("last_sent_at"),
+});
+
 /**
  * Facts that count toward badges (task 3.12), one row per distinct thing:
  * kind "bug_fixed" → ref is a card id moved out of Bug fix;

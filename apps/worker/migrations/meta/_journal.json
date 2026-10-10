@@ -64,6 +64,13 @@
       "when": 1791671771164,
       "tag": "0008_api_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1791675753343,
+      "tag": "0009_newsletter",
+      "breakpoints": true
     }
   ]
 }

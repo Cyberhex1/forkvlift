@@ -2,7 +2,7 @@
 
 - **From:** sol
 - **For task:** 3.9 follow-up
-- **Status:** open
+- **Status:** done (Opus). `createUpload` takes an optional `filename` for resources; the extension must match the type (scripts upload as `text/plain`). `createResource` keeps the name, scans attached text files and marks scripts as executable; downloads use the original name.
 
 ## What I need
 
