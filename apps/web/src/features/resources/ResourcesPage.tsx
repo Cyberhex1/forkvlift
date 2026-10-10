@@ -3,11 +3,11 @@
  * people used to build things. "Proven" sits on top; everything else is
  * "New / untested" until enough projects or reports back it up.
  */
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Resource, ResourceDetail, ResourceType } from "@forkvlift/shared";
-import { Avatar, Badge, Button, Card, Chip, Modal, Skeleton, StateMessage, buttonClasses, cn } from "@forkvlift/ui";
+import { Avatar, Badge, Button, Card, Chip, Modal, Skeleton, Spinner, StateMessage, buttonClasses, cn } from "@forkvlift/ui";
 import { PageShell } from "../../app/kit";
 import { ReportButton } from "../../app/ReportButton";
 import { signInUrl, useSession, useSiteConfig } from "../../app/session";
@@ -276,6 +276,35 @@ function ShareModal({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState({ type: "system_prompt" as ResourceType, title: "", summary: "", bodyMd: "", license: "CC0-1.0", tool: "", model: "" });
   const [token, setToken] = useState("");
   const [reset, setReset] = useState(0);
+  const [files, setFiles] = useState<{ key: string; name: string; size: number }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const uploadBusy = useRef(false);
+  const [uploadError, setUploadError] = useState("");
+  async function upload(chosen: File[]) {
+    if (!chosen.length || uploadBusy.current) return;
+    setUploadError("");
+    if (files.length + chosen.length > 50) { setUploadError("Choose at most 50 files."); return; }
+    const contentType = (file: File) => /\.zip$/i.test(file.name) ? "application/zip" : /\.md$/i.test(file.name) ? "text/markdown" : /\.txt$/i.test(file.name) ? "text/plain" : null;
+    if (chosen.some((file) => !contentType(file) || !file.size || file.size > 10 * 1024 * 1024)) {
+      setUploadError("Choose non-empty ZIP, Markdown or plain text files up to 10 MB each. Put scripts in a ZIP archive.");
+      return;
+    }
+    uploadBusy.current = true;
+    setUploading(true);
+    try {
+      for (const file of chosen) {
+        const type = contentType(file)!;
+        const reservation = await api.call("createUpload", { body: { kind: "resource", contentType: type, size: file.size } });
+        await api.call("putUpload", { params: { key: reservation.key } }, { body: file, headers: { "content-type": type, accept: "application/json" } });
+        setFiles((current) => [...current, { key: reservation.key, name: file.name, size: file.size }]);
+      }
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Upload failed. Choose the file again to retry.");
+    } finally {
+      uploadBusy.current = false;
+      setUploading(false);
+    }
+  }
   const onToken = useCallback((t: string) => setToken(t), []);
   const needsToken = Boolean(config.data?.turnstileSiteKey);
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -289,21 +318,22 @@ function ShareModal({ onClose }: { onClose: () => void }) {
           bodyMd: form.bodyMd,
           license: form.license.trim() || "CC0-1.0",
           testedWith: form.tool.trim() ? [{ tool: form.tool.trim(), model: form.model.trim() || null, version: null }] : [],
-          fileKeys: [],
+          fileKeys: files.map((file) => file.key),
           linkedProjectIds: [],
           turnstileToken: token,
         },
       }),
     onSuccess: (d) => navigate(`/resources/${d.slug}`),
-    onSettled: () => setReset((n) => n + 1),
+    onSettled: () => { setToken(""); setReset((n) => n + 1); },
   });
   const field = "w-full rounded-pixel border border-border bg-surface p-2";
   return (
-    <Modal open onClose={onClose} title="Share a resource" className="max-w-2xl">
+    <Modal open onClose={() => { if (!uploadBusy.current && !share.isPending) onClose(); }} title="Share a resource" className="max-w-2xl">
       <form
         className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
+          if (uploadBusy.current || share.isPending) return;
           share.mutate();
         }}
       >
@@ -323,9 +353,20 @@ function ShareModal({ onClose }: { onClose: () => void }) {
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-semibold">The resource</span>
-          <textarea className={cn(field, "font-mono text-sm")} required rows={10} maxLength={50000} value={form.bodyMd} onChange={(e) => set("bodyMd", e.target.value)} />
-          <span className="text-xs text-muted">Markdown. Code blocks that run things get a "read before you run" warning.</span>
+          <textarea aria-label="The resource" aria-describedby="resource-body-hint" className={cn(field, "font-mono text-sm")} required rows={10} maxLength={50000} value={form.bodyMd} onChange={(e) => set("bodyMd", e.target.value)} />
+          <span id="resource-body-hint" className="text-xs text-muted">Markdown. Code blocks that run things get a "read before you run" warning.</span>
         </label>
+        <section className="space-y-2" aria-label="Resource files">
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold">Files (optional)</span>
+            <input className={field} type="file" multiple accept=".zip,.md,.txt" disabled={uploading || share.isPending} onChange={(e) => { const chosen = Array.from(e.target.files ?? []); e.target.value = ""; void upload(chosen); }} />
+          </label>
+          <p className="text-xs text-muted">ZIP, Markdown or plain text, up to 10 MB each; at most 50 files. Put scripts in a ZIP archive. Archives get a Runs code warning.</p>
+          {uploading ? <Spinner label="Uploading resource files" /> : null}
+          {!files.length ? <p className="text-sm text-muted">No files attached.</p> : <ul className="space-y-2 text-sm">{files.map((file) => <li key={file.key} className="flex items-center gap-2"><span className="min-w-0 flex-1 break-words">{file.name} <span className="text-muted">({Math.max(1, Math.ceil(file.size / 1024))} KB)</span></span><Button variant="ghost" size="sm" aria-label={`Remove ${file.name}`} disabled={uploading || share.isPending} onClick={() => setFiles((current) => current.filter((f) => f.key !== file.key))}>Remove</Button></li>)}</ul>}
+          {files.some((file) => /\.zip$/i.test(file.name)) ? <Badge tone="warning">Runs code</Badge> : null}
+          {uploadError ? <p role="alert" className="text-sm text-danger">{uploadError} Files already uploaded remain attached.</p> : null}
+        </section>
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="block text-sm">
             <span className="mb-1 block font-semibold">License</span>
@@ -343,8 +384,8 @@ function ShareModal({ onClose }: { onClose: () => void }) {
         {needsToken ? <SubmitVerification siteKey={config.data!.turnstileSiteKey!} onToken={onToken} reset={reset} /> : null}
         {share.isError ? <p role="alert" className="text-sm text-danger">{share.error.message}</p> : null}
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" loading={share.isPending} disabled={form.title.trim().length < 3 || !form.bodyMd.trim() || (needsToken && !token)}>Share</Button>
+          <Button variant="ghost" disabled={uploading || share.isPending} onClick={onClose}>Cancel</Button>
+          <Button type="submit" loading={share.isPending} disabled={uploading || form.title.trim().length < 3 || !form.bodyMd.trim() || (needsToken && !token)}>Share</Button>
         </div>
       </form>
     </Modal>
