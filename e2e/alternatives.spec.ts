@@ -1,0 +1,90 @@
+import { expect, test } from "playwright/test";
+import type { ProjectCard } from "@forkvlift/shared";
+import { NO_LICENSE_DISCLAIMER } from "../packages/shared/src/constants";
+
+test("directory search, product page and keyboard project navigation", async ({ page }, info) => {
+  await page.goto("/alternatives");
+  await expect(page.getByRole("heading", { name: "Free alternatives", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Trello.*alternative/ })).toBeVisible();
+  await page.screenshot({ path: `docs/handoffs/screenshots/4.7-${info.project.name}-directory.png` });
+  await page.getByRole("search", { name: "Find a product" }).getByRole("searchbox").fill("trello");
+  await page.getByRole("searchbox", { name: "Product name" }).press("Enter");
+  await expect(page).toHaveURL(/q=trello/);
+  await expect(page.getByRole("link", { name: /Notion/ })).toHaveCount(0);
+  await page.getByRole("link", { name: /Trello.*alternative/ }).press("Enter");
+  await expect(page).toHaveURL(/\/alternatives\/trello$/);
+  await expect(page.getByTestId("project-card")).toHaveCount(1);
+  await page.screenshot({ path: `docs/handoffs/screenshots/4.7-${info.project.name}-projects.png` });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole("link", { name: /^See more/ }).press("Enter");
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/alternatives\/trello$/);
+  await page.getByRole("link", { name: "All products" }).click();
+  await page.getByRole("searchbox", { name: "Product name" }).fill("no-matching-product");
+  await page.getByRole("searchbox", { name: "Product name" }).press("Enter");
+  await expect(page.getByText("No matching products", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Clear search" }).click();
+  await expect(page.getByRole("link", { name: /Trello/ })).toBeVisible();
+});
+
+test("unlicensed requires preference and disclaimer; WIP cards remain available", async ({ page }, info) => {
+  const response = await page.request.get("/api/projects?showUnlicensed=true");
+  const projects = (await response.json() as { items: ProjectCard[] }).items;
+  const items = [projects.find(p => p.stage === "wip" && p.license)!, projects.find(p => !p.license)!];
+  await page.route(/\/api\/alternatives\/notion(?:\?|$)/, route => route.fulfill({ json: {
+    product: { slug: "notion", name: "Notion", projectCount: 2, monthlyPriceUsd: null }, items, hiddenUnlicensedCount: 1,
+  } }));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/alternatives/notion?showUnlicensed=true");
+  await expect(page.getByTestId("project-card")).toHaveCount(1);
+  await expect(page.getByTestId("project-card")).toContainText("Work in progress");
+  await page.getByRole("switch").click();
+  const dialog = page.getByRole("dialog", { name: NO_LICENSE_DISCLAIMER.title });
+  await expect(dialog).toContainText(NO_LICENSE_DISCLAIMER.body);
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("project-card")).toHaveCount(1);
+  await page.getByRole("switch").click();
+  await dialog.getByRole("button", { name: "I understand, show unlicensed" }).click();
+  await expect(page.getByTestId("project-card")).toHaveCount(2);
+  await page.screenshot({ path: `docs/handoffs/screenshots/4.7-${info.project.name}-unlicensed.png` });
+  await page.getByRole("switch").uncheck();
+  await expect(page.getByTestId("project-card")).toHaveCount(1);
+  await page.reload();
+  await expect(page.getByRole("switch")).not.toBeChecked();
+});
+
+test("directory and detail loading, empty, error retry and not found", async ({ page }, info) => {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route(/\/api\/alternatives$/, async route => { await gate; await route.fulfill({ json: { items: [] } }); });
+  await page.goto("/alternatives");
+  await expect(page.getByText("Loading alternatives", { exact: true })).toBeAttached();
+  await page.screenshot({ path: `docs/handoffs/screenshots/4.7-${info.project.name}-loading.png` });
+  release();
+  await expect(page.getByText("No alternatives listed yet", { exact: true })).toBeVisible();
+  await page.screenshot({ path: `docs/handoffs/screenshots/4.7-${info.project.name}-empty.png` });
+  await page.unrouteAll({ behavior: "wait" });
+  await page.route(/\/api\/alternatives$/, route => route.fulfill({ status: 503, json: { error: { code: "internal", message: "QA outage" } } }));
+  await page.reload();
+  await expect(page.getByText("Couldn't load alternatives", { exact: true })).toBeVisible();
+  await page.screenshot({ path: `docs/handoffs/screenshots/4.7-${info.project.name}-error.png` });
+  await page.unrouteAll({ behavior: "wait" });
+  await page.getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByRole("link", { name: /Notion.*alternative/ })).toBeVisible();
+  let detailRelease!: () => void;
+  const detailGate = new Promise<void>(resolve => { detailRelease = resolve; });
+  await page.route(/\/api\/alternatives\/trello(?:\?|$)/, async route => { await detailGate; await route.fulfill({ status: 503, json: { error: { code: "internal", message: "QA outage" } } }); });
+  await page.goto("/alternatives/trello");
+  await expect(page.getByText("Loading projects", { exact: true })).toBeAttached();
+  detailRelease();
+  await expect(page.getByText("Couldn't load projects", { exact: true })).toBeVisible();
+  await page.unrouteAll({ behavior: "wait" });
+  await page.getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByTestId("project-card")).toHaveCount(1);
+  await page.goto("/alternatives/no-matching-product");
+  await expect(page.getByText("No projects to show", { exact: true })).toBeVisible();
+  await page.route(/\/api\/alternatives\/missing(?:\?|$)/, route => route.fulfill({ status: 404, json: { error: { code: "not_found", message: "Missing" } } }));
+  await page.goto("/alternatives/missing");
+  await expect(page.getByText("Product not found", { exact: true })).toBeVisible();
+});
