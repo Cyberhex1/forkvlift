@@ -1,4 +1,4 @@
-.project-card { width: 100%; max-width: 100%; aspect-ratio: 3 / 4; min-height: 520px; perspective: 1200px; }
+.project-card { width: 100%; max-width: 100%; aspect-ratio: 4 / 5; min-height: 440px; perspective: 1200px; }
 .project-card-turner { height: 100%; width: 100%; position: relative; transform-style: preserve-3d; transition: transform 280ms ease; }
 .project-card-turner[data-flipped="true"] { transform: rotateY(180deg); }
 .project-card-face { position: absolute; inset: 0; backface-visibility: hidden; }

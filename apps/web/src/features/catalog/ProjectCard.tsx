@@ -41,18 +41,13 @@ export function ProjectCard({ project, includeUnlicensed = false }: { project: P
         if (flipped) navigate(panelUrl, { state: { fromCatalog: true } });
         else setFlipped(true);
       }}>
-      <div className="absolute top-3 right-3 z-10 flex max-w-[65%] flex-col items-end gap-1 rounded-pixel bg-surface/95 p-1">
-        <Link to={panelUrl} state={{ fromCatalog: true }} className={buttonClasses("primary", "sm")} aria-label={`See more about ${project.name}`}>See more</Link>
-        {project.author ? <Link to={`/u/${project.author.username}`} className="max-w-full truncate px-1 text-xs text-muted hover:text-fg" title={project.author.displayName}>@{project.author.username}</Link>
-          : <span className="px-1 text-xs text-muted">Curated · unclaimed</span>}
-      </div>
       <div className="project-card-turner" data-flipped={flipped}>
-        <div className="project-card-face project-card-front overflow-hidden rounded-card bg-surface" inert={flipped} aria-hidden={flipped}>
-          <div className="flex h-[52%] items-center justify-center overflow-hidden border-b border-border bg-surface-2">
+        <div className="project-card-face project-card-front flex flex-col overflow-hidden rounded-card bg-surface" inert={flipped} aria-hidden={flipped}>
+          <div className="flex aspect-[2/1] w-full items-center justify-center overflow-hidden border-b border-border bg-surface-2">
             {project.thumbnailUrl && !imageFailed ? <img src={project.thumbnailUrl} alt={`${project.name} preview`} loading="lazy" className="size-full object-cover" onError={() => setImageFailed(true)} />
               : <div className="px-6 text-center text-muted"><span className="block font-display text-4xl" aria-hidden>↳</span><span className="mt-2 block text-sm">No preview available</span></div>}
           </div>
-          <div className="flex h-[48%] flex-col gap-2 p-4 pb-12">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 p-4 pb-14">
             <h2 className="line-clamp-2 break-words font-display text-lg leading-tight" title={project.name}>{project.name}</h2>
             <p className="line-clamp-2 text-sm text-muted" title={project.tagline}>{project.tagline || "No tagline provided."}</p>
             <div className="mt-auto flex flex-wrap gap-1.5">
@@ -65,7 +60,7 @@ export function ProjectCard({ project, includeUnlicensed = false }: { project: P
             </div>
           </div>
         </div>
-        <div id={faceId} className="project-card-face project-card-back flex flex-col gap-3 overflow-auto rounded-card bg-surface p-4 pt-24 pb-14" inert={!flipped} aria-hidden={!flipped}>
+        <div id={faceId} className="project-card-face project-card-back flex flex-col gap-3 overflow-auto rounded-card bg-surface p-4 pb-14" inert={!flipped} aria-hidden={!flipped}>
           <h2 className="break-words font-display text-lg">{project.name}</h2>
           <p className="break-words text-sm leading-relaxed">{project.description || "No description provided."}</p>
           <div className="flex flex-wrap gap-2">
@@ -89,15 +84,17 @@ export function ProjectCard({ project, includeUnlicensed = false }: { project: P
           </div>
         </div>
       </div>
-      <div className="absolute right-3 bottom-2 left-3 z-10 flex items-center justify-between gap-2 rounded-pixel bg-surface/95 p-1">
-        <span className="text-xs text-muted">{flipped ? "Details & build facts" : "Preview"}</span>
+      <div className="absolute right-2 bottom-2 left-2 z-10 flex items-center gap-2 rounded-pixel border-t border-border bg-surface/95 p-1">
+        {project.author ? <Link to={`/u/${project.author.username}`} className="min-w-0 flex-1 truncate px-1 text-xs text-muted hover:text-fg" title={project.author.displayName}>@{project.author.username}</Link>
+          : <span className="min-w-0 flex-1 truncate px-1 text-xs text-muted">Curated · unclaimed</span>}
         <Button size="sm" variant="ghost" aria-expanded={flipped} aria-controls={faceId} onClick={() => setFlipped((value) => !value)}>{flipped ? "Show preview" : "Flip card"}</Button>
+        <Link to={panelUrl} state={{ fromCatalog: true }} className={buttonClasses("primary", "sm")} aria-label={`See more about ${project.name}`}>See more</Link>
       </div>
     </Card>
   );
 }
 
 export function ProjectCardSkeleton() {
-  return <Card padded={false} className="aspect-[3/4] min-h-[520px] overflow-hidden" aria-hidden><Skeleton className="h-[52%] rounded-none" /><div className="space-y-3 p-4"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4" /><Skeleton className="h-12" /></div></Card>;
+  return <Card padded={false} className="aspect-[4/5] min-h-[440px] overflow-hidden" aria-hidden><Skeleton className="aspect-[2/1] w-full rounded-none" /><div className="space-y-3 p-4"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4" /><Skeleton className="h-12" /></div></Card>;
 }
 
