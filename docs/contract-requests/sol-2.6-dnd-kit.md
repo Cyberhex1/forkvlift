@@ -2,7 +2,7 @@
 
 - **From:** sol
 - **For task:** 2.6
-- **Status:** open
+- **Status:** done (Opus, contracts PR after #27)
 
 ## What I need
 Add `@dnd-kit/core@^6.3.1` and `@dnd-kit/sortable@^10.0.0` to `apps/web/package.json`, and update the workspace lockfile. Versions were checked against the npm registry on October 10, 2026.
