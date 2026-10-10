@@ -1,4 +1,4 @@
-// ForkvLift Worker: serves the web app (static assets) and the API from one deploy.
+// ForkLift Worker: serves the web app (static assets) and the API from one deploy.
 // Top level = local dev. `env.preview` / `env.production` are the deployed copies.
 // Built and deployed through apps/web (Cloudflare Vite plugin); see README.
 {

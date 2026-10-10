@@ -16,7 +16,7 @@ export interface NoLicenseBannerProps {
 export function NoLicenseBanner({ className, repoUrl }: NoLicenseBannerProps) {
   const askLicenseIssueUrl = repoUrl
     ? `${repoUrl.replace(/\/+$/, "")}/issues/new?title=${encodeURIComponent("Please consider adding an open source license")}&body=${encodeURIComponent(
-        `Hi! I discovered this project on ForkvLift and would love to build on it or contribute. Would you consider adding an open source license (such as MIT or Apache-2.0)?\n\nThanks!`
+        `Hi! I discovered this project on ForkLift and would love to build on it or contribute. Would you consider adding an open source license (such as MIT or Apache-2.0)?\n\nThanks!`
       )}`
     : undefined;
 

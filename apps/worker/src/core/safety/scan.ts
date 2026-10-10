@@ -108,7 +108,7 @@ export function secretKinds(text: string): string[] {
 async function fetchRaw(fullName: string, branch: string, path: string): Promise<string | null> {
   try {
     const res = await fetch(`https://raw.githubusercontent.com/${fullName}/${encodeURIComponent(branch)}/${path.split("/").map(encodeURIComponent).join("/")}`, {
-      headers: { "user-agent": "ForkvLift safety scan" },
+      headers: { "user-agent": "ForkLift safety scan" },
     });
     if (!res.ok) return null;
     const text = await res.text();

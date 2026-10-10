@@ -6,7 +6,7 @@
 import { HttpError } from "../errors";
 
 const API = "https://api.github.com";
-export const GITHUB_UA = "ForkvLift (+https://github.com/Cyberhex1/forkvlift)";
+export const GITHUB_UA = "ForkLift (+https://forklift.stream)";
 
 export class GithubNotFound extends Error {}
 

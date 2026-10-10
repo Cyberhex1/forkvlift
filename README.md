@@ -1,4 +1,4 @@
-# ForkvLift
+# ForkLift
 
 A free, social catalog of vibe-coded projects, finished and unfinished, with public code you can fork and point your own agents at, so nobody rebuilds the same app twice.
 

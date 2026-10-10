@@ -1,6 +1,6 @@
 # AGENTS.md: rules for every agent
 
-**ForkvLift** is a free, social catalog of vibe-coded projects, finished and unfinished, with public code people can fork and point their own agents at, so nobody rebuilds the same app twice. It also points people to free, open alternatives to subscription software. Full spec: [docs/product-plan.md](docs/product-plan.md). Who builds what: [docs/implementation-plan.md](docs/implementation-plan.md). (The docs say "ForkYard", which was the working name. Read it as ForkvLift.)
+**ForkLift** is a free, social catalog of vibe-coded projects, finished and unfinished, with public code people can fork and point their own agents at, so nobody rebuilds the same app twice. It also points people to free, open alternatives to subscription software. Full spec: [docs/product-plan.md](docs/product-plan.md). Who builds what: [docs/implementation-plan.md](docs/implementation-plan.md). (The docs say "ForkYard", which was the working name. Read it as ForkLift.)
 
 Read this file, then your own briefing in `agents/<you>.md`, at the start of every session.
 

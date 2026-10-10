@@ -10,7 +10,7 @@ import { clientIp, safeReturnTo, verifyTurnstile } from "../core/security";
 import { createSession, destroySession } from "../core/auth/session";
 import { upsertEmailUser, upsertGithubUser, type GithubProfile } from "../core/auth/users";
 
-const GITHUB_UA = "ForkvLift (+https://github.com/Cyberhex1/forkvlift)";
+const GITHUB_UA = "ForkLift (+https://forklift.stream)";
 const MAGIC_LINK_MINUTES = 15;
 
 export function registerAuth(app: Hono<AppEnv>) {
