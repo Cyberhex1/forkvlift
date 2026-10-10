@@ -1,0 +1,10 @@
+.project-panel { width: min(calc(100% - 2rem), 64rem); }
+.project-readme { overflow-wrap: anywhere; }
+.project-readme h1, .project-readme h2, .project-readme h3 { font-family: var(--font-display); margin-block: 1rem 0.5rem; font-weight: 600; }
+.project-readme p, .project-readme ul, .project-readme ol { margin-block: 0.75rem; }
+.project-readme ul { list-style: disc inside; }
+.project-readme ol { list-style: decimal inside; }
+.project-readme img, .project-readme video { max-width: 100%; height: auto; }
+.project-readme pre, .project-readme table { max-width: 100%; display: block; overflow-x: auto; }
+.project-readme pre { padding: 0.75rem; background: var(--fv-surface-2); }
+.project-readme a { color: var(--fv-accent); text-decoration: underline; }
