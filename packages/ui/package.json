@@ -6,6 +6,7 @@
   "sideEffects": ["*.css"],
   "exports": {
     ".": "./src/index.ts",
+    "./icons": "./src/icons/index.ts",
     "./tokens.css": "./src/tokens.css"
   },
   "scripts": {
