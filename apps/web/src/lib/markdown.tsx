@@ -8,6 +8,7 @@
  */
 import { Fragment, type ReactNode } from "react";
 import { cn } from "@forkvlift/ui";
+import { HighlightedCode } from "./code-highlight";
 
 const INLINE = /(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\*[^*\s][^*\n]*\*|_[^_\s][^_\n]*_)|(\[[^\]\n]+\]\([^)\s]+\))|(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g;
 
@@ -105,7 +106,7 @@ export function Markdown({ source, className, renderProject }: MarkdownProps) {
       i++;
       blocks.push(
         <pre key={key()} className="overflow-x-auto rounded-card border border-border bg-surface-2 p-3 font-mono text-sm" data-lang={fence[1] || undefined}>
-          <code>{body.join("\n")}</code>
+          <HighlightedCode source={body.join("\n")} language={fence[1] ?? ""} />
         </pre>,
       );
       continue;

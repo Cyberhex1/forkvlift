@@ -7,6 +7,11 @@
   },
   "shared": ["docs/handoffs/**", "docs/contract-requests/**"],
   "rules": [
+    { "pattern": "OWNERS.json", "owner": "sol", "$comment": "User-authorized narrow 3.8 highlighting exception; Opus remains integrator." },
+    { "pattern": "apps/web/package.json", "owner": "sol", "$comment": "3.8 highlighter dependency exception." },
+    { "pattern": "pnpm-lock.yaml", "owner": "sol", "$comment": "3.8 highlighter dependency exception." },
+    { "pattern": "apps/web/src/lib/markdown.tsx", "owner": "sol", "$comment": "3.8 Markdown highlighting exception." },
+    { "pattern": "apps/web/src/lib/code-highlight.tsx", "owner": "sol", "$comment": "3.8 lazy highlighter helper exception." },
     { "pattern": "apps/web/src/features/catalog/**", "owner": "sol" },
     { "pattern": "apps/web/src/features/studio/**", "owner": "sol" },
     { "pattern": "apps/web/src/features/profile/**", "owner": "sol" },
