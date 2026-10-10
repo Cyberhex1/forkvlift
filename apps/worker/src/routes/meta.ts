@@ -15,5 +15,6 @@ export function registerMeta(app: Hono<AppEnv>) {
     githubLogin: Boolean(c.env.GITHUB_CLIENT_ID),
     magicLink: c.env.ENVIRONMENT === "local" || emailConfigured(c.env),
     fixtures: fixturesEnabled(c),
+    siteOrigin: c.env.SITE_ORIGIN,
   }));
 }

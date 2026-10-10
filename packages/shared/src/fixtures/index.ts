@@ -96,7 +96,7 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   marker: FIXTURE_MARKER,
 
   health: () => ({ ok: true, name: SITE_NAME, environment: "local", fixtures: true }),
-  siteConfig: () => ({ siteName: SITE_NAME, environment: "local", turnstileSiteKey: "1x00000000000000000000AA", githubLogin: true, magicLink: true, fixtures: true }),
+  siteConfig: () => ({ siteName: SITE_NAME, environment: "local", turnstileSiteKey: "1x00000000000000000000AA", githubLogin: true, magicLink: true, fixtures: true, siteOrigin: "http://localhost:8787" }),
 
   me: (_, ctx) => ({ user: viewer(ctx) }),
   magicLinkRequest: () => ok,

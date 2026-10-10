@@ -57,7 +57,10 @@
   --color-stage-adoption: var(--fv-info);
   --color-license-open: var(--fv-success);
   --color-license-none: var(--fv-danger);
+}
 
+/* Art palette. Static so every token is emitted: sprites build var() names at runtime. */
+@theme static {
   /* 16-bit accent palette (same in every theme; use for art, avatars, column colors) */
   --color-pixel-0: #1a1c2c;
   --color-pixel-1: #5d275d;
@@ -75,6 +78,18 @@
   --color-pixel-13: #94b0c2;
   --color-pixel-14: #566c86;
   --color-pixel-15: #333c57;
+
+  /* Avatar skin and hair tones (sprites only) */
+  --color-skin-1: #ffe0bd;
+  --color-skin-2: #f1c27d;
+  --color-skin-3: #c68642;
+  --color-skin-4: #8d5524;
+  --color-skin-5: #5c3a1e;
+  --color-hair-dark: #2b1d14;
+  --color-hair-brown: #6b4226;
+  --color-hair-blond: #e8c25a;
+  --color-hair-red: #b5452b;
+  --color-hair-gray: #b8b8c0;
 }
 
 :root,

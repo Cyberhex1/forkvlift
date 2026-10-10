@@ -1,4 +1,6 @@
 import type { RouteObject } from "react-router";
 
-/** Owner: Flash. Avatar builder (3.11); add a route here if it gets its own page. */
-export const avatarRoutes: RouteObject[] = [];
+/** Owner: Flash. Avatar builder (3.11). */
+export const avatarRoutes: RouteObject[] = [
+  { path: "/settings/avatar", lazy: async () => ({ Component: (await import("./AvatarBuilder")).AvatarBuilderPage }) },
+];

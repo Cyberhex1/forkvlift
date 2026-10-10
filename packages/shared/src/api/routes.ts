@@ -159,6 +159,8 @@ export const routes = {
       githubLogin: z.boolean(),
       magicLink: z.boolean(),
       fixtures: z.boolean(),
+      /** Public site origin, for links from the admin console. */
+      siteOrigin: z.string(),
     }),
   }),
 

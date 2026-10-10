@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 /** Task 2.10: account settings. Signed out, only the on-device preferences show. */
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -117,6 +118,9 @@ function ProfileSection({ user }: { user: SessionUser }) {
           <p role="status" className="text-sm">{save.isError ? <span className="text-danger">{save.error.message}</span> : save.isSuccess ? "Saved." : ""}</p>
         </div>
       </form>
+      <p className="mt-4 text-sm">
+        <Link to="/settings/avatar" className="text-accent underline">Edit your 16-bit Plaza avatar</Link>
+      </p>
     </Section>
   );
 }
