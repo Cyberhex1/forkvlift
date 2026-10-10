@@ -5,15 +5,16 @@ const port = Number(process.env.E2E_STATE_PORT ?? 8798);
 http.createServer(async (request, response) => {
   const url = new URL(request.url ?? "/", upstream);
   if (url.pathname === "/__qa") {
-    response.writeHead(302, { "set-cookie": [`fv_e2e_mode=${url.searchParams.get("mode") ?? "fixture"}; Path=/; SameSite=Lax`, `fv_e2e_area=${url.searchParams.get("area") ?? "feed"}; Path=/; SameSite=Lax`], location: url.searchParams.get("area") === "collections" ? "/p/fixture-pixel-planner" : "/" });
+    response.writeHead(302, { "set-cookie": [`fv_e2e_mode=${url.searchParams.get("mode") ?? "fixture"}; Path=/; SameSite=Lax`, `fv_e2e_area=${url.searchParams.get("area") ?? "feed"}; Path=/; SameSite=Lax`], location: url.searchParams.get("area") === "studio" ? "/studio" : url.searchParams.get("area") === "collections" ? "/p/fixture-pixel-planner" : "/" });
     response.end(); return;
   }
   const mode = /fv_e2e_mode=([^;]+)/.exec(request.headers.cookie ?? "")?.[1];
+  const studioArea = /fv_e2e_area=studio/.test(request.headers.cookie ?? "");
   const collectionArea = /fv_e2e_area=collections/.test(request.headers.cookie ?? "");
-  if ((collectionArea ? /^\/api\/users\/[^/]+\/collections$/.test(url.pathname) : url.pathname === "/api/projects") && ["empty", "error", "loading"].includes(mode)) {
+  if ((studioArea ? url.pathname === "/api/studio/board" : collectionArea ? /^\/api\/users\/[^/]+\/collections$/.test(url.pathname) : url.pathname === "/api/projects") && ["empty", "error", "loading"].includes(mode)) {
     if (mode === "loading") await new Promise((resolve) => setTimeout(resolve, 20000));
     response.writeHead(mode === "error" ? 503 : 200, { "content-type": "application/json" });
-    response.end(JSON.stringify(mode === "error" ? { error: { code: "internal", message: "Local QA outage" } } : collectionArea ? { items: [] } : { items: [], nextCursor: null, hiddenUnlicensedCount: 0 }));
+    response.end(JSON.stringify(mode === "error" ? { error: { code: "internal", message: "Local QA outage" } } : studioArea ? { id: "qa_empty_board", columns: [], cards: [] } : collectionArea ? { items: [] } : { items: [], nextCursor: null, hiddenUnlicensedCount: 0 }));
     return;
   }
   try {

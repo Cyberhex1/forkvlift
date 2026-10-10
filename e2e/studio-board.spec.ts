@@ -59,3 +59,20 @@ test('board loading, error retry, empty and own unlicensed project',async({page}
   await page.route('**/api/studio/board',async route=>{const board=await(await route.fetch()).json();board.cards[1].project=project;await route.fulfill({json:board});}); await page.reload();
   await expect(page.getByText('No license: all rights reserved.',{exact:true})).toBeVisible(); await page.screenshot({path:`docs/handoffs/screenshots/2.6-${info.project.name}-no-license.png`});
 });
+
+test('keyboard pickup, cancel, cross-column drop and column reorder; desktop mouse drag',async({page},info)=>{
+  await page.goto('/api/dev/login?as=fx-ada'); await page.goto('/studio');
+  const handle=page.getByRole('button',{name:'Drag card Fixture idea: recipe scaler',exact:true});
+  await handle.press('Space'); await handle.press('ArrowRight'); await handle.press('Escape');
+  await expect(page.getByRole('region',{name:'Column Idea',exact:true})).toContainText('Fixture idea: recipe scaler');
+  await handle.press('Space'); await handle.press('ArrowRight'); await handle.press('Space');
+  await expect(page.getByRole('region',{name:'Column Develop',exact:true})).toContainText('Fixture idea: recipe scaler');
+  await expect(page.getByText('Card moved.',{exact:true})).toBeVisible();
+  const col=page.getByRole('button',{name:'Drag column Idea',exact:true}); await col.press('Space'); await col.press('ArrowRight'); await col.press('Space');
+  await expect(page.getByRole('region',{name:/Column /}).first()).toHaveAccessibleName('Column Develop');
+  if(info.project.name==='desktop') {
+    await page.reload(); const from=await page.getByRole('button',{name:'Drag card Fixture idea: recipe scaler',exact:true}).boundingBox(); const to=await page.getByRole('region',{name:'Column Bug fix',exact:true}).boundingBox();
+    await page.mouse.move(from!.x+from!.width/2,from!.y+from!.height/2); await page.mouse.down(); await page.mouse.move(to!.x+to!.width/2,to!.y+to!.height/2,{steps:20}); await page.mouse.up();
+    await expect(page.getByRole('region',{name:'Column Bug fix',exact:true})).toContainText('Fixture idea: recipe scaler');
+  }
+});

@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCorners, useDroppable, type KeyboardCoordinateGetter } from "@dnd-kit/core";
+import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCorners, closestCenter, useDroppable, type KeyboardCoordinateGetter } from "@dnd-kit/core";
 import { SortableContext, useSortable, horizontalListSortingStrategy, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import type { Board, BoardCard, BoardColumn } from "@forkvlift/shared";
 import { Button } from "@forkvlift/ui";
@@ -29,7 +29,7 @@ export function BoardDrag({board,disabled,move,reorder,children}:{board:Board;di
     if(rect)return {x:currentCoordinates.x+rect.left+rect.width/2-collisionRect.left-collisionRect.width/2,y:currentCoordinates.y+rect.top+rect.height/2-collisionRect.top-collisionRect.height/2};
   };
   const sensors=useSensors(useSensor(PointerSensor,{activationConstraint:{distance:8}}),useSensor(KeyboardSensor,{coordinateGetter:keyboard}));
-  return <Busy.Provider value={disabled}><DndContext sensors={sensors} collisionDetection={args=>closestCorners({...args,droppableContainers:args.droppableContainers.filter(c=>args.active.data.current?.kind==='column'?c.data.current?.kind==='column':c.data.current?.kind!=='column')})}
+  return <Busy.Provider value={disabled}><DndContext sensors={sensors} collisionDetection={args=>(args.active.data.current?.kind === "column" ? closestCenter : closestCorners)({...args,droppableContainers:args.droppableContainers.filter(c=>args.active.data.current?.kind==='column'?c.data.current?.kind==='column':c.data.current?.kind!=='column')})}
     accessibility={{screenReaderInstructions:{draggable:'Press Space to pick up. Use arrow keys to move. Press Space to drop, or Escape to cancel.'}}}
     onDragEnd={({active,over})=>{if(disabled||!over||active.id===over.id)return;const from=active.data.current,to=over.data.current;if(from?.kind==='column'){const ids=columns.map(c=>c.id);const start=ids.indexOf(String(from.columnId)),end=ids.indexOf(String(to?.columnId));if(start<0||end<0)return;ids.splice(end,0,ids.splice(start,1)[0]!);reorder(ids);}else if(from?.kind==='card'&&to?.columnId){const target=board.cards.find(c=>`card:${c.id}`===String(over.id));const pos=target?.position??board.cards.filter(c=>c.columnId===to.columnId&&c.id!==from.cardId).length;move(String(from.cardId),String(to.columnId),pos);}}}>
     <SortableContext items={columns.map(c=>`column:${c.id}`)} strategy={horizontalListSortingStrategy}>{children}</SortableContext>
