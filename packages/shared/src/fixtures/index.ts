@@ -59,6 +59,15 @@ const fxAdoptionRequest = {
   createdAt: "2026-10-09T12:00:00.000Z",
   decidedAt: null,
 };
+const fxEvent = {
+  id: "fx_evt_1", slug: "fixture-build-jam", kind: "build_jam" as const, title: "Fixture build jam: tiny tools",
+  bodyMd: "Dev fixture. Theme: **tiny tools**.", startsAt: "2026-10-08T00:00:00.000Z", submissionEndsAt: "2026-10-12T00:00:00.000Z",
+  votingEndsAt: "2026-10-15T00:00:00.000Z", featuredProject: null, status: "submitting" as const, entryCount: 1,
+};
+const fxEntry = () => ({
+  id: "fx_entry_1", eventId: "fx_evt_1", project: fxProjects[0]!, submittedBy: fxUsers.ada,
+  submittedAt: "2026-10-09T12:00:00.000Z", voteCount: 3, viewerVoted: false, rank: null,
+});
 const fxAdoption = { open: true, note: "Dev fixture: looking for someone to take this on.", openedAt: "2026-10-01T12:00:00.000Z", originalAuthor: fxUsers.bo, maintainer: fxUsers.bo, viewerRequest: null, canManage: false };
 const ref = (p: ProjectCard): ProjectRef => ({ id: p.id, slug: p.slug, name: p.name, author: p.author });
 const viewer = (ctx: FixtureContext) => (ctx.viewerId ? fxSessionUser(ctx.viewerId) : null);
@@ -188,6 +197,17 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   listApiKeys: () => ({ items: [{ id: "fx_key_1", name: "My script", prefix: "fl_live_ab12", createdAt: "2026-10-01T12:00:00.000Z", lastUsedAt: null }] }),
   createApiKey: ({ body }) => ({ key: { id: "fx_key_2", name: body.name, prefix: "fl_live_cd34", createdAt: "2026-10-10T12:00:00.000Z", lastUsedAt: null }, secret: "fl_live_cd34_fixture_secret_not_real" }),
   revokeApiKey: () => ok,
+  listGrowthEvents: () => ({ items: [fxEvent], nextCursor: null }),
+  getGrowthEvent: ({ params }) => {
+    if (params.slug !== fxEvent.slug) throw new FixtureError("not_found", "Event not found");
+    return { ...fxEvent, viewerCanSubmit: true, viewerCanVote: false, viewerBallot: null };
+  },
+  listGrowthEventEntries: () => ({ items: [fxEntry()], nextCursor: null }),
+  submitGrowthEntry: () => fxEntry(),
+  withdrawGrowthEntry: () => ok,
+  voteGrowthEntry: ({ body }) => ({ entryId: body.entryId }),
+  createGrowthEvent: ({ body }) => ({ ...fxEvent, ...body, featuredProject: null, status: "scheduled" as const, entryCount: 0 }),
+  updateGrowthEvent: ({ body }) => ({ ...fxEvent, ...(body.title ? { title: body.title } : {}), status: body.cancelled ? ("cancelled" as const) : fxEvent.status }),
   getProjectAdoption: () => fxAdoption,
   setProjectAdoption: ({ body }) => ({ ...fxAdoption, open: body.open, note: body.note, canManage: true }),
   requestProjectAdoption: ({ body }) => ({ ...fxAdoptionRequest, message: body.message }),

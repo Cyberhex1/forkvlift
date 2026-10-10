@@ -78,6 +78,13 @@
       "when": 1791675954493,
       "tag": "0010_project_adoption",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1791676182778,
+      "tag": "0011_growth_events",
+      "breakpoints": true
     }
   ]
 }

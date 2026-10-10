@@ -196,3 +196,47 @@ export const ProjectAdoption = z.object({
   canManage: z.boolean(),
 });
 export type ProjectAdoption = z.infer<typeof ProjectAdoption>;
+
+// ── Launch days, Fork Friday, build jams (task 4.6) ──────────────────────
+
+export const GrowthEventKind = z.enum(["launch_day", "fork_friday", "build_jam"]);
+export type GrowthEventKind = z.infer<typeof GrowthEventKind>;
+export const GrowthEventStatus = z.enum(["scheduled", "submitting", "voting", "ended", "cancelled"]);
+export type GrowthEventStatus = z.infer<typeof GrowthEventStatus>;
+
+export const GrowthEvent = z.object({
+  id: Id,
+  slug: Slug,
+  kind: GrowthEventKind,
+  title: z.string().max(120),
+  bodyMd: z.string().max(10_000),
+  startsAt: IsoDate,
+  submissionEndsAt: IsoDate,
+  votingEndsAt: IsoDate,
+  featuredProject: ProjectRef.nullable(),
+  /** Derived from the server clock and cancellation. */
+  status: GrowthEventStatus,
+  entryCount: z.number().int().nonnegative(),
+});
+export type GrowthEvent = z.infer<typeof GrowthEvent>;
+
+export const GrowthEventDetail = GrowthEvent.extend({
+  viewerCanSubmit: z.boolean(),
+  viewerCanVote: z.boolean(),
+  /** The entry the viewer voted for, if any. */
+  viewerBallot: Id.nullable(),
+});
+export type GrowthEventDetail = z.infer<typeof GrowthEventDetail>;
+
+export const EventEntry = z.object({
+  id: Id,
+  eventId: Id,
+  project: ProjectCard,
+  submittedBy: UserSummary,
+  submittedAt: IsoDate,
+  voteCount: z.number().int().nonnegative(),
+  viewerVoted: z.boolean(),
+  /** 1-based by votes (ties: earlier submission, then id); null while submissions are open. */
+  rank: z.number().int().positive().nullable(),
+});
+export type EventEntry = z.infer<typeof EventEntry>;
