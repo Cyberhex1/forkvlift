@@ -192,9 +192,10 @@ export async function createCard(
   db: D1Database,
   userId: string,
   input: { columnId: string; title: string; idea: string | null; projectId: string | null },
+  opts: { ignoreWipLimit?: boolean } = {},
 ): Promise<BoardCard> {
   const column = await ownColumn(db, userId, input.columnId);
-  await assertWipRoom(db, column, null);
+  if (!opts.ignoreWipLimit) await assertWipRoom(db, column, null);
   const total = (await db.prepare(`SELECT count(*) AS n FROM board_cards WHERE board_id = ?`).bind(column.board_id).first<{ n: number }>())?.n ?? 0;
   if (total >= MAX_CARDS) throw new HttpError("conflict", `A board can hold up to ${MAX_CARDS} cards.`);
 

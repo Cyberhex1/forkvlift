@@ -6,7 +6,9 @@ import { HttpError, notFound } from "../core/errors";
 import { audit } from "../core/curation/candidates";
 import { ingestRepo } from "../core/github/ingest";
 import { viewerOwnsRepo } from "../core/github/ownership";
+import { createComment } from "../core/projects/comments";
 import { getProjectDetail } from "../core/projects/detail";
+import { continueProject } from "../core/projects/fork";
 import { decodeCursor, encodeCursor, listProjects } from "../core/projects/list";
 import { LISTED, parseJson } from "../core/projects/rows";
 import { createProject, deleteProject, previewSubmission, updateProject } from "../core/projects/submit";
@@ -104,9 +106,12 @@ export function registerCatalog(app: Hono<AppEnv>) {
     return { items, nextCursor: results.length > limit ? encodeCursor({ o: cursor.o + limit }) : null };
   });
 
-  mount(app, "createComment", () => todo("1.9"));
+  mount(app, "createComment", async ({ params, body }, c) => {
+    await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));
+    return createComment(c.env.DB, c.get("user")!, params.slug, body.body, body.parentId);
+  });
   mount(app, "getForkTree", () => todo("3.6"));
-  mount(app, "forkProject", () => todo("2.2"));
+  mount(app, "forkProject", ({ params }, c) => continueProject(c.env, c.get("user")!, params.slug));
   mount(app, "claimProject", async ({ params }, c) => {
     const user = c.get("user")!;
     const db = c.env.DB;
