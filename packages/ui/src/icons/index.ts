@@ -5,3 +5,4 @@ export {
   WarningShieldIcon,
   type PixelIconProps,
 } from "./PixelIcons";
+export * from "./CategoryIcons";
