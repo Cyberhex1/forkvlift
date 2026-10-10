@@ -50,7 +50,7 @@
         "ADMIN_GITHUB_LOGINS": "Cyberhex1",
         "ADMIN_EMAILS": "kdlindsey25@gmail.com",
         "ACCESS_TEAM_DOMAIN": "tight-night-bcaf.cloudflareaccess.com",
-        "ACCESS_AUD": "",
+        "ACCESS_AUD": "d05511da6aa035a19e4a80b69e02927524d62565a256621241ca5b34efc264ec",
         "TURNSTILE_SITE_KEY": "0x4AAAAAAFTEAzMVae-6aBXu"
       },
       "d1_databases": [
