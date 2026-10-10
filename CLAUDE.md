@@ -1,6 +1,6 @@
 # ForkLift — Context Brief for Coding Agents
 
-> Site name: **ForkLift** (domain `forklift.stream`; slug `forklift`; keep it in the `SITE_NAME` constant). Older docs say "ForkYard" or "ForkvLift": read both as ForkLift. **Internal identifiers keep `forkvlift` on purpose and must not be renamed**: the `@forkvlift/*` package scope, Cloudflare resource names (`forkvlift-preview`, D1, R2, KV, queues), the GitHub repo, and the folders `C:codeForkvLift` and `C:codeorkvlift-wt`.
+> Site name: **ForkLift** (domain `forklift.stream`; slug `forklift`; keep it in the `SITE_NAME` constant). Older docs say "ForkYard" or "ForkvLift": read both as ForkLift. **Internal identifiers keep `forkvlift` on purpose and must not be renamed**: the `@forkvlift/*` package scope, Cloudflare resource names (`forkvlift-preview`, D1, R2, KV, queues), the GitHub repo, and the folders `C:\code\ForkvLift` and `C:\code\forkvlift-wt`.
 > Full specs live in `docs/`. Read this file first, then the two plans.
 
 ## What we're building
