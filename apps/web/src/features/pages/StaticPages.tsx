@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { SITE_NAME, SITE_TAGLINE } from "@forkvlift/shared";
 import { Badge, buttonClasses, Card } from "@forkvlift/ui";
 import { NoLicenseBanner } from "./NoLicenseDisclaimer";
+import { SavingsCounter } from "./SavingsCounter";
 
 interface StaticPageLayoutProps {
   badge: string;
@@ -96,6 +97,7 @@ export function AboutPage() {
           clone and point your agents at. Finished or not, licensed or not, each card says plainly
           what you are allowed to do with it so you can pick up where others left off.
         </p>
+        <SavingsCounter className="mt-6 border-l-4 border-l-accent" />
       </section>
 
       <section className="space-y-4">
