@@ -42,6 +42,8 @@ export const users = sqliteTable(
     role: text("role", { enum: ["user", "admin"] }).notNull().default("user"),
     bannedAt: ts("banned_at"),
     banReason: text("ban_reason"),
+    /** Last weekly digest sent to this user. */
+    digestSentAt: ts("digest_sent_at"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     deletedAt: ts("deleted_at"),
@@ -508,9 +510,11 @@ export const notifications = sqliteTable(
     title: text("title").notNull(),
     href: text("href").notNull(),
     readAt: ts("read_at"),
+    /** When the email for this notification was sent (or skipped by preferences). */
+    emailedAt: ts("emailed_at"),
     createdAt: createdAt(),
   },
-  (t) => [index("notifications_user").on(t.userId, t.createdAt)],
+  (t) => [index("notifications_user").on(t.userId, t.createdAt), index("notifications_email_pending").on(t.emailedAt, t.createdAt)],
 );
 
 export const reports = sqliteTable(
