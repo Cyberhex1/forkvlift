@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import type { BuildRequest } from "@forkvlift/shared";
+import type { BuildRequest, ProjectDetail } from "@forkvlift/shared";
 
 test("browse, sign-in gate, claim loading/error/retry and claimed state", async ({ page }, info) => {
   await page.goto("/requests");
@@ -23,6 +23,14 @@ test("browse, sign-in gate, claim loading/error/retry and claimed state", async 
   await expect(claim).toHaveCount(0);
   await page.screenshot({ path: `docs/handoffs/screenshots/4.5-${info.project.name}-claimed.png` });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const fixture = await (await page.request.get("/api/requests/fx_req_1")).json() as BuildRequest;
+  const project = await (await page.request.get("/api/projects/fixture-pixel-planner")).json() as ProjectDetail;
+  await page.route("**/api/requests/fx_req_1", route => route.fulfill({ json: { ...fixture, status: "built", bodyMd: "", builtProject: { id: project.id, slug: project.slug, name: project.name.repeat(4).slice(0, 100), author: project.author } } }));
+  await page.reload();
+  await expect(page.getByText("No details provided yet.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /See the finished project/ })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: `docs/handoffs/screenshots/4.5-${info.project.name}-built.png` });
 });
 
 test("post with text bounty, retain input on error, then show submitted details", async ({ page }, info) => {
