@@ -63,12 +63,25 @@ test('board loading, error retry, empty and own unlicensed project',async({page}
 test('keyboard pickup, cancel, cross-column drop and column reorder; desktop mouse drag',async({page},info)=>{
   await page.goto('/api/dev/login?as=fx-ada'); await page.goto('/studio');
   const handle=page.getByRole('button',{name:'Drag card Fixture idea: recipe scaler',exact:true});
-  await handle.press('Space'); await handle.press('ArrowRight'); await handle.press('Escape');
+  // Wait for sensor activation and target announcements before sending the next key.
+  // Fast CI keyboards can otherwise drop before the drag state has committed.
+  const announcements=page.getByRole('status').filter({hasText:/Draggable item/});
+  await handle.press('Space'); await expect(handle).toHaveAttribute('aria-pressed','true');
+  await expect(announcements).toContainText('over droppable area card:fx_card_1');
+  await handle.press('ArrowRight'); await expect(announcements).toContainText('over droppable area card:fx_card_2');
+  await handle.press('Escape'); await expect(handle).not.toHaveAttribute('aria-pressed','true');
   await expect(page.getByRole('region',{name:'Column Idea',exact:true})).toContainText('Fixture idea: recipe scaler');
-  await handle.press('Space'); await handle.press('ArrowRight'); await handle.press('Space');
+  await handle.press('Space'); await expect(handle).toHaveAttribute('aria-pressed','true');
+  await expect(announcements).toContainText('over droppable area card:fx_card_1');
+  await handle.press('ArrowRight'); await expect(announcements).toContainText('over droppable area card:fx_card_2');
+  await handle.press('Space');
   await expect(page.getByRole('region',{name:'Column Develop',exact:true})).toContainText('Fixture idea: recipe scaler');
   await expect(page.getByText('Card moved.',{exact:true})).toBeVisible();
-  const col=page.getByRole('button',{name:'Drag column Idea',exact:true}); await col.press('Space'); await col.press('ArrowRight'); await col.press('Space');
+  const col=page.getByRole('button',{name:'Drag column Idea',exact:true});
+  await col.press('Space'); await expect(col).toHaveAttribute('aria-pressed','true');
+  await expect(announcements).toContainText('over droppable area column:fx_col_1');
+  await col.press('ArrowRight'); await expect(announcements).toContainText('over droppable area column:fx_col_2');
+  await col.press('Space');
   await expect(page.getByRole('region',{name:/Column /}).first()).toHaveAccessibleName('Column Develop');
   if(info.project.name==='desktop') {
     await page.reload(); const from=await page.getByRole('button',{name:'Drag card Fixture idea: recipe scaler',exact:true}).boundingBox(); const to=await page.getByRole('region',{name:'Column Bug fix',exact:true}).boundingBox();
