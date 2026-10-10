@@ -323,7 +323,7 @@ export const routes = {
     method: "GET", path: "/api/users/:username/projects", auth: "public", kind: "json", area: "users",
     summary: "Profile tabs: projects or forks",
     params: UsernameParams,
-    query: PageQuery.extend({ tab: z.enum(["projects", "forks"]).optional() }),
+    query: PageQuery.extend({ tab: z.enum(["projects", "forks"]).optional(), showUnlicensed: QueryBool.optional() }),
     response: page(ProjectCard).extend({ hiddenUnlicensedCount: z.number().int().nonnegative() }),
   }),
 
