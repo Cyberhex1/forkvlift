@@ -43,9 +43,13 @@ describe("paste-a-link importer and review queue", () => {
     expect(c.score).toBeGreaterThan(40);
   });
 
-  it("lists unlicensed candidates with a failing (not blocking) license chip", async () => {
+  it("lists unlicensed candidates with a failing license chip but never approves them", async () => {
     const c = await importRepo("https://github.com/zed/nolicense");
-    expect(c.checks.find((k) => k.key === "license")).toMatchObject({ pass: false, detail: "No license (shown, not required)" });
+    expect(c.checks.find((k) => k.key === "license")).toMatchObject({ pass: false, detail: "No license (can't be approved)" });
+    const res = await decide(c.id, { action: "approve_publish", edits: { categorySlug: "tools" } });
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain("Unlicensed repos can't be curated");
+    expect((await api("/api/projects/nolicense")).status).toBe(404);
     const queue = await api<{ items: Candidate[] }>("/api/admin/candidates", { as: admin });
     expect(queue.body.items.map((x) => x.repoFullName)).toContain("zed/nolicense");
   });
