@@ -30,7 +30,7 @@ export async function seedCategory(slug: string, parent: string | null = null) {
 
 /** Empty every table the tests write to. */
 export async function resetDb() {
-  const tables = ["projects_fts", "votes", "comments", "collection_items", "collections", "project_tags", "forks", "board_cards", "board_columns", "boards", "projects", "sessions", "profiles", "avatars", "users", "categories"];
+  const tables = ["roadmap_items", "projects_fts", "votes", "comments", "collection_items", "collections", "project_tags", "forks", "board_cards", "board_columns", "boards", "projects", "sessions", "profiles", "avatars", "users", "categories"];
   await env.DB.batch(tables.map((t) => env.DB.prepare(`DELETE FROM ${t}`)));
 }
 

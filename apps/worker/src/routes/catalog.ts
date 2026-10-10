@@ -12,6 +12,7 @@ import { LISTED, parseJson } from "../core/projects/rows";
 import { createProject, deleteProject, previewSubmission, updateProject } from "../core/projects/submit";
 import { clientIp, verifyTurnstile } from "../core/security";
 import { reserveUpload, serveMedia, storeUpload } from "../core/uploads";
+import { voteRoadmapItem } from "../core/studio";
 import { todo } from "./_stubs";
 
 /** Categories, projects, uploads. Opus (tasks 1.1–1.7, 2.2). */
@@ -123,7 +124,7 @@ export function registerCatalog(app: Hono<AppEnv>) {
     await audit(db, user.id, "project.claim", "project", params.slug, { repo: repo.fullName });
     return getProjectDetail(db, params.slug, user);
   });
-  mount(app, "voteRoadmapItem", () => todo("2.7"));
+  mount(app, "voteRoadmapItem", async ({ params }, c) => ({ votes: await voteRoadmapItem(c.env.DB, c.get("user")!.id, params.slug, params.itemId) }));
 
   mount(app, "createUpload", ({ body }, c) => reserveUpload(c.env, c.get("user")!.id, body.kind, body.contentType, body.size));
   mount(app, "putUpload", ({ params }, c) => storeUpload(c.env, c.get("user")!.id, params.key, c.req.raw));
