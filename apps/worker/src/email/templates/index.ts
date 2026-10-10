@@ -122,3 +122,84 @@ export function magicLinkEmail(url: string, settingsUrl: string): RenderedEmail 
     text: `${subject}\n\nThis link signs you in. It works once and expires in 15 minutes:\n${url}\n\nDidn't ask for this? Ignore this email.\n`,
   };
 }
+
+export interface ForkReportHighlight {
+  slug: string;
+  title: string;
+  description: string;
+  url: string;
+  author: string;
+  forks?: number;
+  stars?: number;
+  category?: string;
+}
+
+export interface ForkReportIssueInput {
+  issueNumber: number;
+  title: string;
+  date: string;
+  curatorNote: string;
+  highlights: ForkReportHighlight[];
+  weeklyForkCount?: number;
+  unsubscribeUrl: string;
+  settingsUrl?: string;
+}
+
+export function forkReportEmail(o: ForkReportIssueInput): RenderedEmail {
+  const subject = `The Fork Report #${o.issueNumber}: ${o.title}`;
+  const preheader = o.curatorNote.slice(0, 120);
+
+  const highlightRows = o.highlights
+    .map(
+      (h) => `<tr><td style="padding:16px 0;border-top:1px solid ${C.line}">
+<div style="font-family:'Courier New',monospace;font-size:16px;font-weight:bold">
+  <a href="${escapeHtml(h.url)}" style="color:${C.accent};text-decoration:none">${escapeHtml(h.title)}</a>
+</div>
+<div style="font-size:12px;color:${C.muted};margin:4px 0">by @${escapeHtml(h.author)}${h.category ? ` in ${escapeHtml(h.category)}` : ""}${h.forks !== undefined ? ` · ${h.forks} forks` : ""}</div>
+<p style="margin:6px 0 0;font-size:14px;color:${C.ink}">${escapeHtml(h.description)}</p>
+</td></tr>`,
+    )
+    .join("");
+
+  const statsCallout = o.weeklyForkCount
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;background:#f6f4ee;border:2px solid ${C.ink};padding:12px">
+<tr><td align="center" style="font-family:'Courier New',monospace;font-size:13px;font-weight:bold;color:${C.ink}">
+🌱 ${o.weeklyForkCount.toLocaleString()} new forks this week across the catalog
+</td></tr></table>`
+    : "";
+
+  const bodyHtml = `<p style="margin:0 0 12px;font-style:italic;color:${C.muted}">${escapeHtml(o.curatorNote)}</p>
+${statsCallout}
+<h2 style="margin:18px 0 8px;font-family:'Courier New',monospace;font-size:16px">This Week's Highlights</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${highlightRows}</table>`;
+
+  const textHighlights = o.highlights
+    .map((h) => `* ${h.title} (by @${h.author})\n  ${h.description}\n  ${h.url}`)
+    .join("\n\n");
+
+  return {
+    subject,
+    html: layout({
+      preheader,
+      heading: `The Fork Report #${o.issueNumber}`,
+      bodyHtml,
+      settingsUrl: o.unsubscribeUrl,
+    }),
+    text: `The Fork Report #${o.issueNumber}: ${o.title}\n${o.date}\n\n${o.curatorNote}\n\n${textHighlights}\n\n--\nUnsubscribe: ${o.unsubscribeUrl}\n`,
+  };
+}
+
+export function newsletterConfirmationEmail(o: { confirmUrl: string; unsubscribeUrl: string }): RenderedEmail {
+  const subject = `Confirm your subscription to The Fork Report`;
+  return {
+    subject,
+    html: layout({
+      preheader: "Confirm your email to get weekly highlights of the best vibe-coded projects.",
+      heading: "Confirm your subscription",
+      bodyHtml: `<p style="margin:0">Thanks for subscribing to <strong>The Fork Report</strong> — our weekly digest of the freshest vibe-coded open source projects, forks, and free alternatives.</p><p style="margin:12px 0 0">Click below to confirm your email address:</p>${button(o.confirmUrl, "Confirm Subscription")}<p style="margin:16px 0 0;font-size:13px;color:${C.muted}">If you did not request this, no action is needed.</p>`,
+      settingsUrl: o.unsubscribeUrl,
+    }),
+    text: `Confirm your subscription to The Fork Report\n\nPlease confirm your email address to receive weekly highlights of the best vibe-coded projects on ${SITE_NAME}:\n${o.confirmUrl}\n\nDidn't request this? Ignore this email.\n`,
+  };
+}
+
