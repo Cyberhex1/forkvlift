@@ -21,7 +21,11 @@ const KNOWN: Record<string, Omit<LicenseInfo, "spdx">> = {
 };
 
 export function describeLicense(spdx: string | null | undefined, fallbackName?: string): LicenseInfo | null {
-  if (!spdx || spdx === "NOASSERTION" || spdx === "NONE") return null;
+  if (!spdx || spdx === "NONE") return null;
+  // GitHub found a license file it couldn't identify: it is licensed, just not a standard license.
+  if (spdx === "NOASSERTION") {
+    return { spdx, name: "Custom license", summary: "Custom license: read it in the repo before reusing", copyleft: false };
+  }
   const base = spdx.replace(/-(only|or-later)$/, "");
   const known = KNOWN[spdx] ?? KNOWN[base];
   if (known) return { spdx, ...known };

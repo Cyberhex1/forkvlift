@@ -18,7 +18,8 @@ describe("contract helpers", () => {
 describe("licenses", () => {
   it("treats missing licenses as none", () => {
     expect(describeLicense(null)).toBeNull();
-    expect(describeLicense("NOASSERTION")).toBeNull();
+    expect(describeLicense("NONE")).toBeNull();
+    expect(describeLicense("NOASSERTION")?.name).toBe("Custom license");
   });
   it("flags copyleft", () => {
     expect(describeLicense("GPL-3.0-only")?.copyleft).toBe(true);

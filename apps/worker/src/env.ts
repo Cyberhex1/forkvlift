@@ -8,6 +8,8 @@ declare global {
   interface Env {
     GITHUB_CLIENT_ID?: string;
     GITHUB_CLIENT_SECRET?: string;
+    /** Server token for the GitHub API (public repos only). Raises the limit to 5,000 requests/hour. */
+    GITHUB_TOKEN?: string;
     TURNSTILE_SECRET?: string;
     USE_FIXTURES?: string;
     ALLOW_SESSION_ADMIN?: string;

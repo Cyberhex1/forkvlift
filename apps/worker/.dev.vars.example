@@ -5,6 +5,9 @@
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 
+# Optional: GitHub token (public repo read-only) for ingestion. Without it the API allows 60 requests/hour.
+GITHUB_TOKEN=
+
 # Cloudflare's published always-pass Turnstile test secret.
 TURNSTILE_SECRET=1x0000000000000000000000000000000AA
 
