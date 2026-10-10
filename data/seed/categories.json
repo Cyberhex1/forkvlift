@@ -1,0 +1,930 @@
+[
+  {
+    "slug": "games",
+    "name": "Games",
+    "parentSlug": null,
+    "iconKey": "cat-games",
+    "description": "Browser games, roguelikes, puzzle, multiplayer, game jams, and engines.",
+    "position": 10
+  },
+  {
+    "slug": "browser-games",
+    "name": "Browser games",
+    "parentSlug": "games",
+    "iconKey": null,
+    "description": "Playable in any web browser without installation.",
+    "position": 11
+  },
+  {
+    "slug": "roguelikes",
+    "name": "Roguelikes",
+    "parentSlug": "games",
+    "iconKey": null,
+    "description": "Procedurally generated dungeon crawlers and turn-based adventures.",
+    "position": 12
+  },
+  {
+    "slug": "puzzle-games",
+    "name": "Puzzle",
+    "parentSlug": "games",
+    "iconKey": null,
+    "description": "Logic, brain teasers, and spatial puzzle games.",
+    "position": 13
+  },
+  {
+    "slug": "multiplayer-games",
+    "name": "Multiplayer",
+    "parentSlug": "games",
+    "iconKey": null,
+    "description": "Real-time and turn-based games for multiple players.",
+    "position": 14
+  },
+  {
+    "slug": "game-jams",
+    "name": "Game jams",
+    "parentSlug": "games",
+    "iconKey": null,
+    "description": "Quick prototypes and creative entries made during game jams.",
+    "position": 15
+  },
+  {
+    "slug": "game-engines-and-tools",
+    "name": "Engines and tools for games",
+    "parentSlug": "games",
+    "iconKey": null,
+    "description": "Engines, frameworks, and asset tooling for building games.",
+    "position": 16
+  },
+  {
+    "slug": "production",
+    "name": "Production",
+    "parentSlug": null,
+    "iconKey": "cat-production",
+    "description": "Music, video, streaming, podcasting, and 3D creation suites.",
+    "position": 20
+  },
+  {
+    "slug": "music-and-audio",
+    "name": "Music and audio",
+    "parentSlug": "production",
+    "iconKey": null,
+    "description": "Digital audio workstations, synthesizers, and audio editors.",
+    "position": 21
+  },
+  {
+    "slug": "video-editing",
+    "name": "Video editing",
+    "parentSlug": "production",
+    "iconKey": null,
+    "description": "Timeline video editors, compositing, and video processing tools.",
+    "position": 22
+  },
+  {
+    "slug": "streaming-tools",
+    "name": "Streaming tools",
+    "parentSlug": "production",
+    "iconKey": null,
+    "description": "Broadcasting overlays, capture tools, and stream management.",
+    "position": 23
+  },
+  {
+    "slug": "podcasting",
+    "name": "Podcasting",
+    "parentSlug": "production",
+    "iconKey": null,
+    "description": "Recording, editing, and publishing tools for podcasts.",
+    "position": 24
+  },
+  {
+    "slug": "3d-and-cad",
+    "name": "3D and CAD",
+    "parentSlug": "production",
+    "iconKey": null,
+    "description": "3D modeling, rendering, and computer-aided design software.",
+    "position": 25
+  },
+  {
+    "slug": "tools-and-utilities",
+    "name": "Tools and utilities",
+    "parentSlug": null,
+    "iconKey": "cat-tools-and-utilities",
+    "description": "File converters, CLI helpers, extensions, and window managers.",
+    "position": 30
+  },
+  {
+    "slug": "file-converters",
+    "name": "File converters",
+    "parentSlug": "tools-and-utilities",
+    "iconKey": null,
+    "description": "Format converters for documents, audio, video, and images.",
+    "position": 31
+  },
+  {
+    "slug": "cli-tools",
+    "name": "CLI tools",
+    "parentSlug": "tools-and-utilities",
+    "iconKey": null,
+    "description": "Command-line utilities and terminal productivity tools.",
+    "position": 32
+  },
+  {
+    "slug": "browser-extensions",
+    "name": "Browser extensions",
+    "parentSlug": "tools-and-utilities",
+    "iconKey": null,
+    "description": "Add-ons enhancing web browsing capabilities and privacy.",
+    "position": 33
+  },
+  {
+    "slug": "clipboard-and-window-managers",
+    "name": "Clipboard and window managers",
+    "parentSlug": "tools-and-utilities",
+    "iconKey": null,
+    "description": "Window tiling, clipboard history, and desktop utilities.",
+    "position": 34
+  },
+  {
+    "slug": "suites",
+    "name": "Suites",
+    "parentSlug": null,
+    "iconKey": "cat-suites",
+    "description": "All-in-one office suites, dashboards, and self-hosted bundles.",
+    "position": 40
+  },
+  {
+    "slug": "office-suites",
+    "name": "Office suites",
+    "parentSlug": "suites",
+    "iconKey": null,
+    "description": "All-in-one word processing, spreadsheets, and document suites.",
+    "position": 41
+  },
+  {
+    "slug": "multi-tool-dashboards",
+    "name": "Multi-tool dashboards",
+    "parentSlug": "suites",
+    "iconKey": null,
+    "description": "Unified portals and homepages bringing multiple tools together.",
+    "position": 42
+  },
+  {
+    "slug": "self-hosted-bundles",
+    "name": "Self-hosted bundles",
+    "parentSlug": "suites",
+    "iconKey": null,
+    "description": "Complete suites of interconnected self-hosted services.",
+    "position": 43
+  },
+  {
+    "slug": "productivity",
+    "name": "Productivity",
+    "parentSlug": null,
+    "iconKey": "cat-productivity",
+    "description": "Notes, to-do lists, calendars, and habit and focus trackers.",
+    "position": 50
+  },
+  {
+    "slug": "notes",
+    "name": "Notes",
+    "parentSlug": "productivity",
+    "iconKey": null,
+    "description": "Note-taking, knowledge management, and markdown wikis.",
+    "position": 51
+  },
+  {
+    "slug": "todo-lists",
+    "name": "To-do",
+    "parentSlug": "productivity",
+    "iconKey": null,
+    "description": "Task managers, checklists, and kanban task boards.",
+    "position": 52
+  },
+  {
+    "slug": "calendars",
+    "name": "Calendars",
+    "parentSlug": "productivity",
+    "iconKey": null,
+    "description": "Schedule management, event planners, and calendar views.",
+    "position": 53
+  },
+  {
+    "slug": "habit-trackers",
+    "name": "Habit trackers",
+    "parentSlug": "productivity",
+    "iconKey": null,
+    "description": "Daily streak tracking and habit building tools.",
+    "position": 54
+  },
+  {
+    "slug": "time-tracking",
+    "name": "Time tracking",
+    "parentSlug": "productivity",
+    "iconKey": null,
+    "description": "Work hour logging, project timers, and timesheet tools.",
+    "position": 55
+  },
+  {
+    "slug": "focus-timers",
+    "name": "Focus timers",
+    "parentSlug": "productivity",
+    "iconKey": null,
+    "description": "Pomodoro and interval timers for distraction-free work.",
+    "position": 56
+  },
+  {
+    "slug": "developer-tools",
+    "name": "Developer tools",
+    "parentSlug": null,
+    "iconKey": "cat-developer-tools",
+    "description": "Code editors, linters, API clients, DevOps, and MCP servers.",
+    "position": 60
+  },
+  {
+    "slug": "code-editors",
+    "name": "Code editors",
+    "parentSlug": "developer-tools",
+    "iconKey": null,
+    "description": "Lightweight text and code editors for software development.",
+    "position": 61
+  },
+  {
+    "slug": "linters-and-formatters",
+    "name": "Linters",
+    "parentSlug": "developer-tools",
+    "iconKey": null,
+    "description": "Code quality analyzers, formatters, and static checking tools.",
+    "position": 62
+  },
+  {
+    "slug": "api-clients",
+    "name": "API clients",
+    "parentSlug": "developer-tools",
+    "iconKey": null,
+    "description": "REST, GraphQL, and RPC testing and debugging clients.",
+    "position": 63
+  },
+  {
+    "slug": "devops",
+    "name": "DevOps",
+    "parentSlug": "developer-tools",
+    "iconKey": null,
+    "description": "Deployment automation, infrastructure scripts, and CI helpers.",
+    "position": 64
+  },
+  {
+    "slug": "testing-tools",
+    "name": "Testing",
+    "parentSlug": "developer-tools",
+    "iconKey": null,
+    "description": "Test runners, mock servers, and automated testing harnesses.",
+    "position": 65
+  },
+  {
+    "slug": "mcp-servers",
+    "name": "MCP servers",
+    "parentSlug": "developer-tools",
+    "iconKey": null,
+    "description": "Model Context Protocol servers connecting tools and data to AI agents.",
+    "position": 66
+  },
+  {
+    "slug": "ai-and-agents",
+    "name": "AI and agents",
+    "parentSlug": null,
+    "iconKey": "cat-ai-and-agents",
+    "description": "Agent frameworks, chat UIs, prompt tools, and local LLM apps.",
+    "position": 70
+  },
+  {
+    "slug": "agent-frameworks",
+    "name": "Agent frameworks",
+    "parentSlug": "ai-and-agents",
+    "iconKey": null,
+    "description": "Orchestration libraries and runtimes for autonomous AI agents.",
+    "position": 71
+  },
+  {
+    "slug": "chat-uis",
+    "name": "Chat UIs",
+    "parentSlug": "ai-and-agents",
+    "iconKey": null,
+    "description": "Conversational web interfaces for Large Language Models.",
+    "position": 72
+  },
+  {
+    "slug": "prompt-tools",
+    "name": "Prompt tools",
+    "parentSlug": "ai-and-agents",
+    "iconKey": null,
+    "description": "Prompt engineering, evaluation, and template management tools.",
+    "position": 73
+  },
+  {
+    "slug": "local-llm-frontends",
+    "name": "Local LLM front-ends",
+    "parentSlug": "ai-and-agents",
+    "iconKey": null,
+    "description": "User interfaces for running open models locally on your device.",
+    "position": 74
+  },
+  {
+    "slug": "rag-apps",
+    "name": "RAG apps",
+    "parentSlug": "ai-and-agents",
+    "iconKey": null,
+    "description": "Retrieval-augmented generation pipelines and document question answering.",
+    "position": 75
+  },
+  {
+    "slug": "creative-and-design",
+    "name": "Creative and design",
+    "parentSlug": null,
+    "iconKey": "cat-creative-and-design",
+    "description": "Image editors, pixel art, generative art, fonts, and UI kits.",
+    "position": 80
+  },
+  {
+    "slug": "image-editors",
+    "name": "Image editors",
+    "parentSlug": "creative-and-design",
+    "iconKey": null,
+    "description": "Raster and vector image manipulation and drawing software.",
+    "position": 81
+  },
+  {
+    "slug": "pixel-art",
+    "name": "Pixel art",
+    "parentSlug": "creative-and-design",
+    "iconKey": null,
+    "description": "Grid-based sprite and pixel art authoring tools.",
+    "position": 82
+  },
+  {
+    "slug": "generative-art",
+    "name": "Generative art",
+    "parentSlug": "creative-and-design",
+    "iconKey": null,
+    "description": "Algorithmic visual art and creative coding sketches.",
+    "position": 83
+  },
+  {
+    "slug": "fonts-and-typography",
+    "name": "Fonts",
+    "parentSlug": "creative-and-design",
+    "iconKey": null,
+    "description": "Font editors, glyph visualizers, and typography tools.",
+    "position": 84
+  },
+  {
+    "slug": "ui-kits",
+    "name": "UI kits",
+    "parentSlug": "creative-and-design",
+    "iconKey": null,
+    "description": "Component libraries, wireframing kits, and design systems.",
+    "position": 85
+  },
+  {
+    "slug": "finance-and-money",
+    "name": "Finance and money",
+    "parentSlug": null,
+    "iconKey": "cat-finance-and-money",
+    "description": "Budgeting, invoicing, expense splitting, and portfolio trackers.",
+    "position": 90
+  },
+  {
+    "slug": "budgeting",
+    "name": "Budgeting",
+    "parentSlug": "finance-and-money",
+    "iconKey": null,
+    "description": "Personal finance, envelope budgeting, and spending tracking.",
+    "position": 91
+  },
+  {
+    "slug": "invoicing",
+    "name": "Invoicing",
+    "parentSlug": "finance-and-money",
+    "iconKey": null,
+    "description": "Invoice generation and payment tracking for freelancers and businesses.",
+    "position": 92
+  },
+  {
+    "slug": "expense-splitting",
+    "name": "Expense splitting",
+    "parentSlug": "finance-and-money",
+    "iconKey": null,
+    "description": "Bill sharing and shared household expense calculators.",
+    "position": 93
+  },
+  {
+    "slug": "portfolio-trackers",
+    "name": "Portfolio trackers",
+    "parentSlug": "finance-and-money",
+    "iconKey": null,
+    "description": "Investment, stock, and cryptocurrency portfolio tracking.",
+    "position": 94
+  },
+  {
+    "slug": "health-and-fitness",
+    "name": "Health and fitness",
+    "parentSlug": null,
+    "iconKey": "cat-health-and-fitness",
+    "description": "Workout logs, meal planners, and sleep and mood trackers.",
+    "position": 100
+  },
+  {
+    "slug": "workout-logs",
+    "name": "Workout logs",
+    "parentSlug": "health-and-fitness",
+    "iconKey": null,
+    "description": "Exercise tracking, lifting routines, and athletic journals.",
+    "position": 101
+  },
+  {
+    "slug": "meal-planners",
+    "name": "Meal planners",
+    "parentSlug": "health-and-fitness",
+    "iconKey": null,
+    "description": "Nutrition tracking, grocery lists, and meal prep planners.",
+    "position": 102
+  },
+  {
+    "slug": "sleep-and-mood-trackers",
+    "name": "Sleep and mood trackers",
+    "parentSlug": "health-and-fitness",
+    "iconKey": null,
+    "description": "Wellbeing, sleep cycle, and mental wellness journals.",
+    "position": 103
+  },
+  {
+    "slug": "education-and-learning",
+    "name": "Education and learning",
+    "parentSlug": null,
+    "iconKey": "cat-education-and-learning",
+    "description": "Flashcards, language learning, coding tutorials, and study aids.",
+    "position": 110
+  },
+  {
+    "slug": "flashcards",
+    "name": "Flashcards",
+    "parentSlug": "education-and-learning",
+    "iconKey": null,
+    "description": "Spaced repetition and memory flashcard applications.",
+    "position": 111
+  },
+  {
+    "slug": "language-learning",
+    "name": "Language learning",
+    "parentSlug": "education-and-learning",
+    "iconKey": null,
+    "description": "Vocabulary practice and grammar learning tools.",
+    "position": 112
+  },
+  {
+    "slug": "coding-tutorials",
+    "name": "Coding tutorials",
+    "parentSlug": "education-and-learning",
+    "iconKey": null,
+    "description": "Interactive programming courses and code playgrounds.",
+    "position": 113
+  },
+  {
+    "slug": "study-tools",
+    "name": "Study tools",
+    "parentSlug": "education-and-learning",
+    "iconKey": null,
+    "description": "Exam preparation, study guides, and academic timers.",
+    "position": 114
+  },
+  {
+    "slug": "home-and-life",
+    "name": "Home and life",
+    "parentSlug": null,
+    "iconKey": "cat-home-and-life",
+    "description": "Recipes, home automation, inventory, and plant and pet care.",
+    "position": 120
+  },
+  {
+    "slug": "recipes",
+    "name": "Recipes",
+    "parentSlug": "home-and-life",
+    "iconKey": null,
+    "description": "Recipe organizers, cooking guides, and grocery managers.",
+    "position": 121
+  },
+  {
+    "slug": "home-automation",
+    "name": "Home automation",
+    "parentSlug": "home-and-life",
+    "iconKey": null,
+    "description": "Smart home dashboards, routines, and sensor integrations.",
+    "position": 122
+  },
+  {
+    "slug": "inventory",
+    "name": "Inventory",
+    "parentSlug": "home-and-life",
+    "iconKey": null,
+    "description": "Household item tracking, moving checklists, and pantry storage.",
+    "position": 123
+  },
+  {
+    "slug": "plant-care",
+    "name": "Plant care",
+    "parentSlug": "home-and-life",
+    "iconKey": null,
+    "description": "Watering schedules and houseplant tracking.",
+    "position": 124
+  },
+  {
+    "slug": "pet-care",
+    "name": "Pet care",
+    "parentSlug": "home-and-life",
+    "iconKey": null,
+    "description": "Pet vaccination schedules, feeding logs, and health records.",
+    "position": 125
+  },
+  {
+    "slug": "social-and-community",
+    "name": "Social and community",
+    "parentSlug": null,
+    "iconKey": "cat-social-and-community",
+    "description": "Forums, chat apps, link-in-bio pages, and event planners.",
+    "position": 130
+  },
+  {
+    "slug": "forums",
+    "name": "Forums",
+    "parentSlug": "social-and-community",
+    "iconKey": null,
+    "description": "Discussion boards and threaded community conversation spaces.",
+    "position": 131
+  },
+  {
+    "slug": "chat-apps",
+    "name": "Chat apps",
+    "parentSlug": "social-and-community",
+    "iconKey": null,
+    "description": "Instant messaging and team chat rooms.",
+    "position": 132
+  },
+  {
+    "slug": "link-in-bio",
+    "name": "Link-in-bio",
+    "parentSlug": "social-and-community",
+    "iconKey": null,
+    "description": "Single-page personal profiles and curated link hubs.",
+    "position": 133
+  },
+  {
+    "slug": "event-planners",
+    "name": "Event planners",
+    "parentSlug": "social-and-community",
+    "iconKey": null,
+    "description": "RSVP collection, meetups, and calendar coordination.",
+    "position": 134
+  },
+  {
+    "slug": "business-and-ops",
+    "name": "Business and ops",
+    "parentSlug": null,
+    "iconKey": "cat-business-and-ops",
+    "description": "CRM, booking systems, operations, and small-shop tools.",
+    "position": 140
+  },
+  {
+    "slug": "crm",
+    "name": "CRM",
+    "parentSlug": "business-and-ops",
+    "iconKey": null,
+    "description": "Customer relationship and client contact management.",
+    "position": 141
+  },
+  {
+    "slug": "booking-systems",
+    "name": "Booking systems",
+    "parentSlug": "business-and-ops",
+    "iconKey": null,
+    "description": "Appointment scheduling and service booking calendars.",
+    "position": 142
+  },
+  {
+    "slug": "small-shop-tools",
+    "name": "Small-shop tools",
+    "parentSlug": "business-and-ops",
+    "iconKey": null,
+    "description": "Point-of-sale, storefronts, and inventory for local shops.",
+    "position": 143
+  },
+  {
+    "slug": "data-and-analytics",
+    "name": "Data and analytics",
+    "parentSlug": null,
+    "iconKey": "cat-data-and-analytics",
+    "description": "Dashboards, scrapers, data visualization, and spreadsheets.",
+    "position": 150
+  },
+  {
+    "slug": "dashboards",
+    "name": "Dashboards",
+    "parentSlug": "data-and-analytics",
+    "iconKey": null,
+    "description": "Metrics visualization, analytics portals, and business reporting.",
+    "position": 151
+  },
+  {
+    "slug": "scrapers",
+    "name": "Scrapers",
+    "parentSlug": "data-and-analytics",
+    "iconKey": null,
+    "description": "Web scrapers, crawl utilities, and structured data extractors.",
+    "position": 152
+  },
+  {
+    "slug": "visualization",
+    "name": "Visualization",
+    "parentSlug": "data-and-analytics",
+    "iconKey": null,
+    "description": "Interactive chart generators and data graphic libraries.",
+    "position": 153
+  },
+  {
+    "slug": "spreadsheets",
+    "name": "Spreadsheets",
+    "parentSlug": "data-and-analytics",
+    "iconKey": null,
+    "description": "Tabular calculation and data grid workbooks.",
+    "position": 154
+  },
+  {
+    "slug": "media-and-entertainment",
+    "name": "Media and entertainment",
+    "parentSlug": null,
+    "iconKey": "cat-media-and-entertainment",
+    "description": "Media players, readers, and trackers for films, books, and games.",
+    "position": 160
+  },
+  {
+    "slug": "media-players",
+    "name": "Media players",
+    "parentSlug": "media-and-entertainment",
+    "iconKey": null,
+    "description": "Audio and video players for local and streaming media.",
+    "position": 161
+  },
+  {
+    "slug": "readers",
+    "name": "Readers",
+    "parentSlug": "media-and-entertainment",
+    "iconKey": null,
+    "description": "E-book readers, comics visualizers, and RSS article readers.",
+    "position": 162
+  },
+  {
+    "slug": "media-trackers",
+    "name": "Media trackers",
+    "parentSlug": "media-and-entertainment",
+    "iconKey": null,
+    "description": "Log books and watchlists for movies, books, and video games.",
+    "position": 163
+  },
+  {
+    "slug": "hardware-and-iot",
+    "name": "Hardware and IoT",
+    "parentSlug": null,
+    "iconKey": "cat-hardware-and-iot",
+    "description": "Raspberry Pi, Arduino, 3D printing, and smart firmware.",
+    "position": 170
+  },
+  {
+    "slug": "raspberry-pi",
+    "name": "Raspberry Pi",
+    "parentSlug": "hardware-and-iot",
+    "iconKey": null,
+    "description": "Projects and utilities for Raspberry Pi single-board computers.",
+    "position": 171
+  },
+  {
+    "slug": "arduino",
+    "name": "Arduino",
+    "parentSlug": "hardware-and-iot",
+    "iconKey": null,
+    "description": "Microcontroller firmware, sketches, and sensor controllers.",
+    "position": 172
+  },
+  {
+    "slug": "3d-printing",
+    "name": "3D printing",
+    "parentSlug": "hardware-and-iot",
+    "iconKey": null,
+    "description": "Slicers, print queue monitors, and 3D printing utilities.",
+    "position": 173
+  },
+  {
+    "slug": "smart-home-firmware",
+    "name": "Smart-home firmware",
+    "parentSlug": "hardware-and-iot",
+    "iconKey": null,
+    "description": "Open firmware for microcontrollers and home IoT sensors.",
+    "position": 174
+  },
+  {
+    "slug": "privacy-and-security",
+    "name": "Privacy and security",
+    "parentSlug": null,
+    "iconKey": "cat-privacy-and-security",
+    "description": "Password managers, VPN front-ends, ad blockers, and encryption.",
+    "position": 180
+  },
+  {
+    "slug": "password-managers",
+    "name": "Password managers",
+    "parentSlug": "privacy-and-security",
+    "iconKey": null,
+    "description": "Secure credential vaults and password generation utilities.",
+    "position": 181
+  },
+  {
+    "slug": "vpn-frontends",
+    "name": "VPN front-ends",
+    "parentSlug": "privacy-and-security",
+    "iconKey": null,
+    "description": "Client interfaces for WireGuard, OpenVPN, and mesh networks.",
+    "position": 182
+  },
+  {
+    "slug": "ad-blockers",
+    "name": "Ad blockers",
+    "parentSlug": "privacy-and-security",
+    "iconKey": null,
+    "description": "DNS sinkholes, content filters, and tracking blockers.",
+    "position": 183
+  },
+  {
+    "slug": "encryption-tools",
+    "name": "Encryption tools",
+    "parentSlug": "privacy-and-security",
+    "iconKey": null,
+    "description": "File encryption, secret sharing, and cryptography utilities.",
+    "position": 184
+  },
+  {
+    "slug": "self-hosted-and-homelab",
+    "name": "Self-hosted and homelab",
+    "parentSlug": null,
+    "iconKey": "cat-self-hosted-and-homelab",
+    "description": "Server dashboards, Docker stacks, and homelab backup tools.",
+    "position": 190
+  },
+  {
+    "slug": "server-dashboards",
+    "name": "Server dashboards",
+    "parentSlug": "self-hosted-and-homelab",
+    "iconKey": null,
+    "description": "Hardware monitoring, resource usage, and server status pages.",
+    "position": 191
+  },
+  {
+    "slug": "docker-stacks",
+    "name": "Docker stacks",
+    "parentSlug": "self-hosted-and-homelab",
+    "iconKey": null,
+    "description": "Container composition templates and container management UIs.",
+    "position": 192
+  },
+  {
+    "slug": "backup-tools",
+    "name": "Backup tools",
+    "parentSlug": "self-hosted-and-homelab",
+    "iconKey": null,
+    "description": "Automated backup schedules, deduplication, and offsite syncing.",
+    "position": 193
+  },
+  {
+    "slug": "web-templates-and-starters",
+    "name": "Web templates and starters",
+    "parentSlug": null,
+    "iconKey": "cat-web-templates-and-starters",
+    "description": "Landing pages, portfolio sites, and SaaS boilerplates.",
+    "position": 200
+  },
+  {
+    "slug": "landing-pages",
+    "name": "Landing pages",
+    "parentSlug": "web-templates-and-starters",
+    "iconKey": null,
+    "description": "High-converting marketing pages and product landing sites.",
+    "position": 201
+  },
+  {
+    "slug": "portfolios",
+    "name": "Portfolios",
+    "parentSlug": "web-templates-and-starters",
+    "iconKey": null,
+    "description": "Personal showcase templates for developers and designers.",
+    "position": 202
+  },
+  {
+    "slug": "saas-boilerplates",
+    "name": "SaaS boilerplates",
+    "parentSlug": "web-templates-and-starters",
+    "iconKey": null,
+    "description": "Full-stack starter kits with authentication, billing, and routing.",
+    "position": 203
+  },
+  {
+    "slug": "mobile-apps",
+    "name": "Mobile apps",
+    "parentSlug": null,
+    "iconKey": "cat-mobile-apps",
+    "description": "Native and cross-platform applications for iOS and Android.",
+    "position": 210
+  },
+  {
+    "slug": "ios-apps",
+    "name": "iOS",
+    "parentSlug": "mobile-apps",
+    "iconKey": null,
+    "description": "Native applications developed for Apple iOS and iPadOS.",
+    "position": 211
+  },
+  {
+    "slug": "android-apps",
+    "name": "Android",
+    "parentSlug": "mobile-apps",
+    "iconKey": null,
+    "description": "Native applications developed for the Android operating system.",
+    "position": 212
+  },
+  {
+    "slug": "cross-platform-apps",
+    "name": "Cross-platform",
+    "parentSlug": "mobile-apps",
+    "iconKey": null,
+    "description": "Mobile applications built with cross-platform frameworks.",
+    "position": 213
+  },
+  {
+    "slug": "accessibility",
+    "name": "Accessibility",
+    "parentSlug": null,
+    "iconKey": "cat-accessibility",
+    "description": "Screen-reader helpers, captioning, and high-contrast color tools.",
+    "position": 220
+  },
+  {
+    "slug": "screen-reader-helpers",
+    "name": "Screen-reader helpers",
+    "parentSlug": "accessibility",
+    "iconKey": null,
+    "description": "Assistive tools for screen reading, speech synthesis, and keyboard navigation.",
+    "position": 221
+  },
+  {
+    "slug": "captioning",
+    "name": "Captioning",
+    "parentSlug": "accessibility",
+    "iconKey": null,
+    "description": "Real-time speech-to-text, subtitle generators, and transcript tools.",
+    "position": 222
+  },
+  {
+    "slug": "color-tools",
+    "name": "Color tools",
+    "parentSlug": "accessibility",
+    "iconKey": null,
+    "description": "Contrast checkers, colorblindness simulators, and accessible palettes.",
+    "position": 223
+  },
+  {
+    "slug": "fun-and-experiments",
+    "name": "Fun and experiments",
+    "parentSlug": null,
+    "iconKey": "cat-fun-and-experiments",
+    "description": "Toys, quirky one-offs, creative experiments, and playful art.",
+    "position": 230
+  },
+  {
+    "slug": "toys",
+    "name": "Toys",
+    "parentSlug": "fun-and-experiments",
+    "iconKey": null,
+    "description": "Interactive sandbox toys, physics playgrounds, and soundboards.",
+    "position": 231
+  },
+  {
+    "slug": "weird-one-offs",
+    "name": "Weird one-offs",
+    "parentSlug": "fun-and-experiments",
+    "iconKey": null,
+    "description": "Curious, esoteric, and experimental software creations.",
+    "position": 232
+  },
+  {
+    "slug": "art-projects",
+    "name": "Art projects",
+    "parentSlug": "fun-and-experiments",
+    "iconKey": null,
+    "description": "Interactive visual essays and expressive digital art pieces.",
+    "position": 233
+  }
+]
