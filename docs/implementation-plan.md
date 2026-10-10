@@ -321,7 +321,7 @@ A task is done only when it's merged to `main`, works on the preview URL, and it
 - [ ] GitHub account or org that will own the repo, and is it public from day one? (Public fits the mission)
 - [ ] Final site name before the skeleton run, or keep "ForkYard" as a code name?
 - [ ] Cloudflare account ready, and a domain bought through Cloudflare Registrar?
-- [ ] For curated (non-author) imports, should unlicensed repos be included, or only when the author submits them?
+- [x] For curated (non-author) imports, should unlicensed repos be included? **No (2026-10-10):** curated imports must be licensed; unlicensed projects only come from their authors.
 - [ ] Is Gemini 3.8 Flash Cyber available to you? It could take the security-scan work in task 1.6 if so
 
 ## Sources

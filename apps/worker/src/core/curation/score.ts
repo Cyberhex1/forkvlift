@@ -17,7 +17,7 @@ export function starVelocity(s: Pick<RepoSnapshot, "stars" | "createdAt">, now =
 
 export function candidateChecks(s: RepoSnapshot, scan: ScanResult | null = null): CandidateCheck[] {
   return [
-    { key: "license", label: "License detected", pass: s.license !== null, detail: s.license ? s.license.name : "No license (shown, not required)" },
+    { key: "license", label: "License detected", pass: s.license !== null, detail: s.license ? s.license.name : "No license (can't be approved)" },
     { key: "readme", label: "README exists", pass: s.readmeHtml !== null, detail: null },
     {
       key: "not_empty_fork",

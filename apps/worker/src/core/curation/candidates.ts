@@ -166,6 +166,8 @@ export async function decideCandidate(
 
     // Re-ingest so the published card starts from current data.
     const s = await ingestRepo(env, current.repoFullName, { freshFor: 3600 });
+    // Owner decision: curated imports must be licensed. Unlicensed projects only come from their own authors.
+    if (!s.license) throw new HttpError("invalid_request", "Unlicensed repos can't be curated. Ask the author to add a license or submit it themselves.");
     const { id: projectId } = await insertProject(db, {
       ownerId: null,
       source: "curated",

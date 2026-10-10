@@ -48,10 +48,10 @@
       "vars": {
         "ENVIRONMENT": "preview",
         "ADMIN_GITHUB_LOGINS": "Cyberhex1",
-        "ADMIN_EMAILS": "",
-        "ACCESS_TEAM_DOMAIN": "",
+        "ADMIN_EMAILS": "kdlindsey25@gmail.com",
+        "ACCESS_TEAM_DOMAIN": "tight-night-bcaf.cloudflareaccess.com",
         "ACCESS_AUD": "",
-        "TURNSTILE_SITE_KEY": ""
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAFTEAzMVae-6aBXu"
       },
       "d1_databases": [
         { "binding": "DB", "database_name": "forkvlift-preview", "database_id": "ed963857-1a7a-4586-8e4e-69fff67838d5", "migrations_dir": "migrations" }
@@ -70,6 +70,7 @@
       },
       "vectorize": [{ "binding": "VECTORS", "index_name": "forkvlift-projects-preview" }],
       "ai": { "binding": "AI" },
+      "images": { "binding": "IMAGES" },
       "ratelimits": [
         { "name": "RL_WRITE", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
         { "name": "RL_AUTH", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
@@ -80,8 +81,8 @@
       "vars": {
         "ENVIRONMENT": "production",
         "ADMIN_GITHUB_LOGINS": "Cyberhex1",
-        "ADMIN_EMAILS": "",
-        "ACCESS_TEAM_DOMAIN": "",
+        "ADMIN_EMAILS": "kdlindsey25@gmail.com",
+        "ACCESS_TEAM_DOMAIN": "tight-night-bcaf.cloudflareaccess.com",
         "ACCESS_AUD": "",
         "TURNSTILE_SITE_KEY": ""
       },
@@ -102,6 +103,7 @@
       },
       "vectorize": [{ "binding": "VECTORS", "index_name": "forkvlift-projects-prod" }],
       "ai": { "binding": "AI" },
+      "images": { "binding": "IMAGES" },
       "ratelimits": [
         { "name": "RL_WRITE", "namespace_id": "2001", "simple": { "limit": 30, "period": 60 } },
         { "name": "RL_AUTH", "namespace_id": "2002", "simple": { "limit": 10, "period": 60 } }

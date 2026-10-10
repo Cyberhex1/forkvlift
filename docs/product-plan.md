@@ -493,7 +493,7 @@ Each gate is a suggested checkpoint before moving on, not a deadline; adjust the
 - [ ] Final name, and is the domain available?
 - [ ] Should Studio allow projects with no repo at all (idea-only), or require a GitHub link before anything goes public?
 - [ ] Must every public project have a live demo, or is a repo + screenshots enough?
-- [ ] Decided: unlicensed projects are allowed with a clear label. Still open: should curated (non-author) imports include unlicensed repos, or only author submissions?
+- [x] Decided: unlicensed projects are allowed with a clear label, but only when the author submits them. Curated (non-author) imports must be licensed (owner, 2026-10-10).
 - [ ] Will you apply for Reddit API access, or stay with the paste-a-link importer?
 - [ ] Who moderates chat at launch — just you, or a few trusted early users?
 - [ ] Music: commission an original loop, or use CC0 tracks?
