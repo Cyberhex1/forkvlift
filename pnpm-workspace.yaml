@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Dependencies allowed to run install scripts (native binaries for the toolchain).
+allowBuilds:
+  esbuild: true
+  workerd: true
+  sharp: true
+
+minimumReleaseAgeExclude:
+  - '@types/node@26.6.5'

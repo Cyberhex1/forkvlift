@@ -1,0 +1,35 @@
+{
+  "$comment": "Path → owner. The most specific matching pattern wins; anything unmatched belongs to opus. CI (scripts/check-owners.mjs) fails a PR that edits files outside its author's paths. Branch → author: agent/sol or sol/* = sol, agent/flash or flash/* = flash, everything else = opus.",
+  "agents": {
+    "opus": { "model": "Claude Opus 5.5", "app": "Claude Code", "branch": "agent/opus" },
+    "sol": { "model": "GPT-6.1 Sol", "app": "Codex (ChatGPT desktop)", "branch": "agent/sol" },
+    "flash": { "model": "Gemini 3.8 Flash", "app": "Antigravity", "branch": "agent/flash" }
+  },
+  "shared": ["docs/handoffs/**", "docs/contract-requests/**"],
+  "rules": [
+    { "pattern": "apps/web/src/features/catalog/**", "owner": "sol" },
+    { "pattern": "apps/web/src/features/studio/**", "owner": "sol" },
+    { "pattern": "apps/web/src/features/profile/**", "owner": "sol" },
+    { "pattern": "apps/web/src/features/community/**", "owner": "sol" },
+    { "pattern": "apps/web/src/features/resources/**", "owner": "sol" },
+    { "pattern": "apps/web/src/features/growth/**", "owner": "sol" },
+    { "pattern": "apps/admin/src/**", "owner": "sol" },
+    { "pattern": "apps/admin/index.html", "owner": "sol" },
+    { "pattern": "apps/worker/src/routes/social.ts", "owner": "sol" },
+    { "pattern": "apps/worker/src/routes/growth.ts", "owner": "sol" },
+    { "pattern": "e2e/**", "owner": "sol" },
+
+    { "pattern": "apps/web/src/features/pages/**", "owner": "flash" },
+    { "pattern": "apps/web/src/features/settings/**", "owner": "flash" },
+    { "pattern": "apps/web/src/features/music/**", "owner": "flash" },
+    { "pattern": "apps/web/src/features/avatar/**", "owner": "flash" },
+    { "pattern": "apps/web/public/music/**", "owner": "flash" },
+    { "pattern": "packages/ui/src/icons/**", "owner": "flash" },
+    { "pattern": "packages/ui/src/sprites/**", "owner": "flash" },
+    { "pattern": "packages/ui/src/art/**", "owner": "flash" },
+    { "pattern": "packages/ui/src/fonts/**", "owner": "flash" },
+    { "pattern": "apps/worker/src/routes/feeds.ts", "owner": "flash" },
+    { "pattern": "data/seed/**", "owner": "flash" },
+    { "pattern": "scripts/seed/**", "owner": "flash" }
+  ]
+}

@@ -1,0 +1,20 @@
+// Admin console Worker. Not deployed in Phase 0: set up Cloudflare Access for its
+// hostname first (see README, "Admin console"), then `pnpm --filter @forkvlift/admin deploy:preview`.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "forkvlift-admin-local",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./dist", "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": ["/api/*"] },
+  "services": [{ "binding": "API", "service": "forkvlift-preview" }],
+  "env": {
+    "preview": {
+      "name": "forkvlift-admin-preview",
+      "services": [{ "binding": "API", "service": "forkvlift-preview" }]
+    },
+    "production": {
+      "name": "forkvlift-admin",
+      "services": [{ "binding": "API", "service": "forkvlift" }]
+    }
+  }
+}

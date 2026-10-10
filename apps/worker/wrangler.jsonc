@@ -1,0 +1,113 @@
+// ForkvLift Worker: serves the web app (static assets) and the API from one deploy.
+// Top level = local dev. `env.preview` / `env.production` are the deployed copies.
+// Built and deployed through apps/web (Cloudflare Vite plugin); see README.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "forkvlift-local",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": { "enabled": true },
+  "vars": {
+    "ENVIRONMENT": "local",
+    "ADMIN_GITHUB_LOGINS": "Cyberhex1",
+    "ADMIN_EMAILS": "",
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": "",
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "forkvlift-preview", "database_id": "ed963857-1a7a-4586-8e4e-69fff67838d5", "migrations_dir": "migrations" }
+  ],
+  "kv_namespaces": [{ "binding": "CACHE", "id": "82938105988842b78d1e02095ed91d91" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "forkvlift-media-preview" }],
+  "durable_objects": {
+    "bindings": [
+      { "name": "CHAT_ROOM", "class_name": "ChatRoom" },
+      { "name": "LIVE_THREAD", "class_name": "LiveThread" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ChatRoom", "LiveThread"] }],
+  "queues": {
+    "producers": [{ "binding": "JOBS", "queue": "forkvlift-jobs-preview" }],
+    "consumers": [{ "queue": "forkvlift-jobs-preview", "max_batch_size": 10, "max_batch_timeout": 5 }]
+  },
+  "triggers": { "crons": ["0 */6 * * *", "30 3 * * *"] },
+  "ratelimits": [
+    { "name": "RL_WRITE", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
+    { "name": "RL_AUTH", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+  ],
+
+  "env": {
+    "preview": {
+      "name": "forkvlift-preview",
+      "vars": {
+        "ENVIRONMENT": "preview",
+        "ADMIN_GITHUB_LOGINS": "Cyberhex1",
+        "ADMIN_EMAILS": "",
+        "ACCESS_TEAM_DOMAIN": "",
+        "ACCESS_AUD": "",
+        "TURNSTILE_SITE_KEY": ""
+      },
+      "d1_databases": [
+        { "binding": "DB", "database_name": "forkvlift-preview", "database_id": "ed963857-1a7a-4586-8e4e-69fff67838d5", "migrations_dir": "migrations" }
+      ],
+      "kv_namespaces": [{ "binding": "CACHE", "id": "82938105988842b78d1e02095ed91d91" }],
+      // R2 is not enabled on the account yet. Once enabled in the dashboard:
+      //   wrangler r2 bucket create forkvlift-media-preview   and uncomment:
+      // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "forkvlift-media-preview" }],
+      "durable_objects": {
+        "bindings": [
+          { "name": "CHAT_ROOM", "class_name": "ChatRoom" },
+          { "name": "LIVE_THREAD", "class_name": "LiveThread" }
+        ]
+      },
+      "queues": {
+        "producers": [{ "binding": "JOBS", "queue": "forkvlift-jobs-preview" }],
+        "consumers": [{ "queue": "forkvlift-jobs-preview", "max_batch_size": 10, "max_batch_timeout": 5 }]
+      },
+      "vectorize": [{ "binding": "VECTORS", "index_name": "forkvlift-projects-preview" }],
+      "ai": { "binding": "AI" },
+      "ratelimits": [
+        { "name": "RL_WRITE", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
+        { "name": "RL_AUTH", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+      ]
+    },
+    "production": {
+      "name": "forkvlift",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "ADMIN_GITHUB_LOGINS": "Cyberhex1",
+        "ADMIN_EMAILS": "",
+        "ACCESS_TEAM_DOMAIN": "",
+        "ACCESS_AUD": "",
+        "TURNSTILE_SITE_KEY": ""
+      },
+      "d1_databases": [
+        { "binding": "DB", "database_name": "forkvlift-prod", "database_id": "f97beb0e-a078-405f-8d18-81065cfc2ebe", "migrations_dir": "migrations" }
+      ],
+      "kv_namespaces": [{ "binding": "CACHE", "id": "7c19e8d8994d418298a33753693c33b8" }],
+      // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "forkvlift-media-prod" }],
+      "durable_objects": {
+        "bindings": [
+          { "name": "CHAT_ROOM", "class_name": "ChatRoom" },
+          { "name": "LIVE_THREAD", "class_name": "LiveThread" }
+        ]
+      },
+      "queues": {
+        "producers": [{ "binding": "JOBS", "queue": "forkvlift-jobs-prod" }],
+        "consumers": [{ "queue": "forkvlift-jobs-prod", "max_batch_size": 10, "max_batch_timeout": 5 }]
+      },
+      "vectorize": [{ "binding": "VECTORS", "index_name": "forkvlift-projects-prod" }],
+      "ai": { "binding": "AI" },
+      "ratelimits": [
+        { "name": "RL_WRITE", "namespace_id": "2001", "simple": { "limit": 30, "period": 60 } },
+        { "name": "RL_AUTH", "namespace_id": "2002", "simple": { "limit": 10, "period": 60 } }
+      ]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@forkvlift/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --mode preview",
+    "build:production": "vite build --mode production",
+    "typecheck": "tsc -p tsconfig.json",
+    "deploy:preview": "vite build --mode preview && wrangler deploy",
+    "deploy:production": "vite build --mode production && wrangler deploy"
+  },
+  "dependencies": {
+    "@forkvlift/shared": "workspace:*",
+    "@forkvlift/ui": "workspace:*",
+    "@tanstack/react-query": "^5.104.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router": "^8.4.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.63.1",
+    "@forkvlift/worker": "workspace:*",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.4",
+    "wrangler": "^4.149.0"
+  }
+}

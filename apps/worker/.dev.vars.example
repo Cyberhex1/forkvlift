@@ -1,0 +1,15 @@
+# Copy to .dev.vars (gitignored) for local development.
+
+# GitHub OAuth app for local dev. Callback URL: http://127.0.0.1/api/auth/github/callback
+# (GitHub allows any port on a 127.0.0.1 callback.)
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+# Cloudflare's published always-pass Turnstile test secret.
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+
+# Set to "false" to bypass fixtures and hit the real handlers + local D1.
+USE_FIXTURES=true
+
+# Lets a signed-in admin (ADMIN_GITHUB_LOGINS) use /api/admin/* locally without Cloudflare Access.
+ALLOW_SESSION_ADMIN=true

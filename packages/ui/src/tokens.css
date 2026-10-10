@@ -1,0 +1,215 @@
+/*
+ * ForkvLift design tokens. Owned by Opus (contract); icons/sprites/art by Flash.
+ *
+ * Use the Tailwind utilities these generate (bg-surface, text-fg, border-border,
+ * bg-accent, text-muted, bg-pixel-4 …). Tailwind's default palette is removed on
+ * purpose, so a hard-coded color class simply won't exist.
+ *
+ * Themes: <html data-theme="light|dark|retro">; no attribute = follow the OS.
+ */
+
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Swapped for a self-hosted pixel font when Flash adds one under packages/ui/src/fonts. */
+  --font-display: ui-monospace, "Cascadia Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Menlo, Consolas, monospace;
+  --default-font-family: var(--font-body);
+  --default-mono-font-family: var(--font-mono);
+
+  --radius-pixel: 2px;
+  --radius-card: 10px;
+
+  --shadow-pixel: 3px 3px 0 0 var(--fv-shadow);
+  --shadow-panel: 0 20px 60px -10px var(--fv-shadow-soft);
+
+  --animate-fade-in: fv-fade-in 160ms ease-out;
+  --animate-slide-up: fv-slide-up 200ms ease-out;
+}
+
+/* Semantic colors resolve per theme. */
+@theme inline {
+  --color-bg: var(--fv-bg);
+  --color-surface: var(--fv-surface);
+  --color-surface-2: var(--fv-surface-2);
+  --color-fg: var(--fv-fg);
+  --color-muted: var(--fv-muted);
+  --color-border: var(--fv-border);
+  --color-accent: var(--fv-accent);
+  --color-accent-fg: var(--fv-accent-fg);
+  --color-focus: var(--fv-focus);
+  --color-overlay: var(--fv-overlay);
+
+  --color-success: var(--fv-success);
+  --color-success-fg: var(--fv-success-fg);
+  --color-warning: var(--fv-warning);
+  --color-warning-fg: var(--fv-warning-fg);
+  --color-danger: var(--fv-danger);
+  --color-danger-fg: var(--fv-danger-fg);
+  --color-info: var(--fv-info);
+  --color-info-fg: var(--fv-info-fg);
+
+  /* Stage + license badges */
+  --color-stage-finished: var(--fv-success);
+  --color-stage-wip: var(--fv-warning);
+  --color-stage-adoption: var(--fv-info);
+  --color-license-open: var(--fv-success);
+  --color-license-none: var(--fv-danger);
+
+  /* 16-bit accent palette (same in every theme; use for art, avatars, column colors) */
+  --color-pixel-0: #1a1c2c;
+  --color-pixel-1: #5d275d;
+  --color-pixel-2: #b13e53;
+  --color-pixel-3: #ef7d57;
+  --color-pixel-4: #ffcd75;
+  --color-pixel-5: #a7f070;
+  --color-pixel-6: #38b764;
+  --color-pixel-7: #257179;
+  --color-pixel-8: #29366f;
+  --color-pixel-9: #3b5dc9;
+  --color-pixel-10: #41a6f6;
+  --color-pixel-11: #73eff7;
+  --color-pixel-12: #f4f4f4;
+  --color-pixel-13: #94b0c2;
+  --color-pixel-14: #566c86;
+  --color-pixel-15: #333c57;
+}
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --fv-bg: #f6f4ee;
+  --fv-surface: #ffffff;
+  --fv-surface-2: #eeebe2;
+  --fv-fg: #1c1b24;
+  --fv-muted: #5a5768;
+  --fv-border: #d6d2c4;
+  --fv-accent: #3348c6;
+  --fv-accent-fg: #ffffff;
+  --fv-focus: #3348c6;
+  --fv-overlay: rgb(20 18 30 / 0.45);
+  --fv-shadow: #1c1b24;
+  --fv-shadow-soft: rgb(20 18 30 / 0.35);
+  --fv-success: #1f7a3a;
+  --fv-success-fg: #ffffff;
+  --fv-warning: #8a5a00;
+  --fv-warning-fg: #ffffff;
+  --fv-danger: #b42335;
+  --fv-danger-fg: #ffffff;
+  --fv-info: #1f5fa8;
+  --fv-info-fg: #ffffff;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --fv-bg: #13121a;
+  --fv-surface: #1d1b27;
+  --fv-surface-2: #282536;
+  --fv-fg: #eceaf4;
+  --fv-muted: #a8a4ba;
+  --fv-border: #3a3650;
+  --fv-accent: #9aa8ff;
+  --fv-accent-fg: #11101a;
+  --fv-focus: #b8c2ff;
+  --fv-overlay: rgb(0 0 0 / 0.6);
+  --fv-shadow: #000000;
+  --fv-shadow-soft: rgb(0 0 0 / 0.6);
+  --fv-success: #6fd88d;
+  --fv-success-fg: #0d1f13;
+  --fv-warning: #f2c14e;
+  --fv-warning-fg: #241a00;
+  --fv-danger: #ff8a97;
+  --fv-danger-fg: #2a0a10;
+  --fv-info: #7cb8ff;
+  --fv-info-fg: #0b1b2e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --fv-bg: #13121a;
+    --fv-surface: #1d1b27;
+    --fv-surface-2: #282536;
+    --fv-fg: #eceaf4;
+    --fv-muted: #a8a4ba;
+    --fv-border: #3a3650;
+    --fv-accent: #9aa8ff;
+    --fv-accent-fg: #11101a;
+    --fv-focus: #b8c2ff;
+    --fv-overlay: rgb(0 0 0 / 0.6);
+    --fv-shadow: #000000;
+    --fv-shadow-soft: rgb(0 0 0 / 0.6);
+    --fv-success: #6fd88d;
+    --fv-success-fg: #0d1f13;
+    --fv-warning: #f2c14e;
+    --fv-warning-fg: #241a00;
+    --fv-danger: #ff8a97;
+    --fv-danger-fg: #2a0a10;
+    --fv-info: #7cb8ff;
+    --fv-info-fg: #0b1b2e;
+  }
+}
+
+/* Retro: the 16-bit night palette. */
+[data-theme="retro"] {
+  color-scheme: dark;
+  --fv-bg: #1a1c2c;
+  --fv-surface: #262b44;
+  --fv-surface-2: #333c57;
+  --fv-fg: #f4f4f4;
+  --fv-muted: #94b0c2;
+  --fv-border: #566c86;
+  --fv-accent: #ffcd75;
+  --fv-accent-fg: #1a1c2c;
+  --fv-focus: #73eff7;
+  --fv-overlay: rgb(10 10 20 / 0.65);
+  --fv-shadow: #000000;
+  --fv-shadow-soft: rgb(0 0 0 / 0.6);
+  --fv-success: #a7f070;
+  --fv-success-fg: #1a1c2c;
+  --fv-warning: #ef7d57;
+  --fv-warning-fg: #1a1c2c;
+  --fv-danger: #ff8a97;
+  --fv-danger-fg: #1a1c2c;
+  --fv-info: #41a6f6;
+  --fv-info-fg: #1a1c2c;
+}
+
+@keyframes fv-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fv-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer base {
+  html {
+    background: var(--fv-bg);
+    color: var(--fv-fg);
+  }
+  :focus-visible {
+    outline: 2px solid var(--fv-focus);
+    outline-offset: 2px;
+  }
+  /* data-motion="reduce" is set by the app from the user's setting or the OS. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) *,
+    :root:not([data-motion="full"]) *::before,
+    :root:not([data-motion="full"]) *::after {
+      animation-duration: 1ms !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  [data-motion="reduce"] *,
+  [data-motion="reduce"] *::before,
+  [data-motion="reduce"] *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
