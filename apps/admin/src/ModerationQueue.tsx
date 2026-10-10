@@ -28,6 +28,8 @@ export function ModerationQueue() {
   const noAccess = queue.error instanceof ApiError && (queue.error.status === 401 || queue.error.status === 403);
   const origin = config.data?.siteOrigin ?? "";
 
+  if (noAccess) return <StateMessage title="Admins only" tone="danger">Sign in through Cloudflare Access with an admin account.</StateMessage>;
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -43,8 +45,6 @@ export function ModerationQueue() {
 
       {queue.isPending ? (
         <Spinner label="Loading reports" />
-      ) : noAccess ? (
-        <StateMessage title="Admins only" tone="danger">Sign in through Cloudflare Access with an admin account.</StateMessage>
       ) : queue.isError ? (
         <StateMessage title="Couldn't load reports" tone="danger" action={<Button onClick={() => void queue.refetch()}>Try again</Button>} />
       ) : !items.length ? (
@@ -102,12 +102,12 @@ function ResolveDialog({ report, onClose, onDone }: { report: Report; onClose: (
     { id: "ban_user", label: "Ban the author", hint: "Signs them out everywhere and removes them from chat." },
   ];
   return (
-    <Modal open onClose={onClose} title="Resolve report">
+    <Modal open onClose={() => { if (!resolve.isPending) onClose(); }} title="Resolve report">
       <div className="space-y-4">
-        <p className="text-sm">
+        <p className="text-sm break-words">
           <strong>{REASONS[report.reason]}</strong> · {report.targetLabel ?? report.targetId}
         </p>
-        <fieldset className="space-y-2">
+        <fieldset className="space-y-2" disabled={resolve.isPending}>
           <legend className="mb-1 text-sm font-semibold">Action</legend>
           {actions.map((a) => {
             const disabled = report.targetType === "user" && (a.id === "hide" || a.id === "delete");
@@ -124,13 +124,13 @@ function ResolveDialog({ report, onClose, onDone }: { report: Report; onClose: (
         </fieldset>
         <label className="block text-sm">
           Note for the audit log
-          <textarea className={field} rows={2} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
+          <textarea className={field} disabled={resolve.isPending} rows={2} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
         </label>
         {resolve.isError ? <p role="alert" className="text-sm text-danger">{resolve.error.message}</p> : null}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="secondary" loading={resolve.isPending && resolve.variables === "dismissed"} onClick={() => resolve.mutate("dismissed")}>Dismiss</Button>
-          <Button variant={action === "ban_user" || action === "delete" ? "danger" : "primary"} loading={resolve.isPending && resolve.variables === "resolved"} onClick={() => resolve.mutate("resolved")}>Resolve</Button>
+          <Button variant="ghost" disabled={resolve.isPending} onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" disabled={resolve.isPending} loading={resolve.isPending && resolve.variables === "dismissed"} onClick={() => resolve.mutate("dismissed")}>Dismiss</Button>
+          <Button variant={action === "ban_user" || action === "delete" ? "danger" : "primary"} disabled={resolve.isPending} loading={resolve.isPending && resolve.variables === "resolved"} onClick={() => resolve.mutate("resolved")}>Resolve</Button>
         </div>
       </div>
     </Modal>
@@ -151,15 +151,15 @@ function BanPanel() {
       <h2 className="font-display">Ban or unban</h2>
       <label className="block text-sm">
         Username
-        <input className={field} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="@someone" />
+        <input className={field} disabled={ban.isPending} maxLength={40} value={username} onChange={(e) => { setUsername(e.target.value); setMsg(""); }} placeholder="@someone" />
       </label>
       <label className="block text-sm">
         Reason
-        <input className={field} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
+        <input className={field} disabled={ban.isPending} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
       </label>
       <div className="flex gap-2">
-        <Button variant="danger" size="sm" disabled={!username.trim()} loading={ban.isPending && ban.variables} onClick={() => ban.mutate(true)}>Ban</Button>
-        <Button variant="secondary" size="sm" disabled={!username.trim()} loading={ban.isPending && !ban.variables} onClick={() => ban.mutate(false)}>Unban</Button>
+        <Button variant="danger" size="sm" disabled={ban.isPending || !username.trim().replace(/^@/, "")} loading={ban.isPending && ban.variables} onClick={() => ban.mutate(true)}>Ban</Button>
+        <Button variant="secondary" size="sm" disabled={ban.isPending || !username.trim().replace(/^@/, "")} loading={ban.isPending && !ban.variables} onClick={() => ban.mutate(false)}>Unban</Button>
       </div>
       <p role="status" className="text-sm">{msg}</p>
     </Card>
@@ -179,37 +179,42 @@ function ChatPanel() {
     onError: (e) => setMsg(e.message),
   });
   const id = userId.trim();
+  const validSeconds = Number.isInteger(seconds) && seconds >= 0 && seconds <= 3600;
+  const validMinutes = Number.isInteger(minutes) && minutes >= 1 && minutes <= 10080;
   return (
-    <Card className="space-y-3 p-4">
+    <Card className="min-w-0 space-y-3 p-4">
       <h2 className="font-display">Chat rooms</h2>
       <label className="block text-sm">
         Room
-        <select className={field} value={channel} onChange={(e) => setChannel(e.target.value)}>
+        <select aria-label="Room" className={field} disabled={run.isPending} value={channel} onChange={(e) => { setChannel(e.target.value); setMsg(""); }}>
           {CHANNELS.map((c) => <option key={c} value={c}>#{c}</option>)}
         </select>
       </label>
       <div className="flex flex-wrap items-end gap-2">
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           Slow mode (seconds)
-          <input className={field} type="number" min={0} max={3600} value={seconds} onChange={(e) => setSeconds(Number(e.target.value))} />
+          <input className={field} disabled={run.isPending} aria-invalid={!validSeconds} type="number" min={0} max={3600} step={1} value={Number.isFinite(seconds) ? seconds : ""} onChange={(e) => setSeconds(e.target.valueAsNumber)} />
         </label>
-        <Button size="sm" onClick={() => run.mutate({ action: "slow", seconds })}>Set</Button>
-        <Button size="sm" variant="secondary" onClick={() => run.mutate({ action: "slow", seconds: 0 })}>Off</Button>
+        <Button size="sm" disabled={run.isPending || !validSeconds} onClick={() => run.mutate({ action: "slow", seconds })}>Set</Button>
+        <Button size="sm" variant="secondary" disabled={run.isPending} onClick={() => run.mutate({ action: "slow", seconds: 0 })}>Off</Button>
       </div>
+      {!validSeconds ? <p className="text-sm text-danger">Choose a whole number from 0 to 3600 seconds.</p> : null}
       <label className="block text-sm">
         User ID (from a report or profile)
-        <input className={field} value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="usr_…" />
+        <input className={field} disabled={run.isPending} value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="usr_…" />
       </label>
       <div className="flex flex-wrap items-end gap-2">
-        <label className="text-sm">
+        <label className="min-w-0 text-sm">
           Mute for (minutes)
-          <input className={field} type="number" min={1} max={10080} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} />
+          <input className={field} disabled={run.isPending} aria-invalid={!validMinutes} type="number" min={1} max={10080} step={1} value={Number.isFinite(minutes) ? minutes : ""} onChange={(e) => setMinutes(e.target.valueAsNumber)} />
         </label>
-        <Button size="sm" disabled={!id} onClick={() => run.mutate({ action: "mute", userId: id, minutes })}>Mute</Button>
-        <Button size="sm" variant="secondary" disabled={!id} onClick={() => run.mutate({ action: "unmute", userId: id })}>Unmute</Button>
-        <Button size="sm" variant="secondary" disabled={!id} onClick={() => run.mutate({ action: "kick", userId: id })}>Kick</Button>
-        <Button size="sm" variant="danger" disabled={!id} onClick={() => run.mutate({ action: "deleteByUser", userId: id })}>Delete their messages</Button>
+        <Button size="sm" disabled={run.isPending || !id || !validMinutes} onClick={() => run.mutate({ action: "mute", userId: id, minutes })}>Mute</Button>
+        <Button size="sm" variant="secondary" disabled={run.isPending || !id} onClick={() => run.mutate({ action: "unmute", userId: id })}>Unmute</Button>
+        <Button size="sm" variant="secondary" disabled={run.isPending || !id} onClick={() => run.mutate({ action: "kick", userId: id })}>Kick</Button>
+        <Button size="sm" variant="danger" disabled={run.isPending || !id} onClick={() => run.mutate({ action: "deleteByUser", userId: id })}>Delete their messages</Button>
       </div>
+      {!validMinutes ? <p className="text-sm text-danger">Choose a whole number from 1 to 10080 minutes.</p> : null}
+      {run.isPending ? <Spinner label="Applying chat moderation" /> : null}
       <p role="status" className="text-sm">{msg}</p>
     </Card>
   );
