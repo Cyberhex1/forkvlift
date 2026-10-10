@@ -4,12 +4,25 @@ import { DEFAULT_USER_SETTINGS, type UserSettings } from "@forkvlift/shared";
 import type { AppEnv } from "../env";
 import { getDb, schema } from "../core/db";
 import { HttpError, mount } from "../core/http";
-import { emptyPage, missing, todo } from "./_stubs";
+import { listProjects } from "../core/projects/list";
+import { missing, todo } from "./_stubs";
 
 /** Public profiles + the viewer's own account. Opus. */
 export function registerUsers(app: Hono<AppEnv>) {
   mount(app, "getProfile", () => missing("User"));
-  mount(app, "listUserProjects", () => ({ ...emptyPage(), hiddenUnlicensedCount: 0 }));
+  mount(app, "listUserProjects", async ({ params, query }, c) => {
+    const owner = await c.env.DB.prepare(`SELECT id FROM users WHERE lower(username) = lower(?) AND deleted_at IS NULL`)
+      .bind(params.username)
+      .first<{ id: string }>();
+    if (!owner) return missing("User");
+    const viewer = c.get("user");
+    return listProjects(c.env.DB, { sort: "newest", ...query }, viewer?.id ?? null, {
+      ownerId: owner.id,
+      forksOnly: query.tab === "forks",
+      // Authors always see their own unlicensed projects.
+      includeOwnUnlicensed: viewer?.id === owner.id,
+    });
+  });
 
   mount(app, "updateMe", () => todo("2.8"));
 
