@@ -129,15 +129,15 @@ Every feature in the product plan maps to one task with one owner. Within a phas
 | 1.6 | Security: rate limits, Turnstile, secret and malware checks on import | Opus 5.5 | 1.4 | Done |
 | 1.7 | Discovery cron, candidate queue, admin API behind Cloudflare Access | Opus 5.5 | 1.1 | Done |
 | 1.8 | Project card: flip, See more + author placement, badges (stage, license or "No license", build facts), touch and reduced motion | Sol 6.1 | P0 | Done |
-| 1.9 | Focus panel: blurred backdrop, shareable URL, gallery, README, fork box, WIP and unlicensed variants | Sol 6.1 | 1.8 | Not started |
-| 1.10 | Feed grid and toolbar: search, sort, filter drawer, URL state, infinite scroll; "Show unlicensed projects" switch with first-time disclaimer dialog and an "N hidden · Show them" note | Sol 6.1 | 1.2, 1.8 | Not started |
-| 1.11 | Submit form: paste URL → auto-filled preview, license message, stage picker | Sol 6.1 | 1.4 | Not started |
-| 1.12 | Admin review queue UI: auto-check chips, card preview, approve / reject / snooze, bulk actions | Sol 6.1 | 1.7 | Not started |
+| 1.9 | Focus panel: blurred backdrop, shareable URL, gallery, README, fork box, WIP and unlicensed variants | Sol 6.1 | 1.8 | Done |
+| 1.10 | Feed grid and toolbar: search, sort, filter drawer, URL state, infinite scroll; "Show unlicensed projects" switch with first-time disclaimer dialog and an "N hidden · Show them" note | Sol 6.1 | 1.2, 1.8 | Done |
+| 1.11 | Submit form: paste URL → auto-filled preview, license message, stage picker | Sol 6.1 | 1.4 | Done |
+| 1.12 | Admin review queue UI: auto-check chips, card preview, approve / reject / snooze, bulk actions | Sol 6.1 | 1.7 | Done |
 | 1.13 | Elevator music player: mute, volume, skip, remembered choice, starts on first click | Flash 3.8 | P0 | Done |
 | 1.14 | Static pages: About, Licensing 101 (including what "no license" means), Rules, Privacy, Terms, DMCA; the shared no-license disclaimer component (dialog and panel banner) | Flash 3.8 | P0 | Done |
-| 1.15 | Category taxonomy seed file and a pixel icon per category | Flash 3.8 | P0 | Not started |
-| 1.16 | Seed-catalog script: candidate URL list → ingestion → import report (see Seeding) | Flash 3.8 | 1.1 | Not started |
-| 1.17 | Empty, loading and 404 states; footer | Flash 3.8 | P0 | In review (needs rebase) |
+| 1.15 | Category taxonomy seed file and a pixel icon per category | Flash 3.8 | P0 | Done |
+| 1.16 | Seed-catalog script: candidate URL list → ingestion → import report (see Seeding) | Flash 3.8 | 1.1 | Done |
+| 1.17 | Empty, loading and 404 states; footer | Flash 3.8 | P0 | Done |
 
 **Phase 2 — Studio and profiles**
 
