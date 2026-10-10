@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ForkLiftProjectSubmission",
+  "description": "JSON schema for ForkLift catalog project submissions and mirror records.",
+  "type": "object",
+  "required": [
+    "slug",
+    "name",
+    "tagline",
+    "description",
+    "repoUrl",
+    "categorySlug",
+    "stage"
+  ],
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "minLength": 2,
+      "maxLength": 60,
+      "description": "Unique URL-friendly project identifier."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "Human-readable project title."
+    },
+    "tagline": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140,
+      "description": "Crisp one-line summary of what the project does."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000,
+      "description": "Full markdown-formatted description of the project."
+    },
+    "repoUrl": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://github\\.com/[^/]+/[^/]+/?$",
+      "description": "Public GitHub repository URL."
+    },
+    "categorySlug": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 60,
+      "description": "Slug of the primary category (from categories.json)."
+    },
+    "stage": {
+      "type": "string",
+      "enum": ["finished", "wip", "adoption"],
+      "description": "Current development stage: finished, wip, or adoption."
+    },
+    "licenseSpdx": {
+      "type": ["string", "null"],
+      "description": "SPDX license expression (e.g. MIT, Apache-2.0) or null if unlicensed."
+    },
+    "liveUrl": {
+      "type": ["string", "null"],
+      "format": "uri",
+      "description": "Live production demo URL, if available."
+    },
+    "releaseUrl": {
+      "type": ["string", "null"],
+      "format": "uri",
+      "description": "Latest packaged release or download URL, if available."
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 30
+      },
+      "maxItems": 10,
+      "description": "Search tags and keywords."
+    },
+    "stack": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tech stack components (e.g. React, Cloudflare Workers, SQLite)."
+    },
+    "platforms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Supported target platforms (e.g. web, cli, mobile, macos, windows, linux)."
+    },
+    "difficulty": {
+      "type": ["string", "null"],
+      "enum": ["beginner", "intermediate", "advanced", null],
+      "description": "Estimated setup/forking difficulty."
+    },
+    "aiTools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "AI coding assistants used (e.g. Claude Code, Cursor, Antigravity, v0)."
+    },
+    "buildTime": {
+      "type": ["string", "null"],
+      "description": "Approximate vibe-coding build duration (e.g. '3 hours', '1 weekend')."
+    },
+    "aiInvolvement": {
+      "type": ["string", "null"],
+      "enum": ["high", "medium", "low", null],
+      "description": "Degree of AI code generation vs manual coding."
+    },
+    "isTemplate": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this repo is designed specifically as a starter template."
+    },
+    "replaces": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Commercial/subscription tools this open project replaces (e.g. ['Notion', 'Trello'])."
+    },
+    "whatWorks": {
+      "type": ["string", "null"],
+      "description": "For WIP projects: what is already working."
+    },
+    "whatsMissing": {
+      "type": ["string", "null"],
+      "description": "For WIP projects: what is still missing or broken."
+    },
+    "lookingForHelp": {
+      "type": ["string", "null"],
+      "description": "Specific areas where the author invites collaboration or help."
+    }
+  },
+  "additionalProperties": false
+}
