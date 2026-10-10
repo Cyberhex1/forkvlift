@@ -133,11 +133,11 @@ Every feature in the product plan maps to one task with one owner. Within a phas
 | 1.10 | Feed grid and toolbar: search, sort, filter drawer, URL state, infinite scroll; "Show unlicensed projects" switch with first-time disclaimer dialog and an "N hidden · Show them" note | Sol 6.1 | 1.2, 1.8 | Not started |
 | 1.11 | Submit form: paste URL → auto-filled preview, license message, stage picker | Sol 6.1 | 1.4 | Not started |
 | 1.12 | Admin review queue UI: auto-check chips, card preview, approve / reject / snooze, bulk actions | Sol 6.1 | 1.7 | Not started |
-| 1.13 | Elevator music player: mute, volume, skip, remembered choice, starts on first click | Flash 3.8 | P0 | Not started |
-| 1.14 | Static pages: About, Licensing 101 (including what "no license" means), Rules, Privacy, Terms, DMCA; the shared no-license disclaimer component (dialog and panel banner) | Flash 3.8 | P0 | In review (changes requested) |
+| 1.13 | Elevator music player: mute, volume, skip, remembered choice, starts on first click | Flash 3.8 | P0 | Done |
+| 1.14 | Static pages: About, Licensing 101 (including what "no license" means), Rules, Privacy, Terms, DMCA; the shared no-license disclaimer component (dialog and panel banner) | Flash 3.8 | P0 | Done |
 | 1.15 | Category taxonomy seed file and a pixel icon per category | Flash 3.8 | P0 | Not started |
 | 1.16 | Seed-catalog script: candidate URL list → ingestion → import report (see Seeding) | Flash 3.8 | 1.1 | Not started |
-| 1.17 | Empty, loading and 404 states; footer | Flash 3.8 | P0 | Not started |
+| 1.17 | Empty, loading and 404 states; footer | Flash 3.8 | P0 | In review (needs rebase) |
 
 **Phase 2 — Studio and profiles**
 
