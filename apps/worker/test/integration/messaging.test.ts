@@ -98,3 +98,11 @@ describe("collab requests", () => {
     expect((await request(cy, { kind: "build_permission", projectId: boProject, toUsername: "ada" })).status).toBe(400);
   });
 });
+
+describe("in-app notification preferences", () => {
+  it("skips types the recipient switched off", async () => {
+    await env.DB.prepare(`UPDATE profiles SET settings = ? WHERE user_id = 'usr_bo'`).bind(JSON.stringify({ notifications: { message: { email: false, push: false } } })).run();
+    await api("/api/conversations", { method: "POST", as: ada, body: JSON.stringify({ username: "bo", body: "hi" }) });
+    expect(await unread(bo)).toBe(0);
+  });
+});

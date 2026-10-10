@@ -23,7 +23,9 @@ export function notificationStatements(db: D1Database, items: NewNotification[])
           // Muted or blocked actors never reach the recipient.
           `INSERT INTO notifications (id, user_id, type, actor_id, title, href, created_at)
            SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7
-           WHERE ?4 IS NULL OR NOT EXISTS (SELECT 1 FROM blocks WHERE blocker_id = ?2 AND blocked_id = ?4)`,
+           WHERE (?4 IS NULL OR NOT EXISTS (SELECT 1 FROM blocks WHERE blocker_id = ?2 AND blocked_id = ?4))
+             -- The recipient can switch a type off in-app (settings.notifications[type].push = false).
+             AND coalesce(json_extract((SELECT settings FROM profiles WHERE user_id = ?2), '$.notifications.' || ?3 || '.push'), 1) != 0`,
         )
         .bind(newId("ntf"), n.userId, n.type, n.actorId, n.title.slice(0, 200), n.href, Date.now()),
     );
