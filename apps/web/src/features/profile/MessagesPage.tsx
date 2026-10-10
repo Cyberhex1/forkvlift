@@ -84,7 +84,10 @@ function Thread({ conversation, viewerId }: { conversation: Conversation; viewer
     // Opening a thread marks it read on the server; refresh the inbox badge.
     if (messages.isSuccess) void qc.invalidateQueries({ queryKey: ["conversations"] });
   }, [messages.isSuccess, messages.dataUpdatedAt, qc]);
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), [messages.dataUpdatedAt]);
+  useEffect(() => {
+    // Braces matter: scrollIntoView may return a Promise, and effects must return nothing or a cleanup.
+    void end.current?.scrollIntoView({ block: "end" });
+  }, [messages.dataUpdatedAt]);
   const send = useMutation({
     mutationFn: () => api.call("sendMessage", { params: { id: conversation.id }, body: { body } }),
     onSuccess: () => {
