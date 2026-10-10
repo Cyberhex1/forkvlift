@@ -17,6 +17,8 @@
     { "pattern": "apps/admin/index.html", "owner": "sol" },
     { "pattern": "apps/worker/src/routes/social.ts", "owner": "sol" },
     { "pattern": "apps/worker/src/routes/growth.ts", "owner": "sol" },
+    { "pattern": "apps/worker/test/integration/social.test.ts", "owner": "sol" },
+    { "pattern": "apps/worker/test/integration/growth.test.ts", "owner": "sol" },
     { "pattern": "e2e/**", "owner": "sol" },
 
     { "pattern": "apps/web/src/features/pages/**", "owner": "flash" },
@@ -29,6 +31,8 @@
     { "pattern": "packages/ui/src/art/**", "owner": "flash" },
     { "pattern": "packages/ui/src/fonts/**", "owner": "flash" },
     { "pattern": "apps/worker/src/routes/feeds.ts", "owner": "flash" },
+    { "pattern": "apps/worker/src/email/templates/**", "owner": "flash" },
+    { "pattern": "apps/worker/test/integration/feeds.test.ts", "owner": "flash" },
     { "pattern": "data/seed/**", "owner": "flash" },
     { "pattern": "scripts/seed/**", "owner": "flash" }
   ]
