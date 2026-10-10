@@ -11,7 +11,7 @@ type Repo = Pick<RepoSnapshot, "name" | "description" | "topics" | "language">;
 
 /** slug → keywords. Hyphenated keywords also match as spaced phrases. */
 const RULES: Record<string, string[]> = {
-  "ai-and-agents": ["ai", "llm", "llms", "gpt", "chatgpt", "openai", "claude", "anthropic", "gemini", "ollama", "llama", "agent", "agents", "ai-agent", "chatbot", "rag", "prompt", "prompts", "langchain", "embeddings", "local-llm", "machine-learning", "stable-diffusion", "whisper"],
+  "ai-and-agents": ["ai", "llm", "llms", "gpt", "chatgpt", "openai", "claude", "anthropic", "gemini", "ollama", "llama", "agent", "agents", "ai-agent", "ai-agents", "agent-skill", "agent-skills", "claude-code", "claude-code-plugin", "codex", "cursor", "coding-agent", "copilot", "chatbot", "rag", "prompt", "prompts", "langchain", "embeddings", "local-llm", "machine-learning", "stable-diffusion", "whisper"],
   "developer-tools": ["developer-tools", "devtools", "ide", "code-editor", "vscode", "vscode-extension", "neovim", "vim", "linter", "lint", "formatter", "api-client", "devops", "ci", "github-actions", "git", "mcp", "mcp-server", "sdk", "debugger", "terminal", "code-review", "testing", "compiler", "language-server"],
   "tools-and-utilities": ["utility", "utilities", "tool", "tools", "cli", "converter", "file-converter", "browser-extension", "chrome-extension", "firefox-extension", "extension", "window-manager", "clipboard", "screenshot", "pdf", "downloader", "launcher"],
   productivity: ["productivity", "notes", "note-taking", "todo", "to-do", "todo-list", "tasks", "task-manager", "calendar", "habit", "habit-tracker", "pomodoro", "focus", "kanban", "journal", "bookmarks", "time-tracking", "markdown-editor"],

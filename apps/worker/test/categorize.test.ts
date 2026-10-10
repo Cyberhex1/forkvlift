@@ -12,6 +12,7 @@ describe("keywordCategory", () => {
     [repo("todo", "A keyboard-first to-do list with a habit tracker", ["productivity"]), "productivity"],
     [repo("mcp-weather", "MCP server exposing weather data to agents", ["mcp-server", "llm"]), "developer-tools"],
     [repo("chat-local", "Chat UI for local LLMs via Ollama", ["ollama", "llm", "chatbot"]), "ai-and-agents"],
+    [repo("open-steps", "Plain-language agent skills for Claude Code, Codex, Cursor and Gemini CLI", ["agent-skill", "agent-skills", "ai-agents", "claude-code", "claude-code-plugin"]), "ai-and-agents"],
     [repo("homelab-dash", "Dashboard for my self-hosted services", ["self-hosted", "homelab"]), "self-hosted-and-homelab"],
     [repo("pocket-plant", "Plant watering reminders for iOS", [], "Swift"), "mobile-apps"],
     [repo("recipe-box", "Save and search recipes", ["recipes", "cooking"]), "home-and-life"],
