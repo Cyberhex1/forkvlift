@@ -57,9 +57,7 @@
         { "binding": "DB", "database_name": "forkvlift-preview", "database_id": "ed963857-1a7a-4586-8e4e-69fff67838d5", "migrations_dir": "migrations" }
       ],
       "kv_namespaces": [{ "binding": "CACHE", "id": "82938105988842b78d1e02095ed91d91" }],
-      // R2 is not enabled on the account yet. Once enabled in the dashboard:
-      //   wrangler r2 bucket create forkvlift-media-preview   and uncomment:
-      // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "forkvlift-media-preview" }],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "forkvlift-media-preview" }],
       "durable_objects": {
         "bindings": [
           { "name": "CHAT_ROOM", "class_name": "ChatRoom" },
@@ -91,7 +89,7 @@
         { "binding": "DB", "database_name": "forkvlift-prod", "database_id": "f97beb0e-a078-405f-8d18-81065cfc2ebe", "migrations_dir": "migrations" }
       ],
       "kv_namespaces": [{ "binding": "CACHE", "id": "7c19e8d8994d418298a33753693c33b8" }],
-      // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "forkvlift-media-prod" }],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "forkvlift-media-prod" }],
       "durable_objects": {
         "bindings": [
           { "name": "CHAT_ROOM", "class_name": "ChatRoom" },

@@ -11,6 +11,7 @@ import { decodeCursor, encodeCursor, listProjects } from "../core/projects/list"
 import { LISTED, parseJson } from "../core/projects/rows";
 import { createProject, deleteProject, previewSubmission, updateProject } from "../core/projects/submit";
 import { clientIp, verifyTurnstile } from "../core/security";
+import { reserveUpload, serveMedia, storeUpload } from "../core/uploads";
 import { todo } from "./_stubs";
 
 /** Categories, projects, uploads. Opus (tasks 1.1–1.7, 2.2). */
@@ -124,8 +125,9 @@ export function registerCatalog(app: Hono<AppEnv>) {
   });
   mount(app, "voteRoadmapItem", () => todo("2.7"));
 
-  mount(app, "createUpload", () => todo("1.5"));
-  mount(app, "putUpload", () => todo("1.5"));
+  mount(app, "createUpload", ({ body }, c) => reserveUpload(c.env, c.get("user")!.id, body.kind, body.contentType, body.size));
+  mount(app, "putUpload", ({ params }, c) => storeUpload(c.env, c.get("user")!.id, params.key, c.req.raw));
+  mount(app, "getMedia", ({ params, query }, c) => serveMedia(c.env, params.key, query.w));
 }
 
 interface CommentRow {
