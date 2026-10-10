@@ -869,6 +869,20 @@ export const routes = {
     body: z.object({ banned: z.boolean(), reason: z.string().max(500) }),
     response: OkResponse,
   }),
+  moderateChat: route({
+    method: "POST", path: "/api/admin/chat/:slug", auth: "admin", kind: "json", area: "admin",
+    summary: "Chat moderation: delete a message (or all of a user's), slow mode, mute/unmute, kick",
+    params: SlugParams,
+    body: z.discriminatedUnion("action", [
+      z.object({ action: z.literal("delete"), messageId: z.string().max(64) }),
+      z.object({ action: z.literal("deleteByUser"), userId: Id }),
+      z.object({ action: z.literal("slow"), seconds: z.number().int().min(0).max(3600) }),
+      z.object({ action: z.literal("mute"), userId: Id, minutes: z.number().int().min(1).max(60 * 24 * 30) }),
+      z.object({ action: z.literal("unmute"), userId: Id }),
+      z.object({ action: z.literal("kick"), userId: Id }),
+    ]),
+    response: z.object({ ok: z.literal(true), slowModeSeconds: z.number().int() }),
+  }),
   adminStats: route({
     method: "GET", path: "/api/admin/stats", auth: "admin", kind: "json", area: "admin",
     summary: "Site stats",

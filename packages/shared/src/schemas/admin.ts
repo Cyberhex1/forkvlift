@@ -65,6 +65,9 @@ export const Report = z.object({
   note: z.string().max(1000),
   status: z.enum(["open", "resolved", "dismissed"]),
   reporter: UserSummary.nullable(),
+  /** What was reported, for the moderation queue ("Comment on Pixel Planner"). Null if it no longer exists. */
+  targetLabel: z.string().nullable(),
+  targetHref: z.string().nullable(),
   createdAt: IsoDate,
 });
 export type Report = z.infer<typeof Report>;
