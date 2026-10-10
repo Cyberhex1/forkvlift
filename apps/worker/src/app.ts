@@ -15,6 +15,7 @@ import { registerDev } from "./routes/dev";
 import { registerFeeds } from "./routes/feeds";
 import { registerGrowth } from "./routes/growth";
 import { registerMessages } from "./routes/messages";
+import { registerMcp } from "./routes/mcp";
 import { registerMeta } from "./routes/meta";
 import { registerSocial } from "./routes/social";
 import { registerStudio } from "./routes/studio";
@@ -42,6 +43,7 @@ registerCommunity(app);
 registerGrowth(app);
 registerFeeds(app);
 registerAdmin(app);
+registerMcp(app);
 
 const missing = unmountedRoutes();
 if (missing.length) throw new Error(`Contract routes without a handler: ${missing.join(", ")}`);
