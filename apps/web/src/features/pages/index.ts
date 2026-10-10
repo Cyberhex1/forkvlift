@@ -12,3 +12,5 @@ export {
   type UnlicensedHiddenNoticeProps,
 } from "./States";
 export { AddLicenseLink, LicenseRequestActions, licenseIssueUrl } from "./LicenseRequestActions";
+export { SavingsCounter, type SavingsCounterProps } from "./SavingsCounter";
+
