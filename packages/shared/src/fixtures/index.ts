@@ -76,6 +76,20 @@ const fxCompetition = {
   criteria: [{ id: "fx_crit_1", label: "Usefulness", description: "Does it help?", maxScore: 10, weight: 1 }],
   judges: [fxUsers.bo], version: 2,
 };
+const fxShowcase = (over: Partial<{ slug: string; title: string; kind: "web" | "mobile" | "desktop" | "game" | "art" | "video" | "tool" | "other"; hasPublicCode: boolean; status: "draft" | "published" }> = {}) => ({
+  id: `fx_show_${over.slug ?? "pocket-chef"}`, slug: over.slug ?? "fixture-pocket-chef", title: over.title ?? "Fixture: Pocket Chef",
+  tagline: "Dev fixture: an iPhone app that plans dinner from what is in the fridge.", maker: fxUsers.ada,
+  category: { slug: "home-and-life", name: "Home and life", iconKey: "cat-home-and-life" }, kind: over.kind ?? ("mobile" as const), stage: "finished" as const,
+  coverUrl: null, previewVideoUrl: null, hasPublicCode: over.hasPublicCode ?? false, catalogProject: null, aiTools: ["claude-code", "cursor"], tags: ["ios", "cooking"],
+  upvotes: 12, commentCount: 1, staffPick: false, status: over.status ?? ("published" as const), publishedAt: "2026-10-08T12:00:00.000Z", updatedAt: NOW,
+  viewer: null,
+});
+const fxShowcaseDetail = (over: Parameters<typeof fxShowcase>[0] = {}) => ({
+  ...fxShowcase(over), bodyMd: "Dev fixture. **Not a real app.**", buildStoryMd: "Built over two weekends with Claude Code.", buildTime: "2 weekends", repoUrl: null,
+  media: [{ id: "fx_smed_1", kind: "embed" as const, url: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ", alt: "Demo video" }],
+  links: [{ kind: "app_store" as const, label: "App Store", url: "https://example.com/app" }],
+});
+const fxShowcaseComment = { id: "fx_scom_1", showcaseId: "fx_show_pocket-chef", parentId: null, author: fxUsers.bo, body: "Dev fixture comment.", createdAt: NOW, editedAt: null };
 const fxAdoption = { open: true, note: "Dev fixture: looking for someone to take this on.", openedAt: "2026-10-01T12:00:00.000Z", originalAuthor: fxUsers.bo, maintainer: fxUsers.bo, viewerRequest: null, canManage: false };
 const ref = (p: ProjectCard): ProjectRef => ({ id: p.id, slug: p.slug, name: p.name, author: p.author });
 const viewer = (ctx: FixtureContext) => (ctx.viewerId ? fxSessionUser(ctx.viewerId) : null);
@@ -205,6 +219,20 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   listApiKeys: () => ({ items: [{ id: "fx_key_1", name: "My script", prefix: "fl_live_ab12", createdAt: "2026-10-01T12:00:00.000Z", lastUsedAt: null }] }),
   createApiKey: ({ body }) => ({ key: { id: "fx_key_2", name: body.name, prefix: "fl_live_cd34", createdAt: "2026-10-10T12:00:00.000Z", lastUsedAt: null }, secret: "fl_live_cd34_fixture_secret_not_real" }),
   revokeApiKey: () => ok,
+  listShowcases: () => ({ items: [fxShowcase(), fxShowcase({ slug: "fixture-neon-drift", title: "Fixture: Neon Drift", kind: "game" })], nextCursor: null }),
+  getShowcase: ({ params }) => fxShowcaseDetail({ slug: params.slug }),
+  createShowcase: ({ body }) => ({ ...fxShowcaseDetail({ title: body.title, status: body.publish ? "published" : "draft" }), tagline: body.tagline }),
+  updateShowcase: ({ params, body }) => ({ ...fxShowcaseDetail({ slug: params.slug }), ...(body.title ? { title: body.title } : {}) }),
+  deleteShowcase: () => ok,
+  myShowcases: () => ({ items: [fxShowcase({ status: "draft", slug: "fixture-draft", title: "Fixture: Draft idea" })], nextCursor: null }),
+  savedShowcases: () => ({ items: [fxShowcase()], nextCursor: null }),
+  userShowcases: () => ({ items: [fxShowcase()], nextCursor: null }),
+  voteShowcase: ({ body }) => ({ upvotes: 12 + body.value, upvoted: body.value === 1 }),
+  saveShowcase: ({ body }) => ({ saved: body.saved }),
+  listShowcaseComments: () => ({ items: [fxShowcaseComment], nextCursor: null }),
+  createShowcaseComment: ({ body }) => ({ ...fxShowcaseComment, id: "fx_scom_2", body: body.body, parentId: body.parentId }),
+  deleteShowcaseComment: () => ok,
+  setShowcaseStaffPick: () => ok,
   listCompetitions: () => ({ items: [fxCompetition], nextCursor: null }),
   getCompetition: () => fxCompetition,
   getCompetitionWinners: () => ({ competition: fxCompetition, awards: [] }),

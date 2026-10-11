@@ -75,7 +75,7 @@ export const NotificationType = z.enum([
 ]);
 export type NotificationType = z.infer<typeof NotificationType>;
 
-export const ReportTarget = z.enum(["project", "comment", "thread", "post", "chat_message", "user", "resource"]);
+export const ReportTarget = z.enum(["project", "comment", "thread", "post", "chat_message", "user", "resource", "showcase", "showcase_comment"]);
 export type ReportTarget = z.infer<typeof ReportTarget>;
 
 export const ReportReason = z.enum(["spam", "malware", "harassment", "stolen_code", "other"]);

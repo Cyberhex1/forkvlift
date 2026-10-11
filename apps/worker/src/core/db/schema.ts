@@ -647,6 +647,106 @@ export const competitionAwards = sqliteTable(
   },
   (t) => [uniqueIndex("competition_awards_prize_idx").on(t.prizeId)],
 );
+/**
+ * Showcases (Phase 5): things people built with AI, with or without public
+ * code. Never forkable; labeled "Showcase" / "Closed source" in the UI.
+ */
+export const showcases = sqliteTable(
+  "showcases",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    ownerId: text("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    tagline: text("tagline").notNull().default(""),
+    bodyMd: text("body_md").notNull().default(""),
+    /** "How I built it": tools, prompts, workflow, what was hard. */
+    buildStoryMd: text("build_story_md").notNull().default(""),
+    categorySlug: text("category_slug").notNull().references(() => categories.slug),
+    kind: text("kind", { enum: ["web", "mobile", "desktop", "game", "art", "video", "tool", "other"] }).notNull(),
+    stage: text("stage", { enum: ["finished", "wip"] }).notNull().default("finished"),
+    coverKey: text("cover_key"),
+    /** Optional public repo; when listed in the catalog too, the project id. */
+    repoUrl: text("repo_url"),
+    catalogProjectId: text("catalog_project_id").references(() => projects.id, { onDelete: "set null" }),
+    aiTools: text("ai_tools"),
+    buildTime: text("build_time"),
+    tags: text("tags"),
+    upvotes: integer("upvotes").notNull().default(0),
+    commentCount: integer("comment_count").notNull().default(0),
+    staffPick: integer("staff_pick").notNull().default(0),
+    publishedAt: ts("published_at"),
+    hiddenAt: ts("hidden_at"),
+    deletedAt: ts("deleted_at"),
+    createdAt: createdAt(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [index("showcases_owner_idx").on(t.ownerId), index("showcases_published_idx").on(t.publishedAt)],
+);
+
+export const showcaseMedia = sqliteTable(
+  "showcase_media",
+  {
+    id: text("id").primaryKey(),
+    showcaseId: text("showcase_id").notNull().references(() => showcases.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["image", "gif", "video", "embed"] }).notNull(),
+    /** R2 upload key (image/gif/video) or null for embeds. */
+    key: text("key"),
+    /** Normalized YouTube/Vimeo player URL for embeds. */
+    embedUrl: text("embed_url"),
+    alt: text("alt").notNull().default(""),
+    position: integer("position").notNull(),
+  },
+  (t) => [index("showcase_media_idx").on(t.showcaseId, t.position)],
+);
+
+export const showcaseLinks = sqliteTable(
+  "showcase_links",
+  {
+    id: text("id").primaryKey(),
+    showcaseId: text("showcase_id").notNull().references(() => showcases.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["live", "app_store", "play_store", "download", "demo", "repo", "store", "other"] }).notNull(),
+    label: text("label").notNull(),
+    url: text("url").notNull(),
+    position: integer("position").notNull(),
+  },
+  (t) => [index("showcase_links_idx").on(t.showcaseId, t.position)],
+);
+
+export const showcaseVotes = sqliteTable(
+  "showcase_votes",
+  {
+    showcaseId: text("showcase_id").notNull().references(() => showcases.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.showcaseId, t.userId] })],
+);
+
+export const showcaseSaves = sqliteTable(
+  "showcase_saves",
+  {
+    showcaseId: text("showcase_id").notNull().references(() => showcases.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.showcaseId, t.userId] }), index("showcase_saves_user_idx").on(t.userId)],
+);
+
+export const showcaseComments = sqliteTable(
+  "showcase_comments",
+  {
+    id: text("id").primaryKey(),
+    showcaseId: text("showcase_id").notNull().references(() => showcases.id, { onDelete: "cascade" }),
+    authorId: text("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    parentId: text("parent_id"),
+    body: text("body").notNull(),
+    createdAt: createdAt(),
+    editedAt: ts("edited_at"),
+    deletedAt: ts("deleted_at"),
+  },
+  (t) => [index("showcase_comments_idx").on(t.showcaseId, t.createdAt)],
+);
 /** The Fork Report newsletter (task 4.10). Double opt-in; the token confirms and unsubscribes. */
 export const subscribers = sqliteTable("subscribers", {
   id: text("id").primaryKey(),

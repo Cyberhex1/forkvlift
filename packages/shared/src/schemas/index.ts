@@ -6,3 +6,4 @@ export * from "./studio";
 export * from "./social";
 export * from "./community";
 export * from "./admin";
+export * from "./showcase";

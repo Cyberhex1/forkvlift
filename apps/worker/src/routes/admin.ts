@@ -11,6 +11,7 @@ import { syncProjectSearch } from "../core/projects/search";
 import * as comps from "../core/competitions";
 import { createEvent, updateEvent } from "../core/events";
 import * as moderation from "../core/moderation";
+import { setStaffPick } from "../core/showcases";
 import { setProvenOverride } from "../core/resources";
 
 const DAY_MS = 86_400_000;
@@ -70,6 +71,11 @@ export function registerAdmin(app: Hono<AppEnv>) {
     const res = await comps.publish(c.env.DB, params.id, body);
     await audit(c.env.DB, actor(c), "competition.publish", "competition", params.id, { awards: body.awards });
     return res;
+  });
+  mount(app, "setShowcaseStaffPick", async ({ params, body }, c) => {
+    await setStaffPick(c.env.DB, params.slug, body.staffPick);
+    await audit(c.env.DB, actor(c), body.staffPick ? "showcase.staff_pick" : "showcase.unpick", "showcase", params.slug, {});
+    return { ok: true as const };
   });
   mount(app, "listReports", ({ query }, c) => moderation.listReports(c.env.DB, query.status ?? "open", query.cursor, query.limit));
   mount(app, "resolveReport", ({ params, body }, c) => moderation.resolveReport(c.env, actor(c), params.id, body));

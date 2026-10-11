@@ -30,7 +30,7 @@ export async function seedCategory(slug: string, parent: string | null = null) {
 
 /** Empty every table the tests write to. */
 export async function resetDb() {
-  const tables = ["competition_awards", "competition_scorecards", "competition_judges", "competition_criteria", "competition_prizes", "competition_rounds", "growth_ballots", "growth_entries", "growth_events", "adoption_requests", "project_adoptions", "subscribers", "api_keys", "badge_events", "user_badges", "notifications", "reports", "audit_log", "chat_snapshots", "resource_projects", "resource_ratings", "resource_reports", "resources", "posts", "threads", "roadmap_items", "projects_fts", "votes", "comments", "collection_items", "collections", "project_tags", "forks", "board_cards", "board_columns", "boards", "projects", "sessions", "profiles", "avatars", "users", "categories"];
+  const tables = ["showcase_comments", "showcase_saves", "showcase_votes", "showcase_links", "showcase_media", "showcases", "competition_awards", "competition_scorecards", "competition_judges", "competition_criteria", "competition_prizes", "competition_rounds", "growth_ballots", "growth_entries", "growth_events", "adoption_requests", "project_adoptions", "subscribers", "api_keys", "badge_events", "user_badges", "notifications", "reports", "audit_log", "chat_snapshots", "resource_projects", "resource_ratings", "resource_reports", "resources", "posts", "threads", "roadmap_items", "projects_fts", "votes", "comments", "collection_items", "collections", "project_tags", "forks", "board_cards", "board_columns", "boards", "projects", "sessions", "profiles", "avatars", "users", "categories"];
   await env.DB.batch(tables.map((t) => env.DB.prepare(`DELETE FROM ${t}`)));
 }
 

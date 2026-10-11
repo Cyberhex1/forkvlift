@@ -7,6 +7,11 @@
 import { z } from "zod";
 import {
   AdminStats,
+  ShowcaseCard,
+  ShowcaseComment,
+  ShowcaseDetail,
+  ShowcaseInput,
+  ShowcaseKind,
   Award,
   CompetitionRound,
   Criterion,
@@ -969,6 +974,98 @@ export const routes = {
     body: z.object({ scores: Scorecard.shape.scores, note: z.string().max(2000), submit: z.boolean() }),
     response: Scorecard,
   }),
+  // showcases (Phase 5)
+  listShowcases: route({
+    method: "GET", path: "/api/showcases", auth: "public", kind: "json", area: "showcases",
+    summary: "Showcase feed",
+    query: PageQuery.extend({
+      sort: z.enum(["trending", "new", "top"]).optional(),
+      category: Slug.optional(),
+      kind: ShowcaseKind.optional(),
+      tool: z.string().max(40).optional(),
+      q: z.string().max(200).optional(),
+      staffPicks: QueryBool.optional(),
+    }),
+    response: page(ShowcaseCard),
+  }),
+  getShowcase: route({
+    method: "GET", path: "/api/showcases/:slug", auth: "public", kind: "json", area: "showcases",
+    summary: "Showcase page (drafts: maker only)",
+    params: SlugParams,
+    response: ShowcaseDetail,
+  }),
+  createShowcase: route({
+    method: "POST", path: "/api/showcases", auth: "user", kind: "json", area: "showcases",
+    summary: "Create a showcase (publish now or keep as a draft)",
+    body: ShowcaseInput.extend({ publish: z.boolean(), turnstileToken: TurnstileToken }),
+    response: ShowcaseDetail,
+  }),
+  updateShowcase: route({
+    method: "PATCH", path: "/api/showcases/:slug", auth: "user", kind: "json", area: "showcases",
+    summary: "Edit your showcase; publish: true publishes a draft, false unpublishes",
+    params: SlugParams,
+    body: ShowcaseInput.partial().extend({ publish: z.boolean().optional() }),
+    response: ShowcaseDetail,
+  }),
+  deleteShowcase: route({
+    method: "DELETE", path: "/api/showcases/:slug", auth: "user", kind: "json", area: "showcases",
+    summary: "Delete your showcase",
+    params: SlugParams,
+    response: OkResponse,
+  }),
+  myShowcases: route({
+    method: "GET", path: "/api/me/showcases", auth: "user", kind: "json", area: "showcases",
+    summary: "Your showcases, drafts included",
+    query: PageQuery,
+    response: page(ShowcaseCard),
+  }),
+  userShowcases: route({
+    method: "GET", path: "/api/users/:username/showcases", auth: "public", kind: "json", area: "showcases",
+    summary: "Someone's published showcases",
+    params: UsernameParams,
+    query: PageQuery,
+    response: page(ShowcaseCard),
+  }),
+  voteShowcase: route({
+    method: "POST", path: "/api/showcases/:slug/vote", auth: "user", kind: "json", area: "showcases",
+    summary: "Upvote (1) or take it back (0)",
+    params: SlugParams,
+    body: z.object({ value: z.union([z.literal(0), z.literal(1)]) }),
+    response: z.object({ upvotes: z.number().int(), upvoted: z.boolean() }),
+  }),
+  saveShowcase: route({
+    method: "PUT", path: "/api/showcases/:slug/save", auth: "user", kind: "json", area: "showcases",
+    summary: "Save or unsave",
+    params: SlugParams,
+    body: z.object({ saved: z.boolean() }),
+    response: z.object({ saved: z.boolean() }),
+  }),
+  savedShowcases: route({
+    method: "GET", path: "/api/me/showcases/saved", auth: "user", kind: "json", area: "showcases",
+    summary: "Showcases you saved",
+    query: PageQuery,
+    response: page(ShowcaseCard),
+  }),
+  listShowcaseComments: route({
+    method: "GET", path: "/api/showcases/:slug/comments", auth: "public", kind: "json", area: "showcases",
+    summary: "Comments, oldest first",
+    params: SlugParams,
+    query: PageQuery,
+    response: page(ShowcaseComment),
+  }),
+  createShowcaseComment: route({
+    method: "POST", path: "/api/showcases/:slug/comments", auth: "user", kind: "json", area: "showcases",
+    summary: "Comment on a showcase",
+    params: SlugParams,
+    body: z.object({ body: z.string().trim().min(1).max(5000), parentId: Id.nullable(), turnstileToken: TurnstileToken }),
+    response: ShowcaseComment,
+  }),
+  deleteShowcaseComment: route({
+    method: "DELETE", path: "/api/showcases/:slug/comments/:id", auth: "user", kind: "json", area: "showcases",
+    summary: "Delete your comment (or any comment on your showcase)",
+    params: z.object({ slug: Slug, id: Id }),
+    response: OkResponse,
+  }),
   // admin (behind Cloudflare Access)
   listCandidates: route({
     method: "GET", path: "/api/admin/candidates", auth: "admin", kind: "json", area: "admin",
@@ -1067,6 +1164,12 @@ export const routes = {
     params: IdParams,
     body: z.object({ awards: z.array(z.object({ prizeId: Id, entryId: Id, rationaleMd: z.string().max(5000) })).min(1).max(20), expectedVersion: z.number().int().positive() }),
     response: z.object({ competition: CompetitionRound, awards: z.array(Award) }),
+  }),  setShowcaseStaffPick: route({
+    method: "POST", path: "/api/admin/showcases/:slug/staff-pick", auth: "admin", kind: "json", area: "admin",
+    summary: "Mark or unmark a staff pick (\"Showcase of the week\")",
+    params: SlugParams,
+    body: z.object({ staffPick: z.boolean() }),
+    response: OkResponse,
   }),  listReports: route({
     method: "GET", path: "/api/admin/reports", auth: "admin", kind: "json", area: "admin",
     summary: "Moderation queue",
