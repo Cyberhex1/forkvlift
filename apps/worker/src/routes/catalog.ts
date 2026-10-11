@@ -12,6 +12,7 @@ import { getProjectDetail } from "../core/projects/detail";
 import { continueProject } from "../core/projects/fork";
 import { getForkTree } from "../core/projects/forktree";
 import { findSimilar } from "../core/projects/semantic";
+import { findSimilarShowcases } from "../core/showcase-search";
 import { decodeCursor, encodeCursor, listProjects } from "../core/projects/list";
 import { LISTED, parseJson } from "../core/projects/rows";
 import { createProject, deleteProject, previewSubmission, updateProject } from "../core/projects/submit";
@@ -57,8 +58,15 @@ export function registerCatalog(app: Hono<AppEnv>) {
   });
   mount(app, "decideProjectAdoption", ({ params, body }, c) => adoption.decide(c.env.DB, c.get("user")!, params.slug, params.id, body.decision));
 
-  // "Has this been built?" (4.1): meaning first, keywords as a top-up.
-  mount(app, "similarProjects", async ({ query }, c) => ({ items: await findSimilar(c.env, query.q, query.limit ?? 6, c.get("user")) }));
+  // "Has this been built?" (4.1, 5.2): meaning first, keywords as a top-up; showcases alongside projects.
+  mount(app, "similarProjects", async ({ query }, c) => {
+    const limit = query.limit ?? 6;
+    const [items, showcases] = await Promise.all([
+      findSimilar(c.env, query.q, limit, c.get("user")),
+      findSimilarShowcases(c.env, query.q, Math.min(limit, 6), c.get("user")?.id ?? null),
+    ]);
+    return { items, showcases };
+  });
 
   mount(app, "getProject", ({ params }, c) => getProjectDetail(c.env.DB, params.slug, c.get("user")));
 

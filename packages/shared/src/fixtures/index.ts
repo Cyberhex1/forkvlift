@@ -147,7 +147,7 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   suggestCategory: () => ok,
 
   listProjects: ({ query }) => filterProjects(query),
-  similarProjects: ({ query }) => ({ items: fxProjects.filter((p) => p.license).slice(0, query.limit ?? 3) }),
+  similarProjects: ({ query }) => ({ items: fxProjects.filter((p) => p.license).slice(0, query.limit ?? 3), showcases: [fxShowcase()] }),
   getProject: ({ params }) => project(params.slug),
   previewSubmission: ({ body }) => ({
     repoUrl: body.repoUrl,
