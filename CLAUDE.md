@@ -34,7 +34,7 @@ If this brief and those docs disagree, the docs win. Ask the owner if unsure.
 | Agent | Runs in | Branch / worktree | Owns |
 | --- | --- | --- | --- |
 | Claude Opus 5.5 | Claude Code (Claude desktop app) | `agent/opus` (+ `main` for merges) | Skeleton, `packages/shared` (contract), core/auth, Durable Objects, jobs, security, all merges |
-| GPT-6.1 Sol | Codex in the ChatGPT desktop app | `agent/sol` | Feature UIs under `apps/web/src/features/{catalog,studio,profile,community,resources,growth}`, `apps/admin` UI, `e2e/` |
+| GPT-6.1 Sol | Codex in the ChatGPT desktop app | `agent/sol` | Feature UIs under `apps/web/src/features/{catalog,studio,profile,community,resources,growth,showcases}`, `apps/admin` UI, `e2e/` |
 | Gemini 3.8 Flash | Antigravity IDE | `agent/flash` | `features/{pages,settings,music,avatar}`, icons/sprites in `packages/ui`, feeds, badges, seed scripts |
 
 `OWNERS.json` is the source of truth once it exists. Edit only your folders. Request changes to anyone else's via `docs/contract-requests/`.
