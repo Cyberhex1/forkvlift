@@ -181,7 +181,7 @@ Every feature in the product plan maps to one task with one owner. Within a phas
 | --- | --- | --- | --- | --- |
 | 4.1 | Semantic search and the "Has this been built?" check (Vectorize + embeddings) | Opus 5.5 | 1.2 | Done |
 | 4.2 | MCP endpoint so coding agents can search the catalog and fetch starter prompts | Opus 5.5 | 4.1 | Done |
-| 4.3 | Public API with keys and rate limits | Opus 5.5 | 1.6 | Not started |
+| 4.3 | Public API with keys and rate limits | Opus 5.5 | 1.6 | Done |
 | 4.4 | Agent starter-prompt generator per project (repo summary → paste-ready prompt) | Sol 6.1 | 1.1 | Not started |
 | 4.5 | Requests board and bounties (API and UI) | Sol 6.1 | P0 | Not started |
 | 4.6 | Launch days and leaderboards; Fork Friday and build jams with voting | Sol 6.1 | 1.10 | Not started |

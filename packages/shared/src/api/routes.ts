@@ -7,6 +7,7 @@
 import { z } from "zod";
 import {
   AdminStats,
+  ApiKey,
   AiInvolvement,
   AiTool,
   AlternativeProduct,
@@ -381,6 +382,23 @@ export const routes = {
   downloadExport: route({
     method: "GET", path: "/api/me/export", auth: "user", kind: "text", area: "me",
     summary: "Download the export as a JSON file (built on request)",
+  }),
+  listApiKeys: route({
+    method: "GET", path: "/api/me/api-keys", auth: "user", kind: "json", area: "me",
+    summary: "Your public API keys",
+    response: z.object({ items: z.array(ApiKey) }),
+  }),
+  createApiKey: route({
+    method: "POST", path: "/api/me/api-keys", auth: "user", kind: "json", area: "me",
+    summary: "Create an API key (the secret is returned once)",
+    body: z.object({ name: z.string().trim().min(1).max(60) }),
+    response: z.object({ key: ApiKey, secret: z.string() }),
+  }),
+  revokeApiKey: route({
+    method: "DELETE", path: "/api/me/api-keys/:id", auth: "user", kind: "json", area: "me",
+    summary: "Revoke an API key",
+    params: IdParams,
+    response: OkResponse,
   }),
   deleteAccount: route({
     method: "DELETE", path: "/api/me", auth: "user", kind: "json", area: "me",

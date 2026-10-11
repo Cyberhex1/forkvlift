@@ -175,6 +175,9 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   updateAvatar: ({ body }) => body,
   setShowcase: ({ body }) => ({ projectIds: body.projectIds }),
   exportData: () => ({ status: "queued", downloadUrl: null }),
+  listApiKeys: () => ({ items: [{ id: "fx_key_1", name: "My script", prefix: "fl_live_ab12", createdAt: "2026-10-01T12:00:00.000Z", lastUsedAt: null }] }),
+  createApiKey: ({ body }) => ({ key: { id: "fx_key_2", name: body.name, prefix: "fl_live_cd34", createdAt: "2026-10-10T12:00:00.000Z", lastUsedAt: null }, secret: "fl_live_cd34_fixture_secret_not_real" }),
+  revokeApiKey: () => ok,
   deleteAccount: () => ok,
 
   listFollowing: () => ({ items: [{ targetType: "user", targetId: fxUsers.bo.id, label: fxUsers.bo.displayName, href: `/u/${fxUsers.bo.username}`, createdAt: NOW }], nextCursor: null }),

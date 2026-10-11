@@ -43,6 +43,7 @@ export function SettingsPage() {
           <>
             <PrivacySection user={user} />
             <NotificationsSection user={user} />
+            <ApiKeysSection />
             <DataSection user={user} />
           </>
         ) : null}
@@ -249,6 +250,73 @@ function NotificationsSection({ user }: { user: SessionUser }) {
         Weekly digest email
       </label>
       {!user.email ? <p className="text-sm text-muted">There's no email on your account, so only in-app notifications apply.</p> : null}
+    </Section>
+  );
+}
+
+function ApiKeysSection() {
+  const qc = useQueryClient();
+  const keys = useQuery({ queryKey: ["api-keys"], queryFn: () => api.call("listApiKeys") });
+  const [name, setName] = useState("");
+  const [secret, setSecret] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const create = useMutation({
+    mutationFn: () => api.call("createApiKey", { body: { name: name.trim() } }),
+    onSuccess: (r) => {
+      setSecret(r.secret);
+      setCopied(false);
+      setName("");
+      void qc.invalidateQueries({ queryKey: ["api-keys"] });
+    },
+  });
+  const revoke = useMutation({
+    mutationFn: (id: string) => api.call("revokeApiKey", { params: { id } }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["api-keys"] }),
+  });
+  return (
+    <Section id="api-keys" title="API keys">
+      <p className="text-sm text-muted">
+        The public API (<code className="font-mono">/api/v1</code>) and the MCP endpoint for coding agents work without a key at 60 requests a minute. A key raises that to 600. Send it as{" "}
+        <code className="font-mono">Authorization: Bearer &lt;key&gt;</code>.
+      </p>
+      {secret ? (
+        <div role="status" className="space-y-2 rounded-pixel border border-warning p-3 text-sm">
+          <p className="font-semibold">Copy your new key now. It won&apos;t be shown again.</p>
+          <code className="block select-all break-all rounded-pixel bg-surface-2 p-2 font-mono text-xs">{secret}</code>
+          <div className="flex gap-2">
+            <Button size="sm" variant="secondary" onClick={() => void navigator.clipboard.writeText(secret).then(() => setCopied(true))}>{copied ? "Copied" : "Copy key"}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setSecret(null)}>Done</Button>
+          </div>
+        </div>
+      ) : null}
+      {keys.isPending ? <Spinner label="Loading keys" /> : keys.isError ? <p role="alert" className="text-sm text-danger">Couldn&apos;t load your keys.</p> : keys.data.items.length ? (
+        <ul className="divide-y divide-border rounded-pixel border border-border">
+          {keys.data.items.map((k) => (
+            <li key={k.id} className="flex flex-wrap items-center gap-2 p-2 text-sm">
+              <span className="font-semibold">{k.name}</span>
+              <code className="font-mono text-xs text-muted">{k.prefix}…</code>
+              <span className="text-xs text-muted">{k.lastUsedAt ? `used ${new Date(k.lastUsedAt).toLocaleDateString()}` : "never used"}</span>
+              <Button size="sm" variant="ghost" className="ml-auto" loading={revoke.isPending && revoke.variables === k.id} onClick={() => revoke.mutate(k.id)}>Revoke</Button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted">No keys yet.</p>
+      )}
+      <form
+        className="flex flex-wrap items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          create.mutate();
+        }}
+      >
+        <label className="min-w-0 flex-1 text-sm">
+          New key name
+          <input className={field} maxLength={60} placeholder="My script" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <Button type="submit" size="sm" loading={create.isPending} disabled={!name.trim()}>Create key</Button>
+      </form>
+      {create.isError ? <p role="alert" className="text-sm text-danger">{create.error.message}</p> : null}
     </Section>
   );
 }
