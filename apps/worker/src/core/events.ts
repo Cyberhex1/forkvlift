@@ -10,6 +10,11 @@ import { HttpError, notFound } from "./errors";
 import { newId } from "./ids";
 import { decodeCursor, encodeCursor } from "./projects/list";
 import { LISTED, parseJson, rowsToCards, type ProjectRow } from "./projects/rows";
+import * as showcaseEvents from "./showcase-events";
+
+/** Live entries in a showcase event: not withdrawn, showcase still published by a live account. */
+const SHOWCASE_ENTRY_COUNT = `(SELECT count(*) FROM showcase_entries se JOIN showcases s ON s.id = se.showcase_id JOIN users u ON u.id = s.owner_id
+    WHERE se.event_id = e.id AND se.withdrawn_at IS NULL AND s.published_at IS NOT NULL AND s.hidden_at IS NULL AND s.deleted_at IS NULL AND u.deleted_at IS NULL AND u.banned_at IS NULL)`;
 
 export interface EventRow {
   id: string;
@@ -28,7 +33,8 @@ export interface EventRow {
 }
 
 const EVENT_SELECT = `SELECT e.*, f.slug AS f_slug, f.name AS f_name,
-  (SELECT count(*) FROM growth_entries ge JOIN projects p ON p.id = ge.project_id WHERE ge.event_id = e.id AND ge.withdrawn_at IS NULL AND ${LISTED} AND p.license_spdx IS NOT NULL) AS entry_count
+  CASE WHEN e.kind = 'show_off' THEN ${SHOWCASE_ENTRY_COUNT}
+    ELSE (SELECT count(*) FROM growth_entries ge JOIN projects p ON p.id = ge.project_id WHERE ge.event_id = e.id AND ge.withdrawn_at IS NULL AND ${LISTED} AND p.license_spdx IS NOT NULL) END AS entry_count
   FROM growth_events e LEFT JOIN projects f ON f.id = e.featured_project_id`;
 
 export function statusOf(e: Pick<EventRow, "starts_at" | "submission_ends_at" | "voting_ends_at" | "cancelled_at">, now = Date.now()): GrowthEventStatus {
@@ -61,7 +67,7 @@ export async function eventById(db: D1Database, id: string): Promise<EventRow | 
   return db.prepare(`${EVENT_SELECT} WHERE e.id = ?`).bind(id).first<EventRow>();
 }
 
-async function eventBySlug(db: D1Database, slug: string): Promise<EventRow> {
+export async function eventBySlug(db: D1Database, slug: string): Promise<EventRow> {
   const e = await db.prepare(`${EVENT_SELECT} WHERE e.slug = ?`).bind(slug).first<EventRow>();
   if (!e) throw notFound("Event not found");
   return e;
@@ -96,6 +102,7 @@ export async function listEvents(db: D1Database, q: { cursor?: string; limit?: n
 
 /** Projects the viewer could enter: theirs, listed, licensed, and (Fork Friday) descended from the featured project. */
 async function eligibleProjectIds(db: D1Database, e: EventRow, userId: string): Promise<string[]> {
+  if (e.kind === "show_off") return [];
   const { results } = await db.prepare(`SELECT p.id FROM projects p WHERE p.owner_id = ? AND ${LISTED} AND p.license_spdx IS NOT NULL`).bind(userId).all<{ id: string }>();
   if (e.kind !== "fork_friday") return results.map((r) => r.id);
   if (!e.featured_project_id) return [];
@@ -120,7 +127,10 @@ export async function getEvent(db: D1Database, slug: string, viewer: SessionUser
   const event = toEvent(e);
   let viewerCanSubmit = false;
   let viewerBallot: string | null = null;
-  if (viewer) {
+  if (viewer && e.kind === "show_off") {
+    if (event.status === "submitting") viewerCanSubmit = (await showcaseEvents.eligibleShowcaseIds(db, viewer.id)).length > 0;
+    viewerBallot = await showcaseEvents.ballotOf(db, e.id, viewer.id);
+  } else if (viewer) {
     if (event.status === "submitting") viewerCanSubmit = (await eligibleProjectIds(db, e, viewer.id)).length > 0;
     viewerBallot = (await db.prepare(`SELECT entry_id FROM growth_ballots WHERE event_id = ? AND voter_id = ?`).bind(e.id, viewer.id).first<{ entry_id: string }>())?.entry_id ?? null;
   }
@@ -202,6 +212,7 @@ export async function listEntries(db: D1Database, slug: string, viewerId: string
 
 export async function submitEntry(db: D1Database, viewer: SessionUser, slug: string, projectId: string): Promise<EventEntry> {
   const e = await eventBySlug(db, slug);
+  if (e.kind === "show_off") throw new HttpError("invalid_request", "This is a showcase event: enter one of your showcases instead.");
   if (statusOf(e) !== "submitting") throw new HttpError("conflict", "Submissions aren't open for this event.");
   const eligible = await eligibleProjectIds(db, e, viewer.id);
   if (!eligible.includes(projectId)) {
@@ -234,6 +245,7 @@ export async function withdrawEntry(db: D1Database, viewer: SessionUser, slug: s
 
 export async function vote(db: D1Database, viewer: SessionUser, slug: string, entryId: string | null): Promise<{ entryId: string | null }> {
   const e = await eventBySlug(db, slug);
+  if (e.kind === "show_off") return showcaseEvents.vote(db, viewer, e, entryId);
   if (statusOf(e) !== "voting") throw new HttpError("conflict", "Voting isn't open for this event.");
   if (entryId === null) {
     await db.prepare(`DELETE FROM growth_ballots WHERE event_id = ? AND voter_id = ?`).bind(e.id, viewer.id).run();
@@ -270,6 +282,7 @@ export async function createEvent(
     const ok = await db.prepare(`SELECT 1 FROM projects p WHERE p.id = ? AND ${LISTED} AND p.license_spdx IS NOT NULL`).bind(b.featuredProjectId).first();
     if (!ok) throw new HttpError("invalid_request", "The featured project must be public and openly licensed.");
   }
+  if (b.kind === "show_off" && b.featuredProjectId) throw new HttpError("invalid_request", "A showcase event has no featured project.");
   if (b.kind === "launch_day" && new Date(s).toISOString().slice(0, 10) !== new Date(se - 1).toISOString().slice(0, 10)) {
     throw new HttpError("invalid_request", "A launch day's submissions open and close on the same UTC date.");
   }

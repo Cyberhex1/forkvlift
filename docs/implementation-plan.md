@@ -211,7 +211,7 @@ Every feature in the product plan maps to one task with one owner. Within a phas
 | 5.6 | Home page showcase rail, "Showcase of the week", profile Showcases tab; admin staff pick and moderation support | Sol 6.1 | 5.2 | Not started |
 | 5.7 | Showcase art: "Showcase" and "Closed source" badges, empty states, OG share images; RSS for showcases | Flash 3.8 | 5.1 | Not started |
 | 5.8 | Showcase rules and help copy (what's allowed, honest AI use, links and downloads); Plaza #showcase auto-post copy | Flash 3.8 | 5.1 | Not started |
-| 5.9 | Showcase-only events (e.g. "Show-off Saturday") on the events system | Opus 5.5 | 4.6, 5.1 | Not started |
+| 5.9 | Showcase-only events (e.g. "Show-off Saturday") on the events system | Opus 5.5 | 4.6, 5.1 | Done |
 
 **Every phase**
 

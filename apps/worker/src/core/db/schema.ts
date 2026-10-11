@@ -533,7 +533,7 @@ export const adoptionRequests = sqliteTable(
 export const growthEvents = sqliteTable("growth_events", {
   id: text("id").primaryKey(),
   slug: text("slug").notNull().unique(),
-  kind: text("kind", { enum: ["launch_day", "fork_friday", "build_jam"] }).notNull(),
+  kind: text("kind", { enum: ["launch_day", "fork_friday", "build_jam", "show_off"] }).notNull(),
   title: text("title").notNull(),
   bodyMd: text("body_md").notNull().default(""),
   featuredProjectId: text("featured_project_id").references(() => projects.id, { onDelete: "set null" }),
@@ -569,6 +569,34 @@ export const growthBallots = sqliteTable(
     updatedAt: integer("updated_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.eventId, t.voterId] }), index("growth_ballots_entry_idx").on(t.entryId)],
+);
+/**
+ * Showcase-only events (5.9, e.g. "Show-off Saturday"): a growth event of kind
+ * "show_off" takes showcases instead of projects. Same windows and one vote
+ * per person per event, in tables of their own.
+ */
+export const showcaseEntries = sqliteTable(
+  "showcase_entries",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id").notNull().references(() => growthEvents.id, { onDelete: "cascade" }),
+    showcaseId: text("showcase_id").notNull().references(() => showcases.id, { onDelete: "cascade" }),
+    submittedBy: text("submitted_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+    submittedAt: integer("submitted_at").notNull(),
+    withdrawnAt: ts("withdrawn_at"),
+  },
+  (t) => [uniqueIndex("showcase_entries_active_idx").on(t.eventId, t.showcaseId).where(sql`withdrawn_at IS NULL`), index("showcase_entries_event_idx").on(t.eventId)],
+);
+
+export const showcaseBallots = sqliteTable(
+  "showcase_ballots",
+  {
+    eventId: text("event_id").notNull().references(() => growthEvents.id, { onDelete: "cascade" }),
+    voterId: text("voter_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    entryId: text("entry_id").notNull().references(() => showcaseEntries.id, { onDelete: "cascade" }),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.voterId] }), index("showcase_ballots_entry_idx").on(t.entryId)],
 );
 /**
  * Build competitions (task 4.14) ride on a growth event: the event holds the

@@ -90,6 +90,9 @@ const fxShowcaseDetail = (over: Parameters<typeof fxShowcase>[0] = {}) => ({
   links: [{ kind: "app_store" as const, label: "App Store", url: "https://example.com/app" }],
   builtWith: { projects: [{ id: "fx_prj_2", slug: "fixture-dungeon-toaster", name: "Fixture: Dungeon Toaster", author: null }], resources: [] },
 });
+const fxShowcaseEntry = () => ({
+  id: "fx_sentry_1", eventId: "fx_evt_2", showcase: fxShowcase(), submittedBy: fxUsers.ada, submittedAt: NOW, voteCount: 3, viewerVoted: false, rank: null,
+});
 const fxShowcaseComment = { id: "fx_scom_1", showcaseId: "fx_show_pocket-chef", parentId: null, author: fxUsers.bo, body: "Dev fixture comment.", createdAt: NOW, editedAt: null };
 const fxAdoption = { open: true, note: "Dev fixture: looking for someone to take this on.", openedAt: "2026-10-01T12:00:00.000Z", originalAuthor: fxUsers.bo, maintainer: fxUsers.bo, viewerRequest: null, canManage: false };
 const ref = (p: ProjectCard): ProjectRef => ({ id: p.id, slug: p.slug, name: p.name, author: p.author });
@@ -256,6 +259,9 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   submitGrowthEntry: () => fxEntry(),
   withdrawGrowthEntry: () => ok,
   voteGrowthEntry: ({ body }) => ({ entryId: body.entryId }),
+  listShowcaseEventEntries: () => ({ items: [fxShowcaseEntry()], nextCursor: null }),
+  submitShowcaseEntry: () => fxShowcaseEntry(),
+  withdrawShowcaseEntry: () => ok,
   createGrowthEvent: ({ body }) => ({ ...fxEvent, ...body, featuredProject: null, status: "scheduled" as const, entryCount: 0 }),
   updateGrowthEvent: ({ body }) => ({ ...fxEvent, ...(body.title ? { title: body.title } : {}), status: body.cancelled ? ("cancelled" as const) : fxEvent.status }),
   getProjectAdoption: () => fxAdoption,

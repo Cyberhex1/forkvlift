@@ -199,7 +199,8 @@ export type ProjectAdoption = z.infer<typeof ProjectAdoption>;
 
 // ── Launch days, Fork Friday, build jams (task 4.6) ──────────────────────
 
-export const GrowthEventKind = z.enum(["launch_day", "fork_friday", "build_jam"]);
+/** show_off (5.9): a showcase-only event, e.g. "Show-off Saturday". Entries are showcases, not projects. */
+export const GrowthEventKind = z.enum(["launch_day", "fork_friday", "build_jam", "show_off"]);
 export type GrowthEventKind = z.infer<typeof GrowthEventKind>;
 export const GrowthEventStatus = z.enum(["scheduled", "submitting", "voting", "ended", "cancelled"]);
 export type GrowthEventStatus = z.infer<typeof GrowthEventStatus>;
