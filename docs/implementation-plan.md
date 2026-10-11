@@ -199,6 +199,20 @@ Every feature in the product plan maps to one task with one owner. Within a phas
 | 4.13 | Open catalog data mirror: nightly export of one JSON file per project to a public repo; accept submissions by pull request | Flash 3.8 | 1.2 | Not started |
 | 4.14 | Build competitions: prize rounds, judging, winners page | Sol 6.1 | 4.6 | Not started |
 
+**Phase 5 — Showcases** (product plan, "Showcases"). No repo or open-source license required; never forkable.
+
+| ID | Task | Owner | Needs | Status |
+| --- | --- | --- | --- | --- |
+| 5.1 | Showcase contract, tables and API: create/edit/drafts, media, links, build story, upvotes, comments, saves, reports, notifications | Opus 5.5 | P0 | Not started |
+| 5.2 | Showcase feed ranking, search (keyword + semantic) and the "Has this been built?" check including showcases | Opus 5.5 | 5.1, 4.1 | Not started |
+| 5.3 | Links between showcases and the catalog: "Built with" credits, list-in-catalog for public licensed repos, open-source-it-later conversion | Opus 5.5 | 5.1 | Not started |
+| 5.4 | Showcase feed UI (media-first grid, filters, sort) and showcase page (gallery, video, links, build story, comments) | Sol 6.1 | 5.1 | Not started |
+| 5.5 | Showcase composer: create, edit, drafts, media upload with progress, link checks, preview; publish a Studio card as a showcase | Sol 6.1 | 5.1 | Not started |
+| 5.6 | Home page showcase rail, "Showcase of the week", profile Showcases tab; admin staff pick and moderation support | Sol 6.1 | 5.2 | Not started |
+| 5.7 | Showcase art: "Showcase" and "Closed source" badges, empty states, OG share images; RSS for showcases | Flash 3.8 | 5.1 | Not started |
+| 5.8 | Showcase rules and help copy (what's allowed, honest AI use, links and downloads); Plaza #showcase auto-post copy | Flash 3.8 | 5.1 | Not started |
+| 5.9 | Showcase-only events (e.g. "Show-off Saturday") on the events system | Opus 5.5 | 4.6, 5.1 | Not started |
+
 **Every phase**
 
 | ID | Task | Owner | Needs | Status |

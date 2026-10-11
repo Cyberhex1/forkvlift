@@ -480,6 +480,38 @@ Pages still works and isn't being shut off, but new Cloudflare features land on 
 
 If you'd ever rather not depend on one provider, the most portable alternative is **Supabase (backend) + Cloudflare Workers (frontend)**, or self-hosting with Coolify once traffic is predictable. Pricing on all of these changes often, so recheck the free tiers before committing.
 
+## Showcases (Phase 5)
+
+Showcases are where people show off what they built with AI, whether or not the code is public. A game on itch.io, an iOS app, a closed-source SaaS, a short film, generative art, an internal tool at work: all welcome. It's the other half of the site next to the catalog, with its own tab in the header and a rail on the home page.
+
+**How showcases differ from catalog projects**
+
+| | Catalog project | Showcase |
+| --- | --- | --- |
+| Public GitHub repo | Required | Optional |
+| Open-source license | Shown; unlicensed hidden by default | Not required |
+| Clone box, "Continue this", fork tree | Yes | No: you can look, not take |
+| Main content | README, code, lineage | Media, links, the story of how it was built |
+
+- **Honest labels:** every showcase carries a "Showcase" badge. One without public code says "Closed source: look, don't take". There is never a clone or fork action, so nobody mistakes a showcase for reusable code.
+- **The card:** media first (cover image, GIF or short video), title, tagline, maker, stage (Finished / Work in progress), tools used, upvotes.
+- **The page:**
+  - A gallery: images, GIFs, video.
+  - Links: live site, app store, demo video, download.
+  - "How I built it": tools and models, time spent, the prompts or workflow that worked, what was hard.
+  - Tags and category (the catalog's categories), comments, saves.
+- **Optional repo:** if a showcase links a public repo with an open license, the maker can also list it in the catalog in one click. The two stay linked ("See the code").
+- **Open-source it later:** a closed showcase can become a catalog project when its maker publishes the code, keeping its upvotes and comments.
+- **"Built with":** a showcase can credit catalog projects and resources it used, which shows up on those projects as "Used in these showcases".
+- **Discovery:**
+  - `/showcase` feed with Trending / New / Top, filters by category, type (web, mobile, game, art, video, tool) and AI tools.
+  - Search includes showcases.
+  - A weekly "Showcase of the week" staff pick (no paid placement, ever).
+  - Showcases are also found when someone asks "Has this been built?".
+- **Community:** posting a showcase can drop a card into the Plaza's #showcase room (opt-in). Showcase-only events (for example "Show-off Saturday") reuse the events system.
+- **Profiles:** a Showcases tab next to Projects.
+- **Safety:** reports, Turnstile, rate limits and new-account limits as elsewhere. Download links get the same "review before running" warning as scripts, and links to app stores or known hosts are preferred. No impersonation, nothing fake, and AI use is stated honestly.
+
 ## Phased roadmap
 
 Launch the catalog alone first: it's useful on day one even with zero users, because you seed it yourself from the curation console.
@@ -490,6 +522,8 @@ Each gate is a suggested checkpoint before moving on, not a deadline; adjust the
 
 ## Open questions
 
+- [ ] Showcases: may they link to paid or commercial apps (plain links only, no paid placement)?
+- [ ] Showcases: host short videos ourselves (R2, size-capped) or only embed YouTube/Vimeo?
 - [ ] Final name, and is the domain available?
 - [ ] Should Studio allow projects with no repo at all (idea-only), or require a GitHub link before anything goes public?
 - [ ] Must every public project have a live demo, or is a repo + screenshots enough?
