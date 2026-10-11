@@ -680,6 +680,9 @@ export const showcases = sqliteTable(
     deletedAt: ts("deleted_at"),
     createdAt: createdAt(),
     updatedAt: integer("updated_at").notNull(),
+    /** Semantic search (5.2): when the vector was last written, and a hash of the text it came from. */
+    embeddedAt: ts("embedded_at"),
+    embeddingHash: text("embedding_hash"),
   },
   (t) => [index("showcases_owner_idx").on(t.ownerId), index("showcases_published_idx").on(t.publishedAt)],
 );

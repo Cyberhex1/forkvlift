@@ -3,11 +3,12 @@ import type { AppEnv } from "../env";
 import { mount } from "../core/http";
 import { notFound } from "../core/errors";
 import * as showcases from "../core/showcases";
+import { searchShowcases } from "../core/showcase-search";
 import { clientIp, verifyTurnstile } from "../core/security";
 
 /** Showcases (Phase 5, task 5.1). Opus. */
 export function registerShowcases(app: Hono<AppEnv>) {
-  mount(app, "listShowcases", ({ query }, c) => showcases.listShowcases(c.env.DB, query, c.get("user")?.id ?? null));
+  mount(app, "listShowcases", ({ query }, c) => searchShowcases(c.env, query, c.get("user")?.id ?? null));
   mount(app, "getShowcase", ({ params }, c) => showcases.getShowcase(c.env.DB, params.slug, c.get("user")));
   mount(app, "createShowcase", async ({ body }, c) => {
     await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));

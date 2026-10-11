@@ -16,9 +16,9 @@ const DAY_MS = 86_400_000;
 const MAX_NEW_PER_DAY = 10;
 
 /** Published, not removed, by a live account. */
-const VISIBLE = `s.published_at IS NOT NULL AND s.hidden_at IS NULL AND s.deleted_at IS NULL AND u.deleted_at IS NULL AND u.banned_at IS NULL`;
+export const VISIBLE = `s.published_at IS NOT NULL AND s.hidden_at IS NULL AND s.deleted_at IS NULL AND u.deleted_at IS NULL AND u.banned_at IS NULL`;
 
-interface ShowcaseRow {
+export interface ShowcaseRow {
   id: string;
   slug: string;
   owner_id: string;
@@ -54,7 +54,7 @@ interface ShowcaseRow {
   preview_embed: string | null;
 }
 
-const SELECT = `SELECT s.*, u.username AS u_username, u.display_name AS u_display_name, u.avatar_url AS u_avatar_url, av.config AS u_avatar,
+export const SHOWCASE_SELECT = `SELECT s.*, u.username AS u_username, u.display_name AS u_display_name, u.avatar_url AS u_avatar_url, av.config AS u_avatar,
     c.name AS cat_name, c.icon_key AS cat_icon,
     cp.slug AS cp_slug, cp.name AS cp_name,
     (SELECT m.key FROM showcase_media m WHERE m.showcase_id = s.id AND m.kind = 'video' ORDER BY m.position LIMIT 1) AS preview_video,
@@ -125,13 +125,13 @@ async function viewerFlags(db: D1Database, viewerId: string | null, ids: string[
   return { id: viewerId, upvoted: new Set(v!.results.map((x) => x.showcase_id)), saved: new Set(s!.results.map((x) => x.showcase_id)) };
 }
 
-async function toCards(db: D1Database, rows: ShowcaseRow[], viewerId: string | null) {
+export async function toCards(db: D1Database, rows: ShowcaseRow[], viewerId: string | null) {
   const flags = await viewerFlags(db, viewerId, rows.map((r) => r.id));
   return rows.map((r) => toCard(r, flags));
 }
 
 async function rowBySlug(db: D1Database, slug: string, viewer: SessionUser | null): Promise<ShowcaseRow> {
-  const r = await db.prepare(`${SELECT} WHERE s.slug = ? AND s.deleted_at IS NULL`).bind(slug).first<ShowcaseRow>();
+  const r = await db.prepare(`${SHOWCASE_SELECT} WHERE s.slug = ? AND s.deleted_at IS NULL`).bind(slug).first<ShowcaseRow>();
   const isMaker = r && viewer?.id === r.owner_id;
   const isAdmin = viewer?.role === "admin";
   if (!r || (!isMaker && !isAdmin && (!r.published_at || r.hidden_at))) throw notFound("Showcase not found");
@@ -161,13 +161,27 @@ export async function getShowcase(db: D1Database, slug: string, viewer: SessionU
   };
 }
 
-type ListQuery = { cursor?: string; limit?: number; sort?: "trending" | "new" | "top"; category?: string; kind?: ShowcaseCard["kind"]; tool?: string; q?: string; staffPicks?: boolean };
+export type ListQuery = { cursor?: string; limit?: number; sort?: "trending" | "new" | "top"; category?: string; kind?: ShowcaseCard["kind"]; tool?: string; q?: string; staffPicks?: boolean };
 
-export async function listShowcases(db: D1Database, q: ListQuery, viewerId: string | null, extra: { ownerId?: string; includeDrafts?: boolean; savedBy?: string } = {}) {
+export async function listShowcases(
+  db: D1Database,
+  q: ListQuery,
+  viewerId: string | null,
+  extra: { ownerId?: string; includeDrafts?: boolean; savedBy?: string; onlyIds?: string[]; excludeIds?: string[]; offset?: number } = {},
+) {
   const limit = Math.min(q.limit ?? 24, 60);
-  const cursor = decodeCursor(q.cursor);
+  const cursor = extra.offset !== undefined ? { o: extra.offset } : decodeCursor(q.cursor);
   const where: string[] = [extra.includeDrafts ? `s.deleted_at IS NULL` : VISIBLE];
   const binds: unknown[] = [];
+  if (extra.onlyIds) {
+    if (!extra.onlyIds.length) return { items: [], nextCursor: null };
+    where.push(`s.id IN (${extra.onlyIds.map(() => "?").join(",")})`);
+    binds.push(...extra.onlyIds);
+  }
+  if (extra.excludeIds?.length) {
+    where.push(`s.id NOT IN (${extra.excludeIds.map(() => "?").join(",")})`);
+    binds.push(...extra.excludeIds);
+  }
   if (extra.ownerId) {
     where.push(`s.owner_id = ?`);
     binds.push(extra.ownerId);
@@ -205,7 +219,7 @@ export async function listShowcases(db: D1Database, q: ListQuery, viewerId: stri
           : // Same recency-weighted formula as the catalog: (votes + 1) / (age in days + 2)^1.5.
             `(s.upvotes + 1.0) / (((${now} - s.published_at) / ${DAY_MS}.0 + 2) * sqrt((${now} - s.published_at) / ${DAY_MS}.0 + 2)) DESC`;
   const { results } = await db
-    .prepare(`${SELECT} WHERE ${where.join(" AND ")} ORDER BY ${order}, s.id LIMIT ? OFFSET ?`)
+    .prepare(`${SHOWCASE_SELECT} WHERE ${where.join(" AND ")} ORDER BY ${order}, s.id LIMIT ? OFFSET ?`)
     .bind(...binds, limit + 1, cursor.o)
     .all<ShowcaseRow>();
   return { items: await toCards(db, results.slice(0, limit), viewerId), nextCursor: results.length > limit ? encodeCursor({ o: cursor.o + limit }) : null };
@@ -277,7 +291,7 @@ export async function createShowcase(env: Env, user: SessionUser, input: Showcas
 }
 
 async function ownRow(db: D1Database, slug: string, user: SessionUser): Promise<ShowcaseRow> {
-  const r = await db.prepare(`${SELECT} WHERE s.slug = ? AND s.deleted_at IS NULL`).bind(slug).first<ShowcaseRow>();
+  const r = await db.prepare(`${SHOWCASE_SELECT} WHERE s.slug = ? AND s.deleted_at IS NULL`).bind(slug).first<ShowcaseRow>();
   if (!r || r.owner_id !== user.id) throw notFound("Showcase not found");
   return r;
 }
