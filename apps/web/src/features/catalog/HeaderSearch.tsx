@@ -4,7 +4,7 @@ export function HeaderSearch() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   return <form role="search" aria-label="Header search" onSubmit={(event) => {
-    event.preventDefault(); const next = new URLSearchParams(params);
+    event.preventDefault(); const next = new URLSearchParams(window.location.search);
     const q = String(new FormData(event.currentTarget).get("q") ?? "").trim();
     if (q) next.set("q", q); else next.delete("q"); next.delete("cursor"); next.delete("limit");
     void navigate(`/${next.size ? `?${next}` : ""}`);
