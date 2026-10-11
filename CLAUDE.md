@@ -26,6 +26,7 @@ If this brief and those docs disagree, the docs win. Ask the owner if unsure.
 - **Reddit:** no scraping or unofficial APIs. The admin console uses a paste-a-link importer. Reddit API access only if Reddit approves a request.
 - **No fake content:** nothing fake ships. The catalog is seeded only with real, verified repos (implementation plan, "Seeding"). Dev fixtures live in `packages/shared/fixtures` and never deploy.
 - **No paid boosts or placement.**
+- **Showcases (Phase 5) are separate from the catalog:** they don't need a GitHub repo or an open-source license, are labeled "Showcase" / "Closed source", and never offer clone or fork (owner, 2026-10-10).
 - **Curated imports must be licensed.** Unlicensed projects only come from their own authors (owner, 2026-10-10).
 
 ## Team and ownership
