@@ -182,28 +182,28 @@ Every feature in the product plan maps to one task with one owner. Within a phas
 | 4.1 | Semantic search and the "Has this been built?" check (Vectorize + embeddings) | Opus 5.5 | 1.2 | Done |
 | 4.2 | MCP endpoint so coding agents can search the catalog and fetch starter prompts | Opus 5.5 | 4.1 | Done |
 | 4.3 | Public API with keys and rate limits | Opus 5.5 | 1.6 | Done |
-| 4.4 | Agent starter-prompt generator per project (repo summary → paste-ready prompt) | Sol 6.1 | 1.1 | Not started |
-| 4.5 | Requests board and bounties (API and UI) | Sol 6.1 | P0 | Not started |
-| 4.6 | Launch days and leaderboards; Fork Friday and build jams with voting | Sol 6.1 | 1.10 | Not started |
-| 4.7 | Alternatives directory pages built from the "replaces" field | Sol 6.1 | 1.2 | Not started |
-| 4.8 | Live README badge (SVG with forks and upvotes) | Flash 3.8 | 1.2 | Not started |
-| 4.9 | RSS feeds: new projects, per category, per user | Flash 3.8 | 1.2 | Not started |
-| 4.10 | Newsletter signup and "Fork Report" issue template | Flash 3.8 | 2.13 | Not started |
-| 4.11 | Subscription savings counter widget | Flash 3.8 | 4.7 | Not started |
+| 4.4 | Agent starter-prompt generator per project (repo summary → paste-ready prompt) | Sol 6.1 | 1.1 | Done |
+| 4.5 | Requests board and bounties (API and UI) | Sol 6.1 | P0 | Done |
+| 4.6 | Launch days and leaderboards; Fork Friday and build jams with voting | Sol 6.1 | 1.10 | Server done; UI not started |
+| 4.7 | Alternatives directory pages built from the "replaces" field | Sol 6.1 | 1.2 | Done |
+| 4.8 | Live README badge (SVG with forks and upvotes) | Flash 3.8 | 1.2 | Done |
+| 4.9 | RSS feeds: new projects, per category, per user | Flash 3.8 | 1.2 | Done |
+| 4.10 | Newsletter signup and "Fork Report" issue template | Flash 3.8 | 2.13 | Server and emails done; signup UI not started |
+| 4.11 | Subscription savings counter widget | Flash 3.8 | 4.7 | Done |
 
 **Phase 4 additions from the updated product plan** (the WIP "What works / What's missing" box is part of 1.9; "Continue this" is part of 2.2)
 
 | ID | Task | Owner | Needs | Status |
 | --- | --- | --- | --- | --- |
-| 4.12 | "Up for adoption" flow: mark a project, request takeover, author approves, maintainer changes | Sol 6.1 | 2.4 | Not started |
-| 4.13 | Open catalog data mirror: nightly export of one JSON file per project to a public repo; accept submissions by pull request | Flash 3.8 | 1.2 | Not started |
-| 4.14 | Build competitions: prize rounds, judging, winners page | Sol 6.1 | 4.6 | Not started |
+| 4.12 | "Up for adoption" flow: mark a project, request takeover, author approves, maintainer changes | Sol 6.1 | 2.4 | Server done; UI not started |
+| 4.13 | Open catalog data mirror: nightly export of one JSON file per project to a public repo; accept submissions by pull request | Flash 3.8 | 1.2 | Done |
+| 4.14 | Build competitions: prize rounds, judging, winners page | Sol 6.1 | 4.6 | Server done; UI not started |
 
 **Phase 5 — Showcases** (product plan, "Showcases"). No repo or open-source license required; never forkable.
 
 | ID | Task | Owner | Needs | Status |
 | --- | --- | --- | --- | --- |
-| 5.1 | Showcase contract, tables and API: create/edit/drafts, media, links, build story, upvotes, comments, saves, reports, notifications | Opus 5.5 | P0 | Not started |
+| 5.1 | Showcase contract, tables and API: create/edit/drafts, media, links, build story, upvotes, comments, saves, reports, notifications | Opus 5.5 | P0 | Done |
 | 5.2 | Showcase feed ranking, search (keyword + semantic) and the "Has this been built?" check including showcases | Opus 5.5 | 5.1, 4.1 | Not started |
 | 5.3 | Links between showcases and the catalog: "Built with" credits, list-in-catalog for public licensed repos, open-source-it-later conversion | Opus 5.5 | 5.1 | Not started |
 | 5.4 | Showcase feed UI (media-first grid, filters, sort) and showcase page (gallery, video, links, build story, comments) | Sol 6.1 | 5.1 | Not started |

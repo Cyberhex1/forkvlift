@@ -50,7 +50,8 @@ If this brief and those docs disagree, the docs win. Ask the owner if unsure.
 
 ## Current status
 
-- **Phase 0 skeleton is merged** (see `docs/handoffs/P0-skeleton.md`). Phase 1 is open: all three agents work in parallel.
+- Phases 0–3 are merged, and Phase 4's servers are merged (some UIs remain; see the task board in `docs/implementation-plan.md`). Phase 5 (Showcases) is in progress.
+- Production launch waits on the owner steps in `docs/owner-todo.md`, starting with approving 100+ projects.
 - Repo: https://github.com/Cyberhex1/forkvlift (public). Main checkout `C:\code\ForkvLift` (`main`); worktrees `C:\code\forkvlift-wt\{opus,sol,flash}`.
 - Day-to-day rules and commands: `AGENTS.md`, plus `agents/<you>.md`.
 
