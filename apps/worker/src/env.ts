@@ -11,6 +11,10 @@ declare global {
     /** Server token for the GitHub API (public repos only). Raises the limit to 5,000 requests/hour. */
     GITHUB_TOKEN?: string;
     TURNSTILE_SECRET?: string;
+    /** Catalog mirror (4.13): "owner/name" of the public mirror repo, a token with contents:write on it, and the webhook secret. */
+    MIRROR_REPO?: string;
+    MIRROR_GITHUB_TOKEN?: string;
+    MIRROR_WEBHOOK_SECRET?: string;
     /** Email via Resend when the Cloudflare Email binding isn't available. */
     RESEND_API_KEY?: string;
     /** Override the sender, e.g. "ForkLift <hello@forklift.stream>". */
