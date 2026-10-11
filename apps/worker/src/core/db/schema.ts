@@ -491,6 +491,44 @@ export const apiKeys = sqliteTable(
   (t) => [index("api_keys_user_idx").on(t.userId)],
 );
 
+/**
+ * "Up for adoption" (task 4.12). One row per adoption period; the open one has
+ * closed_at NULL. Kept after it closes so the original author stays credited.
+ */
+export const projectAdoptions = sqliteTable(
+  "project_adoptions",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    originalOwnerId: text("original_owner_id").references(() => users.id, { onDelete: "set null" }),
+    previousStage: text("previous_stage").notNull(),
+    note: text("note").notNull().default(""),
+    openedAt: integer("opened_at").notNull(),
+    closedAt: ts("closed_at"),
+    outcome: text("outcome", { enum: ["cancelled", "adopted"] }),
+    adoptedBy: text("adopted_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => [uniqueIndex("project_adoptions_open_idx").on(t.projectId).where(sql`closed_at IS NULL`), index("project_adoptions_project_idx").on(t.projectId)],
+);
+
+export const adoptionRequests = sqliteTable(
+  "adoption_requests",
+  {
+    id: text("id").primaryKey(),
+    adoptionId: text("adoption_id").notNull().references(() => projectAdoptions.id, { onDelete: "cascade" }),
+    projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    requesterId: text("requester_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    message: text("message").notNull(),
+    status: text("status", { enum: ["pending", "approved", "declined", "withdrawn", "cancelled"] }).notNull().default("pending"),
+    createdAt: createdAt(),
+    decidedAt: ts("decided_at"),
+    decidedBy: text("decided_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    uniqueIndex("adoption_requests_pending_idx").on(t.projectId, t.requesterId).where(sql`status = 'pending'`),
+    index("adoption_requests_project_idx").on(t.projectId, t.status),
+  ],
+);
 /** The Fork Report newsletter (task 4.10). Double opt-in; the token confirms and unsubscribes. */
 export const subscribers = sqliteTable("subscribers", {
   id: text("id").primaryKey(),

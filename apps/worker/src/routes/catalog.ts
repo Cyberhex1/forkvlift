@@ -3,6 +3,7 @@ import type { Comment } from "@forkvlift/shared";
 import type { AppEnv } from "../env";
 import { mount } from "../core/http";
 import { HttpError, notFound } from "../core/errors";
+import * as adoption from "../core/adoption";
 import { audit } from "../core/curation/candidates";
 import { ingestRepo } from "../core/github/ingest";
 import { viewerOwnsRepo } from "../core/github/ownership";
@@ -41,6 +42,20 @@ export function registerCatalog(app: Hono<AppEnv>) {
   mount(app, "suggestCategory", () => todo("1.15"));
 
   mount(app, "listProjects", ({ query }, c) => listProjects(c.env.DB, query, c.get("user")?.id ?? null));
+
+  // Adoption (4.12)
+  mount(app, "getProjectAdoption", ({ params }, c) => adoption.getAdoption(c.env.DB, params.slug, c.get("user")));
+  mount(app, "setProjectAdoption", ({ params, body }, c) => adoption.setAdoption(c.env.DB, c.get("user")!, params.slug, body));
+  mount(app, "requestProjectAdoption", async ({ params, body }, c) => {
+    await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));
+    return adoption.requestAdoption(c.env.DB, c.get("user")!, params.slug, body.message);
+  });
+  mount(app, "listProjectAdoptionRequests", ({ params, query }, c) => adoption.listRequests(c.env.DB, c.get("user")!, params.slug, query));
+  mount(app, "withdrawProjectAdoptionRequest", async ({ params }, c) => {
+    await adoption.withdrawRequest(c.env.DB, c.get("user")!, params.slug, params.id);
+    return { ok: true as const };
+  });
+  mount(app, "decideProjectAdoption", ({ params, body }, c) => adoption.decide(c.env.DB, c.get("user")!, params.slug, params.id, body.decision));
 
   // "Has this been built?" (4.1): meaning first, keywords as a top-up.
   mount(app, "similarProjects", async ({ query }, c) => ({ items: await findSimilar(c.env, query.q, query.limit ?? 6, c.get("user")) }));

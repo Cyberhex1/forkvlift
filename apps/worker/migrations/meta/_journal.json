@@ -71,6 +71,13 @@
       "when": 1791675753343,
       "tag": "0009_newsletter",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1791675954493,
+      "tag": "0010_project_adoption",
+      "breakpoints": true
     }
   ]
 }
