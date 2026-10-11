@@ -37,8 +37,11 @@ export function FeedPage() {
     observer.observe(sentinel.current);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
+  // Build on the address bar, not this render's params: a navigation commits the URL before React re-renders,
+  // so a quick second change (sort right after "Apply filters") would otherwise drop the first one.
+  const currentParams = () => new URLSearchParams(window.location.search);
   function update(key: string, value: string) {
-    const next = new URLSearchParams(params); next.delete("cursor"); next.delete("limit");
+    const next = currentParams(); next.delete("cursor"); next.delete("limit");
     if (value) next.set(key, value); else next.delete(key);
     setParams(next);
   }
@@ -69,7 +72,7 @@ export function FeedPage() {
       : <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{visible.map((project) => <ProjectCard key={project.id} project={project} />)}</div>}
     <div ref={sentinel} className="py-5" aria-live="polite">{projects.hasNextPage ? <div className="space-y-2">{projects.isFetchNextPageError ? <p className="text-danger">Couldn't load more projects. Your current results are still available.</p> : null}<Button variant="secondary" loading={projects.isFetchingNextPage} onClick={() => void projects.fetchNextPage()}>{projects.isFetchNextPageError ? "Retry loading more" : "Load more projects"}</Button></div> : visible.length ? <p className="text-sm text-muted">You've reached the end.</p> : null}</div>
     <Drawer open={drawer} onClose={() => setDrawer(false)} title="Filter projects"><form key={params.toString()} className="mt-4 space-y-5" onSubmit={(event) => {
-      event.preventDefault(); const data = new FormData(event.currentTarget); const next = new URLSearchParams(params); next.delete("cursor"); next.delete("limit");
+      event.preventDefault(); const data = new FormData(event.currentTarget); const next = currentParams(); next.delete("cursor"); next.delete("limit");
       for (const key of listKeys) { const values = data.getAll(key).map(String); if (values.length) next.set(key, values.join(",")); else next.delete(key); }
       for (const key of textKeys) { const value = String(data.get(key) ?? "").trim(); if (value) next.set(key, value); else next.delete(key); }
       for (const key of boolKeys) { if (data.has(key)) next.set(key, "true"); else next.delete(key); }
