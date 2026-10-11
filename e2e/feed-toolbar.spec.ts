@@ -2,6 +2,8 @@ import { expect, test } from "playwright/test";
 const cards = '[data-testid="project-card"]';
 
 test("search and all filters persist in URL, reload and browser history", async ({ page }, info) => {
+  // Many steps plus a reload: on a cold dev server (always the case in CI) this runs past the default 30s.
+  test.slow();
   await page.goto("/");
   await expect(page.locator(cards)).toHaveCount(4);
   await page.screenshot({ path: `docs/handoffs/screenshots/1.10-${info.project.name}-feed.png` });
