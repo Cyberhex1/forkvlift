@@ -45,6 +45,14 @@ export async function describeTarget(db: D1Database, type: ReportTarget, id: str
       const r = await one<{ slug: string; title: string; author_id: string }>(`SELECT slug, title, author_id FROM resources WHERE id = ?`, id);
       return r ? { label: `Resource: ${r.title}`, href: `/resources/${r.slug}`, authorId: r.author_id } : null;
     }
+    case "showcase": {
+      const s = await one<{ slug: string; title: string; owner_id: string }>(`SELECT slug, title, owner_id FROM showcases WHERE id = ?`, id);
+      return s ? { label: `Showcase: ${s.title}`, href: `/showcase/${s.slug}`, authorId: s.owner_id } : null;
+    }
+    case "showcase_comment": {
+      const c = await one<{ author_id: string; slug: string; title: string }>(`SELECT c.author_id, s.slug, s.title FROM showcase_comments c JOIN showcases s ON s.id = c.showcase_id WHERE c.id = ?`, id);
+      return c ? { label: `Comment on showcase ${c.title}`, href: `/showcase/${c.slug}#comment-${id}`, authorId: c.author_id } : null;
+    }
     case "user": {
       const u = await one<{ username: string }>(`SELECT username FROM users WHERE id = ?`, id);
       return u ? { label: `User @${u.username}`, href: `/u/${u.username}`, authorId: id } : null;
@@ -169,6 +177,15 @@ async function removeContent(env: Env, type: ReportTarget, id: string, how: "hid
       if (channel && messageId) await chatAdmin(env, channel, { action: "delete", messageId });
       break;
     }
+    case "showcase":
+      await db.prepare(how === "hide" ? `UPDATE showcases SET hidden_at = ? WHERE id = ?` : `UPDATE showcases SET deleted_at = ?, published_at = NULL WHERE id = ?`).bind(now, id).run();
+      break;
+    case "showcase_comment":
+      await db.batch([
+        db.prepare(`UPDATE showcase_comments SET deleted_at = ? WHERE id = ?`).bind(now, id),
+        db.prepare(`UPDATE showcases SET comment_count = (SELECT count(*) FROM showcase_comments c WHERE c.showcase_id = showcases.id AND c.deleted_at IS NULL) WHERE id = (SELECT showcase_id FROM showcase_comments WHERE id = ?)`).bind(id),
+      ]);
+      break;
     case "user":
       break; // Users are banned, not hidden.
   }

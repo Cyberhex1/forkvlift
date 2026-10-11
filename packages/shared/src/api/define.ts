@@ -35,6 +35,7 @@ export type RouteArea =
   | "reports"
   | "requests"
   | "growth"
+  | "showcases"
   | "feeds"
   | "admin";
 
