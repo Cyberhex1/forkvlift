@@ -2,7 +2,7 @@
 
 **Worktree:** `C:\code\forkvlift-wt\sol` (branch `agent/sol`). **Dev server:** http://127.0.0.1:8788
 
-You own the feature UIs under `apps/web/src/features/{catalog,studio,profile,community,resources,growth}`, the admin console UI (`apps/admin/src`), the Worker route files `routes/social.ts` and `routes/growth.ts`, and `e2e/`.
+You own the feature UIs under `apps/web/src/features/{catalog,studio,profile,community,resources,growth,showcases}`, the admin console UI (`apps/admin/src`), the Worker route files `routes/social.ts` and `routes/growth.ts`, and `e2e/`.
 
 ## How to work a task
 

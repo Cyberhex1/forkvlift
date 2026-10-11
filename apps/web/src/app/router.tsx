@@ -12,6 +12,7 @@ import { notFoundRoute, pagesRoutes } from "../features/pages/routes";
 import { profileRoutes } from "../features/profile/routes";
 import { resourcesRoutes } from "../features/resources/routes";
 import { settingsRoutes } from "../features/settings/routes";
+import { showcasesRoutes } from "../features/showcases/routes";
 import { studioRoutes } from "../features/studio/routes";
 import { Layout } from "./Layout";
 import { RouteError } from "./RouteError";
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       ...communityRoutes,
       ...resourcesRoutes,
       ...growthRoutes,
+      ...showcasesRoutes,
       ...settingsRoutes,
       ...musicRoutes,
       ...avatarRoutes,

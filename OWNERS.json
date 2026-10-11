@@ -13,6 +13,7 @@
     { "pattern": "apps/web/src/features/community/**", "owner": "sol" },
     { "pattern": "apps/web/src/features/resources/**", "owner": "sol" },
     { "pattern": "apps/web/src/features/growth/**", "owner": "sol" },
+    { "pattern": "apps/web/src/features/showcases/**", "owner": "sol" },
     { "pattern": "apps/admin/src/**", "owner": "sol" },
     { "pattern": "apps/admin/index.html", "owner": "sol" },
     { "pattern": "apps/worker/src/routes/social.ts", "owner": "sol" },
