@@ -50,6 +50,33 @@ type JsonRouteId = { [K in RouteId]: Routes[K]["kind"] extends "json" ? K : neve
 
 const NOW = "2026-10-10T12:00:00.000Z";
 const ok = { ok: true as const };
+const fxAdoptionRequest = {
+  id: "fx_adreq_1",
+  project: { id: "fx_prj_2", slug: "fixture-dungeon-toaster", name: "Fixture: Dungeon Toaster", author: null },
+  requester: fxUsers.ada,
+  message: "Dev fixture: I'd love to keep this going.",
+  status: "pending" as const,
+  createdAt: "2026-10-09T12:00:00.000Z",
+  decidedAt: null,
+};
+const fxEvent = {
+  id: "fx_evt_1", slug: "fixture-build-jam", kind: "build_jam" as const, title: "Fixture build jam: tiny tools",
+  bodyMd: "Dev fixture. Theme: **tiny tools**.", startsAt: "2026-10-08T00:00:00.000Z", submissionEndsAt: "2026-10-12T00:00:00.000Z",
+  votingEndsAt: "2026-10-15T00:00:00.000Z", featuredProject: null, status: "submitting" as const, entryCount: 1,
+};
+const fxEntry = () => ({
+  id: "fx_entry_1", eventId: "fx_evt_1", project: fxProjects[0]!, submittedBy: fxUsers.ada,
+  submittedAt: "2026-10-09T12:00:00.000Z", voteCount: 3, viewerVoted: false, rank: null,
+});
+const fxCompetition = {
+  id: "fx_comp_1", slug: "fixture-tiny-tools-cup", eventSlug: "fixture-build-jam", title: "Fixture: Tiny Tools Cup",
+  rulesMd: "Dev fixture rules.", eligibilityMd: "Public, openly licensed projects.", submissionEndsAt: "2026-10-12T00:00:00.000Z",
+  judgingEndsAt: "2026-10-20T00:00:00.000Z", publishedAt: null, status: "open" as const,
+  prizes: [{ id: "fx_prize_1", label: "Best tiny tool", descriptionMd: "Bragging rights.", sponsorName: null, sponsorUrl: null, place: 1 }],
+  criteria: [{ id: "fx_crit_1", label: "Usefulness", description: "Does it help?", maxScore: 10, weight: 1 }],
+  judges: [fxUsers.bo], version: 2,
+};
+const fxAdoption = { open: true, note: "Dev fixture: looking for someone to take this on.", openedAt: "2026-10-01T12:00:00.000Z", originalAuthor: fxUsers.bo, maintainer: fxUsers.bo, viewerRequest: null, canManage: false };
 const ref = (p: ProjectCard): ProjectRef => ({ id: p.id, slug: p.slug, name: p.name, author: p.author });
 const viewer = (ctx: FixtureContext) => (ctx.viewerId ? fxSessionUser(ctx.viewerId) : null);
 const me = (ctx: FixtureContext) => {
@@ -178,6 +205,32 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   listApiKeys: () => ({ items: [{ id: "fx_key_1", name: "My script", prefix: "fl_live_ab12", createdAt: "2026-10-01T12:00:00.000Z", lastUsedAt: null }] }),
   createApiKey: ({ body }) => ({ key: { id: "fx_key_2", name: body.name, prefix: "fl_live_cd34", createdAt: "2026-10-10T12:00:00.000Z", lastUsedAt: null }, secret: "fl_live_cd34_fixture_secret_not_real" }),
   revokeApiKey: () => ok,
+  listCompetitions: () => ({ items: [fxCompetition], nextCursor: null }),
+  getCompetition: () => fxCompetition,
+  getCompetitionWinners: () => ({ competition: fxCompetition, awards: [] }),
+  getCompetitionJudging: () => ({ competition: { ...fxCompetition, status: "judging" as const }, entries: [fxEntry()], scorecards: [], conflicts: [] }),
+  saveCompetitionScorecard: ({ params, body }) => ({ entryId: params.entryId, scores: body.scores, note: body.note, submittedAt: body.submit ? NOW : null }),
+  createCompetition: ({ body }) => ({ ...fxCompetition, slug: body.slug, title: body.title, status: "draft" as const }),
+  updateCompetition: ({ body }) => ({ ...fxCompetition, status: body.cancelled ? ("cancelled" as const) : fxCompetition.status }),
+  getCompetitionScores: () => ({ items: [{ entry: fxEntry(), total: 0.8, scorecards: 1, judges: 1 }] }),
+  publishCompetitionWinners: () => ({ competition: { ...fxCompetition, status: "published" as const, publishedAt: NOW }, awards: [{ id: "fx_award_1", prize: fxCompetition.prizes[0]!, entry: fxEntry(), rationaleMd: "Dev fixture.", announcedAt: NOW }] }),
+  listGrowthEvents: () => ({ items: [fxEvent], nextCursor: null }),
+  getGrowthEvent: () => ({ ...fxEvent, viewerCanSubmit: true, viewerCanVote: false, viewerBallot: null }),
+  listGrowthEventEntries: () => ({ items: [fxEntry()], nextCursor: null }),
+  submitGrowthEntry: () => fxEntry(),
+  withdrawGrowthEntry: () => ok,
+  voteGrowthEntry: ({ body }) => ({ entryId: body.entryId }),
+  createGrowthEvent: ({ body }) => ({ ...fxEvent, ...body, featuredProject: null, status: "scheduled" as const, entryCount: 0 }),
+  updateGrowthEvent: ({ body }) => ({ ...fxEvent, ...(body.title ? { title: body.title } : {}), status: body.cancelled ? ("cancelled" as const) : fxEvent.status }),
+  getProjectAdoption: () => fxAdoption,
+  setProjectAdoption: ({ body }) => ({ ...fxAdoption, open: body.open, note: body.note, canManage: true }),
+  requestProjectAdoption: ({ body }) => ({ ...fxAdoptionRequest, message: body.message }),
+  listProjectAdoptionRequests: () => ({ items: [fxAdoptionRequest], nextCursor: null }),
+  withdrawProjectAdoptionRequest: () => ok,
+  decideProjectAdoption: ({ body }) => ({ request: { ...fxAdoptionRequest, status: body.decision === "approve" ? ("approved" as const) : ("declined" as const), decidedAt: "2026-10-10T12:00:00.000Z" }, adoption: { ...fxAdoption, open: body.decision !== "approve" } }),
+  subscribeNewsletter: () => ({ ok: true as const, status: "pending" as const }),
+  confirmNewsletter: () => ok,
+  unsubscribeNewsletter: () => ok,
   deleteAccount: () => ok,
 
   listFollowing: () => ({ items: [{ targetType: "user", targetId: fxUsers.bo.id, label: fxUsers.bo.displayName, href: `/u/${fxUsers.bo.username}`, createdAt: NOW }], nextCursor: null }),

@@ -1,6 +1,8 @@
-import type { Hono } from "hono";
+import type { Context, Hono } from "hono";
 import { SITE_NAME, SITE_TAGLINE } from "@forkvlift/shared";
 import type { AppEnv } from "../env";
+import * as newsletter from "../core/newsletter";
+import { clientIp, verifyTurnstile } from "../core/security";
 import { mount, notFound } from "../core/http";
 import { LISTED, parseJson } from "../core/projects/rows";
 
@@ -112,7 +114,7 @@ export function registerFeeds(app: Hono<AppEnv>) {
     };
   });
 
-  mount(app, "projectsRss", async ({ query }, c) => {
+  const projectsRss = async (query: { category?: string; user?: string }, c: Context<AppEnv>) => {
     const origin = new URL(c.req.url).origin;
     const conditions = [LISTED, "p.license_spdx IS NOT NULL"];
     const bindings: unknown[] = [];
@@ -196,7 +198,24 @@ ${itemsXml}
       "cache-control": "public, max-age=600, stale-while-revalidate=86400",
       "x-content-type-options": "nosniff",
     });
+  };
+
+  mount(app, "subscribeNewsletter", async ({ body }, c) => {
+    await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));
+    return newsletter.subscribe(c.env, body.email);
   });
+  mount(app, "confirmNewsletter", async ({ body }, c) => {
+    await newsletter.confirm(c.env.DB, body.token);
+    return { ok: true as const };
+  });
+  mount(app, "unsubscribeNewsletter", async ({ body }, c) => {
+    await newsletter.unsubscribe(c.env.DB, body.token);
+    return { ok: true as const };
+  });
+
+  mount(app, "projectsRss", ({ query }, c) => projectsRss(query, c));
+  mount(app, "categoryRss", ({ params }, c) => projectsRss({ category: params.slug }, c));
+  mount(app, "userRss", ({ params }, c) => projectsRss({ user: params.username }, c));
 
   mount(app, "readmeBadge", async ({ params }, c) => {
     const row = await c.env.DB.prepare(

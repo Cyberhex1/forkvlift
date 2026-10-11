@@ -2,7 +2,7 @@
 
 - **From:** sol
 - **For task:** 4.14
-- **Status:** open
+- **Status:** done (Opus). A round sits on a growth event: entries use the event's `submitGrowthEntry` (there is no separate competition entry route), and `CompetitionRound.eventSlug` points at it. Status: draft → open (until the event's submissions close) → judging → published (or cancelled). Prizes, criteria and judges are set at creation and freeze once the round opens; only rules and eligibility text can change. Judges can't score entries they own or submitted (`conflicts` in `getCompetitionJudging`). Submitted scorecards are final. Admin `getCompetitionScores` shows weighted totals (each criterion counts score/max × weight, averaged over submitted scorecards; ties go to the earlier entry). `publishCompetitionWinners` works once, after submissions close, with `expectedVersion`; published awards are never rewritten. Prizes are display only.
 
 ## What I need
 

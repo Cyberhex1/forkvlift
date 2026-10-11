@@ -11,6 +11,7 @@ import { ingestRepo } from "../core/github/ingest";
 import { flushNotificationEmails, sendWeeklyDigests } from "../email/deliver";
 import { snapshotChat } from "../core/moderation";
 import { syncVectors } from "../core/projects/semantic";
+import { exportCatalog } from "../core/mirror";
 import { enqueueStatsRefresh, runRepoIngest } from "./refresh";
 
 export const JobMessage = z.discriminatedUnion("type", [
@@ -20,6 +21,7 @@ export const JobMessage = z.discriminatedUnion("type", [
   z.object({ type: z.literal("email.flush") }),
   z.object({ type: z.literal("email.digest") }),
   z.object({ type: z.literal("vectors.sync") }),
+  z.object({ type: z.literal("catalog.export") }),
   z.object({ type: z.literal("repo.ingest"), repoFullName: z.string(), candidateId: z.string().nullable() }),
   z.object({
     type: z.literal("candidate.discover"),
@@ -32,7 +34,7 @@ export type JobMessage = z.infer<typeof JobMessage>;
 /** Cron expressions from wrangler.jsonc → jobs to enqueue. */
 const SCHEDULE: Record<string, JobMessage[]> = {
   "0 */6 * * *": [{ type: "discovery.run" }],
-  "30 3 * * *": [{ type: "stats.refresh" }, { type: "chat.snapshot" }],
+  "30 3 * * *": [{ type: "stats.refresh" }, { type: "chat.snapshot" }, { type: "catalog.export" }],
   "*/15 * * * *": [{ type: "email.flush" }, { type: "vectors.sync" }],
   "0 15 * * 1": [{ type: "email.digest" }],
 };
@@ -72,6 +74,11 @@ export async function handleQueue(batch: MessageBatch<unknown>, env: Env): Promi
         case "email.digest":
           await sendWeeklyDigests(env);
           break;
+        case "catalog.export": {
+          const r = await exportCatalog(env);
+          if (r.commit) console.log(`[jobs] catalog.export: ${r.projects} projects → ${r.commit}`);
+          break;
+        }
         case "vectors.sync": {
           const r = await syncVectors(env);
           if (r.upserted || r.removed) console.log(`[jobs] vectors.sync: ${r.upserted} embedded, ${r.removed} removed`);

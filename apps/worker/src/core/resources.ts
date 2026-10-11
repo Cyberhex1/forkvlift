@@ -9,7 +9,7 @@ import { newId, slugify } from "./ids";
 import { decodeCursor, encodeCursor } from "./projects/list";
 import { LISTED, parseJson } from "./projects/rows";
 import { scriptFlags } from "./safety/scan";
-import { assertOwnedUploads, mediaUrl } from "./uploads";
+import { assertOwnedUploads, cleanFilename, mediaUrl } from "./uploads";
 
 export const PROVEN_PROJECTS = 3;
 export const PROVEN_REPORTS = 5;
@@ -142,7 +142,7 @@ export async function getResource(db: D1Database, slug: string): Promise<Resourc
 
 /** Code blocks in languages that run things, or attached archives, mean "review before running". */
 export function detectExecutable(bodyMd: string, filePaths: string[]): boolean {
-  if (filePaths.some((p) => /\.(zip|sh|ps1|js|ts|py)$/i.test(p))) return true;
+  if (filePaths.some((p) => /\.(zip|sh|bash|ps1|bat|cmd|js|mjs|ts|py|rb)$/i.test(p))) return true;
   return /```\s*(bash|sh|shell|zsh|powershell|ps1|pwsh|cmd|bat|python|py|js|javascript|ts|typescript|node)\b/i.test(bodyMd);
 }
 
@@ -156,14 +156,24 @@ export async function createResource(env: Env, user: SessionUser, body: CreateBo
     const { results } = await db.prepare(`SELECT p.id FROM projects p WHERE p.id IN (${projects.map(() => "?").join(",")}) AND ${LISTED}`).bind(...projects).all<{ id: string }>();
     if (results.length !== projects.length) throw new HttpError("invalid_request", "Link only public projects.");
   }
+  const used = new Set<string>();
   const files = await Promise.all(
     body.fileKeys.map(async (key, i) => {
       const head = await env.MEDIA!.head(key);
-      return { key, path: `${slugify(body.title) || "resource"}-${i + 1}.${key.split(".").pop()}`, size: head?.size ?? 0 };
+      let path = cleanFilename(head?.customMetadata?.filename) ?? `${slugify(body.title) || "resource"}-${i + 1}.${key.split(".").pop()}`;
+      while (used.has(path)) path = `${i + 1}-${path}`;
+      used.add(path);
+      return { key, path, size: head?.size ?? 0, contentType: head?.httpMetadata?.contentType ?? "" };
     }),
   );
   // Scan the instructions themselves for install-style commands that pipe downloads into a shell, etc.
   const flags = scriptFlags("resource.sh", body.bodyMd);
+  // And every attached text file, under its real name so the right rules apply.
+  for (const f of files) {
+    if (!f.contentType.startsWith("text/") || f.size > 512 * 1024) continue;
+    const text = await (await env.MEDIA!.get(f.key))?.text();
+    if (text) for (const flag of scriptFlags(f.path, text)) if (!flags.includes(flag)) flags.push(`${f.path}: ${flag}`);
+  }
   let slug = slugify(body.title) || "resource";
   for (let i = 2; await db.prepare(`SELECT 1 FROM resources WHERE slug = ?`).bind(slug).first(); i++) slug = `${slugify(body.title).slice(0, 70)}-${i}`;
   const id = newId("res");
@@ -174,7 +184,7 @@ export async function createResource(env: Env, user: SessionUser, body: CreateBo
         `INSERT INTO resources (id, slug, type, title, summary, body_md, author_id, license, tested_with, files, has_executable_code, scan_flags, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(id, slug, body.type, body.title.trim(), body.summary.trim(), body.bodyMd, user.id, body.license || "CC0-1.0", JSON.stringify(body.testedWith), JSON.stringify(files), detectExecutable(body.bodyMd, files.map((f) => f.path)) ? 1 : 0, JSON.stringify(flags), now, now),
+      .bind(id, slug, body.type, body.title.trim(), body.summary.trim(), body.bodyMd, user.id, body.license || "CC0-1.0", JSON.stringify(body.testedWith), JSON.stringify(files.map(({ key, path, size }) => ({ key, path, size }))), detectExecutable(body.bodyMd, files.map((f) => f.path)) ? 1 : 0, JSON.stringify(flags), now, now),
     ...projects.map((pid) => db.prepare(`INSERT OR IGNORE INTO resource_projects (resource_id, project_id) VALUES (?, ?)`).bind(id, pid)),
   ]);
   return getResource(db, slug);

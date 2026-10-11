@@ -6,7 +6,7 @@
  * JSON in text columns, soft deletes via deleted_at where content can be reported.
  */
 import { sql } from "drizzle-orm";
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type {
   AiInvolvement,
   AiTool,
@@ -490,6 +490,176 @@ export const apiKeys = sqliteTable(
   },
   (t) => [index("api_keys_user_idx").on(t.userId)],
 );
+
+/**
+ * "Up for adoption" (task 4.12). One row per adoption period; the open one has
+ * closed_at NULL. Kept after it closes so the original author stays credited.
+ */
+export const projectAdoptions = sqliteTable(
+  "project_adoptions",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    originalOwnerId: text("original_owner_id").references(() => users.id, { onDelete: "set null" }),
+    previousStage: text("previous_stage").notNull(),
+    note: text("note").notNull().default(""),
+    openedAt: integer("opened_at").notNull(),
+    closedAt: ts("closed_at"),
+    outcome: text("outcome", { enum: ["cancelled", "adopted"] }),
+    adoptedBy: text("adopted_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => [uniqueIndex("project_adoptions_open_idx").on(t.projectId).where(sql`closed_at IS NULL`), index("project_adoptions_project_idx").on(t.projectId)],
+);
+
+export const adoptionRequests = sqliteTable(
+  "adoption_requests",
+  {
+    id: text("id").primaryKey(),
+    adoptionId: text("adoption_id").notNull().references(() => projectAdoptions.id, { onDelete: "cascade" }),
+    projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    requesterId: text("requester_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    message: text("message").notNull(),
+    status: text("status", { enum: ["pending", "approved", "declined", "withdrawn", "cancelled"] }).notNull().default("pending"),
+    createdAt: createdAt(),
+    decidedAt: ts("decided_at"),
+    decidedBy: text("decided_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    uniqueIndex("adoption_requests_pending_idx").on(t.projectId, t.requesterId).where(sql`status = 'pending'`),
+    index("adoption_requests_project_idx").on(t.projectId, t.status),
+  ],
+);
+/** Launch days, Fork Friday and build jams (task 4.6). Times are UTC ms; status is derived from them. */
+export const growthEvents = sqliteTable("growth_events", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  kind: text("kind", { enum: ["launch_day", "fork_friday", "build_jam"] }).notNull(),
+  title: text("title").notNull(),
+  bodyMd: text("body_md").notNull().default(""),
+  featuredProjectId: text("featured_project_id").references(() => projects.id, { onDelete: "set null" }),
+  startsAt: integer("starts_at").notNull(),
+  submissionEndsAt: integer("submission_ends_at").notNull(),
+  votingEndsAt: integer("voting_ends_at").notNull(),
+  cancelledAt: ts("cancelled_at"),
+  /** Admin actor (user id or "access:<email>"). */
+  createdBy: text("created_by").notNull(),
+  createdAt: createdAt(),
+});
+
+export const growthEntries = sqliteTable(
+  "growth_entries",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id").notNull().references(() => growthEvents.id, { onDelete: "cascade" }),
+    projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    submittedBy: text("submitted_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+    submittedAt: integer("submitted_at").notNull(),
+    withdrawnAt: ts("withdrawn_at"),
+  },
+  (t) => [uniqueIndex("growth_entries_active_idx").on(t.eventId, t.projectId).where(sql`withdrawn_at IS NULL`), index("growth_entries_event_idx").on(t.eventId)],
+);
+
+/** One active vote per person per event. */
+export const growthBallots = sqliteTable(
+  "growth_ballots",
+  {
+    eventId: text("event_id").notNull().references(() => growthEvents.id, { onDelete: "cascade" }),
+    voterId: text("voter_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    entryId: text("entry_id").notNull().references(() => growthEntries.id, { onDelete: "cascade" }),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.voterId] }), index("growth_ballots_entry_idx").on(t.entryId)],
+);
+/**
+ * Build competitions (task 4.14) ride on a growth event: the event holds the
+ * entries and the submission window; the round adds rules, prizes (display
+ * only: the site never handles money), criteria, judges and published awards.
+ */
+export const competitionRounds = sqliteTable("competition_rounds", {
+  id: text("id").primaryKey(),
+  eventId: text("event_id").notNull().unique().references(() => growthEvents.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  rulesMd: text("rules_md").notNull().default(""),
+  eligibilityMd: text("eligibility_md").notNull().default(""),
+  judgingEndsAt: integer("judging_ends_at").notNull(),
+  /** null = draft (not public). */
+  openedAt: ts("opened_at"),
+  publishedAt: ts("published_at"),
+  cancelledAt: ts("cancelled_at"),
+  version: integer("version").notNull().default(1),
+  createdBy: text("created_by").notNull(),
+  createdAt: createdAt(),
+});
+
+export const competitionPrizes = sqliteTable("competition_prizes", {
+  id: text("id").primaryKey(),
+  roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  descriptionMd: text("description_md").notNull().default(""),
+  sponsorName: text("sponsor_name"),
+  sponsorUrl: text("sponsor_url"),
+  place: integer("place"),
+});
+
+export const competitionCriteria = sqliteTable("competition_criteria", {
+  id: text("id").primaryKey(),
+  roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  description: text("description").notNull().default(""),
+  maxScore: integer("max_score").notNull(),
+  weight: real("weight").notNull().default(1),
+});
+
+export const competitionJudges = sqliteTable(
+  "competition_judges",
+  {
+    roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+    judgeId: text("judge_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    conflictNote: text("conflict_note").notNull().default(""),
+  },
+  (t) => [primaryKey({ columns: [t.roundId, t.judgeId] })],
+);
+
+export const competitionScorecards = sqliteTable(
+  "competition_scorecards",
+  {
+    roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+    entryId: text("entry_id").notNull().references(() => growthEntries.id, { onDelete: "cascade" }),
+    judgeId: text("judge_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    scores: text("scores").notNull(),
+    note: text("note").notNull().default(""),
+    submittedAt: ts("submitted_at"),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.roundId, t.entryId, t.judgeId] })],
+);
+
+export const competitionAwards = sqliteTable(
+  "competition_awards",
+  {
+    id: text("id").primaryKey(),
+    roundId: text("round_id").notNull().references(() => competitionRounds.id, { onDelete: "cascade" }),
+    prizeId: text("prize_id").notNull().references(() => competitionPrizes.id, { onDelete: "cascade" }),
+    entryId: text("entry_id").notNull().references(() => growthEntries.id, { onDelete: "cascade" }),
+    rationaleMd: text("rationale_md").notNull().default(""),
+    announcedAt: integer("announced_at").notNull(),
+  },
+  (t) => [uniqueIndex("competition_awards_prize_idx").on(t.prizeId)],
+);
+/** The Fork Report newsletter (task 4.10). Double opt-in; the token confirms and unsubscribes. */
+export const subscribers = sqliteTable("subscribers", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  token: text("token").notNull().unique(),
+  status: text("status", { enum: ["pending", "confirmed", "unsubscribed"] }).notNull().default("pending"),
+  createdAt: createdAt(),
+  confirmedAt: ts("confirmed_at"),
+  unsubscribedAt: ts("unsubscribed_at"),
+  /** Last confirmation email, to throttle re-sends. */
+  lastSentAt: ts("last_sent_at"),
+});
+
 /**
  * Facts that count toward badges (task 3.12), one row per distinct thing:
  * kind "bug_fixed" → ref is a card id moved out of Bug fix;

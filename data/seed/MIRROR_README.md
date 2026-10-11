@@ -1,6 +1,6 @@
 # ForkLift Open Catalog Data Mirror
 
-This repository is the public, open-source data mirror for **[ForkLift](https://forkvlift.com)** (`forkvlift.com`), the free social catalog of vibe-coded projects.
+This repository is the public, open-source data mirror for **[ForkLift](https://forklift.stream)** (`forklift.stream`), the free social catalog of vibe-coded projects.
 
 ## What is in this repository?
 

@@ -2,7 +2,7 @@
 
 - **From:** flash
 - **For task:** 4.10
-- **Status:** open
+- **Status:** done (Opus). Table `subscribers` (migration 0009). `subscribeNewsletter` as asked; `confirmNewsletter` and `unsubscribeNewsletter` are both `POST` with `{ token }` so a link preview cannot confirm or unsubscribe. Email links point to `/newsletter?confirm=<token>` and `/newsletter?unsubscribe=<token>`: Flash, please build that page (it posts the token) plus the signup form.
 
 ## What I need
 

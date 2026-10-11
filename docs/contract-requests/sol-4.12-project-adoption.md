@@ -2,7 +2,7 @@
 
 - **From:** sol
 - **For task:** 4.12
-- **Status:** open
+- **Status:** done (Opus). Routes as proposed: `getProjectAdoption`, `setProjectAdoption`, `requestProjectAdoption` (Turnstile), `listProjectAdoptionRequests`, `withdrawProjectAdoptionRequest`, `decideProjectAdoption`. `setProjectAdoption` and `decideProjectAdoption` return `ProjectAdoption` (not `ProjectDetail`); refetch `getProject` for the card. Approval is a guarded batch (one handover, competing requests cancelled, the old maintainer's Studio card removed). `originalAuthor` is the first author across handovers. Adoption moves ForkLift stewardship only: no GitHub access or license change, and `verifiedAuthor` stays tied to the repo's GitHub owner. Admin cancellation is not built yet.
 
 ## What I need
 

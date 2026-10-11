@@ -8,6 +8,8 @@ import { audit, decideCandidate, importByUrl, listCandidates } from "../core/cur
 import { decodeCursor, encodeCursor } from "../core/projects/list";
 import { parseJson } from "../core/projects/rows";
 import { syncProjectSearch } from "../core/projects/search";
+import * as comps from "../core/competitions";
+import { createEvent, updateEvent } from "../core/events";
 import * as moderation from "../core/moderation";
 import { setProvenOverride } from "../core/resources";
 
@@ -43,6 +45,32 @@ export function registerAdmin(app: Hono<AppEnv>) {
     return { updated };
   });
 
+  mount(app, "createGrowthEvent", async ({ body }, c) => {
+    const e = await createEvent(c.env.DB, actor(c), body);
+    await audit(c.env.DB, actor(c), "event.create", "event", e.id, { slug: e.slug, kind: e.kind });
+    return e;
+  });
+  mount(app, "updateGrowthEvent", async ({ params, body }, c) => {
+    const e = await updateEvent(c.env.DB, params.id, body);
+    await audit(c.env.DB, actor(c), body.cancelled ? "event.cancel" : "event.update", "event", e.id, { ...body });
+    return e;
+  });
+  mount(app, "createCompetition", async ({ body }, c) => {
+    const r = await comps.createCompetition(c.env.DB, actor(c), body);
+    await audit(c.env.DB, actor(c), "competition.create", "competition", r.id, { slug: r.slug });
+    return r;
+  });
+  mount(app, "updateCompetition", async ({ params, body }, c) => {
+    const r = await comps.updateCompetition(c.env.DB, params.id, body);
+    await audit(c.env.DB, actor(c), body.cancelled ? "competition.cancel" : body.open ? "competition.open" : "competition.update", "competition", r.id, { ...body });
+    return r;
+  });
+  mount(app, "getCompetitionScores", ({ params }, c) => comps.scores(c.env.DB, params.id));
+  mount(app, "publishCompetitionWinners", async ({ params, body }, c) => {
+    const res = await comps.publish(c.env.DB, params.id, body);
+    await audit(c.env.DB, actor(c), "competition.publish", "competition", params.id, { awards: body.awards });
+    return res;
+  });
   mount(app, "listReports", ({ query }, c) => moderation.listReports(c.env.DB, query.status ?? "open", query.cursor, query.limit));
   mount(app, "resolveReport", ({ params, body }, c) => moderation.resolveReport(c.env, actor(c), params.id, body));
   mount(app, "moderateChat", async ({ params, body }, c) => {

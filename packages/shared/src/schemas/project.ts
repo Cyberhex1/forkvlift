@@ -166,3 +166,137 @@ export const SubmissionPreview = z.object({
   warnings: z.array(z.string()),
 });
 export type SubmissionPreview = z.infer<typeof SubmissionPreview>;
+
+// ── Adoption (task 4.12) ─────────────────────────────────────────────────
+
+export const AdoptionRequestStatus = z.enum(["pending", "approved", "declined", "withdrawn", "cancelled"]);
+export type AdoptionRequestStatus = z.infer<typeof AdoptionRequestStatus>;
+
+export const AdoptionRequest = z.object({
+  id: Id,
+  project: ProjectRef,
+  requester: UserSummary,
+  message: z.string().max(2000),
+  status: AdoptionRequestStatus,
+  createdAt: IsoDate,
+  decidedAt: IsoDate.nullable(),
+});
+export type AdoptionRequest = z.infer<typeof AdoptionRequest>;
+
+/** Public view of a project's adoption state. Applicants and their messages are never public. */
+export const ProjectAdoption = z.object({
+  open: z.boolean(),
+  note: z.string().max(1000),
+  openedAt: IsoDate.nullable(),
+  /** Who built it first (kept after a handover). null when it was never handed over and isn't open. */
+  originalAuthor: UserSummary.nullable(),
+  maintainer: UserSummary.nullable(),
+  /** The viewer's most recent request for this project, if any. */
+  viewerRequest: AdoptionRequest.nullable(),
+  canManage: z.boolean(),
+});
+export type ProjectAdoption = z.infer<typeof ProjectAdoption>;
+
+// ── Launch days, Fork Friday, build jams (task 4.6) ──────────────────────
+
+export const GrowthEventKind = z.enum(["launch_day", "fork_friday", "build_jam"]);
+export type GrowthEventKind = z.infer<typeof GrowthEventKind>;
+export const GrowthEventStatus = z.enum(["scheduled", "submitting", "voting", "ended", "cancelled"]);
+export type GrowthEventStatus = z.infer<typeof GrowthEventStatus>;
+
+export const GrowthEvent = z.object({
+  id: Id,
+  slug: Slug,
+  kind: GrowthEventKind,
+  title: z.string().max(120),
+  bodyMd: z.string().max(10_000),
+  startsAt: IsoDate,
+  submissionEndsAt: IsoDate,
+  votingEndsAt: IsoDate,
+  featuredProject: ProjectRef.nullable(),
+  /** Derived from the server clock and cancellation. */
+  status: GrowthEventStatus,
+  entryCount: z.number().int().nonnegative(),
+});
+export type GrowthEvent = z.infer<typeof GrowthEvent>;
+
+export const GrowthEventDetail = GrowthEvent.extend({
+  viewerCanSubmit: z.boolean(),
+  viewerCanVote: z.boolean(),
+  /** The entry the viewer voted for, if any. */
+  viewerBallot: Id.nullable(),
+});
+export type GrowthEventDetail = z.infer<typeof GrowthEventDetail>;
+
+export const EventEntry = z.object({
+  id: Id,
+  eventId: Id,
+  project: ProjectCard,
+  submittedBy: UserSummary,
+  submittedAt: IsoDate,
+  voteCount: z.number().int().nonnegative(),
+  viewerVoted: z.boolean(),
+  /** 1-based by votes (ties: earlier submission, then id); null while submissions are open. */
+  rank: z.number().int().positive().nullable(),
+});
+export type EventEntry = z.infer<typeof EventEntry>;
+
+// ── Build competitions (task 4.14) ───────────────────────────────────────
+
+export const CompetitionStatus = z.enum(["draft", "open", "judging", "published", "cancelled"]);
+export type CompetitionStatus = z.infer<typeof CompetitionStatus>;
+
+/** Display only: the site never takes or pays money. */
+export const Prize = z.object({
+  id: Id,
+  label: z.string().max(140),
+  descriptionMd: z.string().max(2000),
+  sponsorName: z.string().max(100).nullable(),
+  sponsorUrl: Url.nullable(),
+  place: z.number().int().positive().nullable(),
+});
+export type Prize = z.infer<typeof Prize>;
+
+export const Criterion = z.object({
+  id: Id,
+  label: z.string().max(80),
+  description: z.string().max(500),
+  maxScore: z.number().int().min(1).max(100),
+  weight: z.number().min(0.1).max(10),
+});
+export type Criterion = z.infer<typeof Criterion>;
+
+export const CompetitionRound = z.object({
+  id: Id,
+  slug: Slug,
+  eventSlug: Slug,
+  title: z.string().max(120),
+  rulesMd: z.string().max(20_000),
+  eligibilityMd: z.string().max(10_000),
+  submissionEndsAt: IsoDate,
+  judgingEndsAt: IsoDate,
+  publishedAt: IsoDate.nullable(),
+  status: CompetitionStatus,
+  prizes: z.array(Prize),
+  criteria: z.array(Criterion),
+  judges: z.array(UserSummary),
+  version: z.number().int().positive(),
+});
+export type CompetitionRound = z.infer<typeof CompetitionRound>;
+
+export const Scorecard = z.object({
+  entryId: Id,
+  scores: z.array(z.object({ criterionId: Id, score: z.number().int().min(0) })),
+  note: z.string().max(2000),
+  submittedAt: IsoDate.nullable(),
+});
+export type Scorecard = z.infer<typeof Scorecard>;
+
+export const Award = z.object({
+  id: Id,
+  prize: Prize,
+  entry: EventEntry,
+  rationaleMd: z.string().max(5000),
+  announcedAt: IsoDate,
+});
+export type Award = z.infer<typeof Award>;

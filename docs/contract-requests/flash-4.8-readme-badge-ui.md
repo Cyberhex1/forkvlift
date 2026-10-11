@@ -2,7 +2,7 @@
 
 - **From:** flash
 - **For task:** 4.8
-- **Status:** open
+- **Status:** done (Opus). The copy box is in the panel's Fork lineage section, shown to the project's author for licensed projects (`catalog/ReadmeBadge.tsx`).
 
 ## What I need
 

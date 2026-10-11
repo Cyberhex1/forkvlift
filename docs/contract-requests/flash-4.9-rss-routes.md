@@ -2,7 +2,7 @@
 
 - **From:** flash
 - **For task:** 4.9
-- **Status:** open
+- **Status:** done (Opus). Paths are `/api/feeds/category/:slug/projects.rss` and `/api/feeds/users/:username/projects.rss` (a `.rss` suffix glued to a route parameter does not route cleanly).
 
 ## What I need
 
