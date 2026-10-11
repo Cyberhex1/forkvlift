@@ -85,6 +85,20 @@ export const ShowcaseComment = z.object({
 });
 export type ShowcaseComment = z.infer<typeof ShowcaseComment>;
 
+/** An entry in a showcase-only event (5.9). Voting uses the event's ballot route. */
+export const ShowcaseEventEntry = z.object({
+  id: Id,
+  eventId: Id,
+  showcase: ShowcaseCard,
+  submittedBy: UserSummary,
+  submittedAt: IsoDate,
+  voteCount: z.number().int().nonnegative(),
+  viewerVoted: z.boolean(),
+  /** 1-based by votes (ties: earlier submission, then id); null while submissions are open. */
+  rank: z.number().int().positive().nullable(),
+});
+export type ShowcaseEventEntry = z.infer<typeof ShowcaseEventEntry>;
+
 /** What the composer sends. Media is uploaded first (kind "media"), then referenced by key. */
 export const ShowcaseInput = z.object({
   title: z.string().trim().min(2).max(100),

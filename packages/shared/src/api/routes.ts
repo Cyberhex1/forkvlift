@@ -6,6 +6,7 @@
  */
 import { z } from "zod";
 import {
+  ShowcaseEventEntry,
   ProjectRef,
   AdminStats,
   ShowcaseCard,
@@ -918,7 +919,7 @@ export const routes = {
   }),
   listGrowthEventEntries: route({
     method: "GET", path: "/api/events/:slug/entries", auth: "public", kind: "json", area: "growth",
-    summary: "Entries (sort=rank is the leaderboard)",
+    summary: "Entries (sort=rank is the leaderboard). Showcase events (kind show_off) list theirs under /showcase-entries.",
     params: SlugParams,
     query: PageQuery.extend({ sort: z.enum(["newest", "rank"]).optional() }),
     response: page(EventEntry),
@@ -938,10 +939,30 @@ export const routes = {
   }),
   voteGrowthEntry: route({
     method: "PUT", path: "/api/events/:slug/ballot", auth: "user", kind: "json", area: "growth",
-    summary: "Vote for one entry (null takes the vote back)",
+    summary: "Vote for one entry (null takes the vote back); works for project and showcase events",
     params: SlugParams,
     body: z.object({ entryId: Id.nullable() }),
     response: z.object({ entryId: Id.nullable() }),
+  }),
+  listShowcaseEventEntries: route({
+    method: "GET", path: "/api/events/:slug/showcase-entries", auth: "public", kind: "json", area: "growth",
+    summary: "Entries in a showcase event (sort=rank is the leaderboard)",
+    params: SlugParams,
+    query: PageQuery.extend({ sort: z.enum(["newest", "rank"]).optional() }),
+    response: page(ShowcaseEventEntry),
+  }),
+  submitShowcaseEntry: route({
+    method: "POST", path: "/api/events/:slug/showcase-entries", auth: "user", kind: "json", area: "growth",
+    summary: "Enter one of your published showcases in a showcase event",
+    params: SlugParams,
+    body: z.object({ showcaseId: Id, turnstileToken: TurnstileToken }),
+    response: ShowcaseEventEntry,
+  }),
+  withdrawShowcaseEntry: route({
+    method: "DELETE", path: "/api/events/:slug/showcase-entries/:id", auth: "user", kind: "json", area: "growth",
+    summary: "Withdraw your showcase entry (until submissions close)",
+    params: z.object({ slug: Slug, id: Id }),
+    response: OkResponse,
   }),
   // competitions (4.14)
   listCompetitions: route({

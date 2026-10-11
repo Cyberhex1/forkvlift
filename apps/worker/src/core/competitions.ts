@@ -225,6 +225,7 @@ export async function createCompetition(
   const e = await eventById(db, b.eventId);
   if (!e) throw new HttpError("invalid_request", "Event not found.");
   if (e.cancelled_at) throw new HttpError("invalid_request", "That event was cancelled.");
+  if (e.kind === "show_off") throw new HttpError("invalid_request", "Competitions run on project events, not showcase events.");
   const judgingEnds = Date.parse(b.judgingEndsAt);
   if (judgingEnds <= e.submission_ends_at) throw new HttpError("invalid_request", "Judging must end after submissions close.");
   if (await db.prepare(`SELECT 1 FROM competition_rounds WHERE slug = ? OR event_id = ?`).bind(b.slug, b.eventId).first()) {
