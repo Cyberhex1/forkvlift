@@ -9,11 +9,13 @@ import { buildFtsQuery } from "./search";
 
 const DAY_MS = 86_400_000;
 
-interface Cursor {
+export interface Cursor {
   /** offset */
   o: number;
   /** seed for sort=random */
   s?: number;
+  /** ids already shown above the keyword results (semantic showcase search) */
+  x?: string[];
 }
 
 export function encodeCursor(c: Cursor): string {

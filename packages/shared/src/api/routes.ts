@@ -6,6 +6,7 @@
  */
 import { z } from "zod";
 import {
+  ProjectRef,
   AdminStats,
   ShowcaseCard,
   ShowcaseComment,
@@ -278,9 +279,9 @@ export const routes = {
     response: z.object({ request: AdoptionRequest, adoption: ProjectAdoption }),
   }),  similarProjects: route({
     method: "GET", path: "/api/search/similar", auth: "public", kind: "json", area: "projects",
-    summary: "\"Has this been built?\" check",
+    summary: "\"Has this been built?\" check: catalog projects, plus showcases (which can't be forked)",
     query: z.object({ q: z.string().min(3).max(300), limit: QueryLimit.optional() }),
-    response: z.object({ items: z.array(ProjectCard) }),
+    response: z.object({ items: z.array(ProjectCard), showcases: z.array(ShowcaseCard) }),
   }),
   getProject: route({
     method: "GET", path: "/api/projects/:slug", auth: "public", kind: "json", area: "projects",
@@ -977,7 +978,7 @@ export const routes = {
   // showcases (Phase 5)
   listShowcases: route({
     method: "GET", path: "/api/showcases", auth: "public", kind: "json", area: "showcases",
-    summary: "Showcase feed",
+    summary: "Showcase feed (a search sorted by relevance matches by meaning first, then keywords)",
     query: PageQuery.extend({
       sort: z.enum(["trending", "new", "top"]).optional(),
       category: Slug.optional(),
@@ -1059,6 +1060,27 @@ export const routes = {
     params: SlugParams,
     body: z.object({ body: z.string().trim().min(1).max(5000), parentId: Id.nullable(), turnstileToken: TurnstileToken }),
     response: ShowcaseComment,
+  }),
+  listShowcaseInCatalog: route({
+    method: "POST", path: "/api/showcases/:slug/catalog", auth: "user", kind: "json", area: "showcases",
+    summary: "List the showcase's public, licensed repo in the catalog (5.3). A closed showcase opening its code for the first time carries its upvotes and comments over.",
+    params: SlugParams,
+    body: z.object({ repoUrl: Url.nullable(), turnstileToken: TurnstileToken }),
+    response: z.object({ showcase: ShowcaseDetail, project: ProjectRef, carriedOver: z.object({ upvotes: z.number().int().nonnegative(), comments: z.number().int().nonnegative() }) }),
+  }),
+  projectShowcases: route({
+    method: "GET", path: "/api/projects/:slug/showcases", auth: "public", kind: "json", area: "showcases",
+    summary: "\"Used in these showcases\": published showcases that credit this project",
+    params: SlugParams,
+    query: PageQuery,
+    response: page(ShowcaseCard),
+  }),
+  resourceShowcases: route({
+    method: "GET", path: "/api/resources/:slug/showcases", auth: "public", kind: "json", area: "showcases",
+    summary: "\"Used in these showcases\": published showcases that credit this resource",
+    params: SlugParams,
+    query: PageQuery,
+    response: page(ShowcaseCard),
   }),
   deleteShowcaseComment: route({
     method: "DELETE", path: "/api/showcases/:slug/comments/:id", auth: "user", kind: "json", area: "showcases",

@@ -3,11 +3,13 @@ import type { AppEnv } from "../env";
 import { mount } from "../core/http";
 import { notFound } from "../core/errors";
 import * as showcases from "../core/showcases";
+import { searchShowcases } from "../core/showcase-search";
+import * as showcaseCatalog from "../core/showcase-catalog";
 import { clientIp, verifyTurnstile } from "../core/security";
 
 /** Showcases (Phase 5, task 5.1). Opus. */
 export function registerShowcases(app: Hono<AppEnv>) {
-  mount(app, "listShowcases", ({ query }, c) => showcases.listShowcases(c.env.DB, query, c.get("user")?.id ?? null));
+  mount(app, "listShowcases", ({ query }, c) => searchShowcases(c.env, query, c.get("user")?.id ?? null));
   mount(app, "getShowcase", ({ params }, c) => showcases.getShowcase(c.env.DB, params.slug, c.get("user")));
   mount(app, "createShowcase", async ({ body }, c) => {
     await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));
@@ -32,6 +34,12 @@ export function registerShowcases(app: Hono<AppEnv>) {
     await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));
     return showcases.createComment(c.env.DB, c.get("user")!, params.slug, body.body, body.parentId);
   });
+  mount(app, "listShowcaseInCatalog", async ({ params, body }, c) => {
+    await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));
+    return showcaseCatalog.listInCatalog(c.env, c.get("user")!, params.slug, body);
+  });
+  mount(app, "projectShowcases", ({ params, query }, c) => showcaseCatalog.projectShowcases(c.env.DB, params.slug, query, c.get("user")?.id ?? null));
+  mount(app, "resourceShowcases", ({ params, query }, c) => showcaseCatalog.resourceShowcases(c.env.DB, params.slug, query, c.get("user")?.id ?? null));
   mount(app, "deleteShowcaseComment", async ({ params }, c) => {
     await showcases.deleteComment(c.env.DB, c.get("user")!, params.slug, params.id);
     return { ok: true as const };

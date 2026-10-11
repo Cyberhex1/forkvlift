@@ -11,6 +11,7 @@ import { ingestRepo } from "../core/github/ingest";
 import { flushNotificationEmails, sendWeeklyDigests } from "../email/deliver";
 import { snapshotChat } from "../core/moderation";
 import { syncVectors } from "../core/projects/semantic";
+import { syncShowcaseVectors } from "../core/showcase-search";
 import { exportCatalog } from "../core/mirror";
 import { enqueueStatsRefresh, runRepoIngest } from "./refresh";
 
@@ -82,6 +83,8 @@ export async function handleQueue(batch: MessageBatch<unknown>, env: Env): Promi
         case "vectors.sync": {
           const r = await syncVectors(env);
           if (r.upserted || r.removed) console.log(`[jobs] vectors.sync: ${r.upserted} embedded, ${r.removed} removed`);
+          const s = await syncShowcaseVectors(env);
+          if (s.upserted || s.removed) console.log(`[jobs] vectors.sync: ${s.upserted} showcases embedded, ${s.removed} removed`);
           break;
         }
         case "chat.snapshot":

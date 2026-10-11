@@ -58,6 +58,10 @@ export const ShowcaseCard = z.object({
 });
 export type ShowcaseCard = z.infer<typeof ShowcaseCard>;
 
+/** A resource credited under "Built with". */
+export const ShowcaseResourceRef = z.object({ id: Id, slug: Slug, title: z.string().max(120) });
+export type ShowcaseResourceRef = z.infer<typeof ShowcaseResourceRef>;
+
 export const ShowcaseDetail = ShowcaseCard.extend({
   bodyMd: Markdown,
   buildStoryMd: Markdown,
@@ -65,6 +69,8 @@ export const ShowcaseDetail = ShowcaseCard.extend({
   repoUrl: Url.nullable(),
   media: z.array(ShowcaseMedia),
   links: z.array(ShowcaseLink),
+  /** "Built with" (5.3): catalog projects and resources the maker credits. Removed or hidden ones drop out. */
+  builtWith: z.object({ projects: z.array(ProjectRef), resources: z.array(ShowcaseResourceRef) }),
 });
 export type ShowcaseDetail = z.infer<typeof ShowcaseDetail>;
 
@@ -97,5 +103,7 @@ export const ShowcaseInput = z.object({
   aiTools: z.array(z.string().trim().min(1).max(40)).max(10),
   buildTime: z.string().trim().max(60).nullable(),
   tags: z.array(z.string().trim().min(1).max(40)).max(8),
+  /** "Built with": slugs of catalog projects and resources. Omit to leave unchanged (none on create). */
+  builtWith: z.object({ projects: z.array(Slug).max(10), resources: z.array(Slug).max(10) }).optional(),
 });
 export type ShowcaseInput = z.infer<typeof ShowcaseInput>;

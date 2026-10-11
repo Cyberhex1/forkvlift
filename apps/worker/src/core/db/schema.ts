@@ -680,8 +680,30 @@ export const showcases = sqliteTable(
     deletedAt: ts("deleted_at"),
     createdAt: createdAt(),
     updatedAt: integer("updated_at").notNull(),
+    /** Semantic search (5.2): when the vector was last written, and a hash of the text it came from. */
+    embeddedAt: ts("embedded_at"),
+    embeddingHash: text("embedding_hash"),
   },
   (t) => [index("showcases_owner_idx").on(t.ownerId), index("showcases_published_idx").on(t.publishedAt)],
+);
+
+/**
+ * "Built with" (5.3): catalog projects and resources a showcase credits. They
+ * show on those pages as "Used in these showcases". Exactly one target is set.
+ */
+export const showcaseCredits = sqliteTable(
+  "showcase_credits",
+  {
+    showcaseId: text("showcase_id").notNull().references(() => showcases.id, { onDelete: "cascade" }),
+    projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
+    resourceId: text("resource_id").references(() => resources.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+  },
+  (t) => [
+    index("showcase_credits_showcase_idx").on(t.showcaseId, t.position),
+    index("showcase_credits_project_idx").on(t.projectId),
+    index("showcase_credits_resource_idx").on(t.resourceId),
+  ],
 );
 
 export const showcaseMedia = sqliteTable(
