@@ -7,6 +7,11 @@
 import { z } from "zod";
 import {
   AdminStats,
+  EventEntry,
+  GrowthEvent,
+  GrowthEventDetail,
+  GrowthEventKind,
+  GrowthEventStatus,
   AdoptionRequest,
   AdoptionRequestStatus,
   ApiKey,
@@ -39,6 +44,7 @@ import {
   ForkTree,
   ForumBoard,
   Id,
+  IsoDate,
   Markdown,
   Notification,
   OkResponse,
@@ -886,6 +892,46 @@ export const routes = {
     params: SlugParams,
   }),
 
+  // events (4.6)
+  listGrowthEvents: route({
+    method: "GET", path: "/api/events", auth: "public", kind: "json", area: "growth",
+    summary: "Launch days, Fork Fridays and build jams",
+    query: PageQuery.extend({ kind: GrowthEventKind.optional(), status: GrowthEventStatus.optional() }),
+    response: page(GrowthEvent),
+  }),
+  getGrowthEvent: route({
+    method: "GET", path: "/api/events/:slug", auth: "public", kind: "json", area: "growth",
+    summary: "One event, with what the viewer can do",
+    params: SlugParams,
+    response: GrowthEventDetail,
+  }),
+  listGrowthEventEntries: route({
+    method: "GET", path: "/api/events/:slug/entries", auth: "public", kind: "json", area: "growth",
+    summary: "Entries (sort=rank is the leaderboard)",
+    params: SlugParams,
+    query: PageQuery.extend({ sort: z.enum(["newest", "rank"]).optional() }),
+    response: page(EventEntry),
+  }),
+  submitGrowthEntry: route({
+    method: "POST", path: "/api/events/:slug/entries", auth: "user", kind: "json", area: "growth",
+    summary: "Enter one of your public, licensed projects",
+    params: SlugParams,
+    body: z.object({ projectId: Id, turnstileToken: TurnstileToken }),
+    response: EventEntry,
+  }),
+  withdrawGrowthEntry: route({
+    method: "DELETE", path: "/api/events/:slug/entries/:id", auth: "user", kind: "json", area: "growth",
+    summary: "Withdraw your entry (until submissions close)",
+    params: z.object({ slug: Slug, id: Id }),
+    response: OkResponse,
+  }),
+  voteGrowthEntry: route({
+    method: "PUT", path: "/api/events/:slug/ballot", auth: "user", kind: "json", area: "growth",
+    summary: "Vote for one entry (null takes the vote back)",
+    params: SlugParams,
+    body: z.object({ entryId: Id.nullable() }),
+    response: z.object({ entryId: Id.nullable() }),
+  }),
   // admin (behind Cloudflare Access)
   listCandidates: route({
     method: "GET", path: "/api/admin/candidates", auth: "admin", kind: "json", area: "admin",
@@ -922,7 +968,34 @@ export const routes = {
     summary: "Fill in a suggested category for queued candidates that have none",
     response: z.object({ updated: z.number().int() }),
   }),
-  listReports: route({
+  createGrowthEvent: route({
+    method: "POST", path: "/api/admin/events", auth: "admin", kind: "json", area: "admin",
+    summary: "Schedule an event",
+    body: z.object({
+      slug: Slug,
+      kind: GrowthEventKind,
+      title: z.string().trim().min(3).max(120),
+      bodyMd: z.string().max(10_000),
+      featuredProjectId: Id.nullable(),
+      startsAt: IsoDate,
+      submissionEndsAt: IsoDate,
+      votingEndsAt: IsoDate,
+    }),
+    response: GrowthEvent,
+  }),
+  updateGrowthEvent: route({
+    method: "PATCH", path: "/api/admin/events/:id", auth: "admin", kind: "json", area: "admin",
+    summary: "Edit wording, move future deadlines, or cancel",
+    params: IdParams,
+    body: z.object({
+      title: z.string().trim().min(3).max(120).optional(),
+      bodyMd: z.string().max(10_000).optional(),
+      submissionEndsAt: IsoDate.optional(),
+      votingEndsAt: IsoDate.optional(),
+      cancelled: z.boolean().optional(),
+    }),
+    response: GrowthEvent,
+  }),  listReports: route({
     method: "GET", path: "/api/admin/reports", auth: "admin", kind: "json", area: "admin",
     summary: "Moderation queue",
     query: PageQuery.extend({ status: z.enum(["open", "resolved", "dismissed"]).optional() }),

@@ -8,6 +8,7 @@ import { audit, decideCandidate, importByUrl, listCandidates } from "../core/cur
 import { decodeCursor, encodeCursor } from "../core/projects/list";
 import { parseJson } from "../core/projects/rows";
 import { syncProjectSearch } from "../core/projects/search";
+import { createEvent, updateEvent } from "../core/events";
 import * as moderation from "../core/moderation";
 import { setProvenOverride } from "../core/resources";
 
@@ -43,6 +44,16 @@ export function registerAdmin(app: Hono<AppEnv>) {
     return { updated };
   });
 
+  mount(app, "createGrowthEvent", async ({ body }, c) => {
+    const e = await createEvent(c.env.DB, actor(c), body);
+    await audit(c.env.DB, actor(c), "event.create", "event", e.id, { slug: e.slug, kind: e.kind });
+    return e;
+  });
+  mount(app, "updateGrowthEvent", async ({ params, body }, c) => {
+    const e = await updateEvent(c.env.DB, params.id, body);
+    await audit(c.env.DB, actor(c), body.cancelled ? "event.cancel" : "event.update", "event", e.id, { ...body });
+    return e;
+  });
   mount(app, "listReports", ({ query }, c) => moderation.listReports(c.env.DB, query.status ?? "open", query.cursor, query.limit));
   mount(app, "resolveReport", ({ params, body }, c) => moderation.resolveReport(c.env, actor(c), params.id, body));
   mount(app, "moderateChat", async ({ params, body }, c) => {

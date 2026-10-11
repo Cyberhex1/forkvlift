@@ -2,7 +2,7 @@
 
 - **From:** sol
 - **For task:** 4.6
-- **Status:** open
+- **Status:** done (Opus). Paths are `/api/events…` (not `/api/growth/events…`). The leaderboard is `listGrowthEventEntries?sort=rank` (ties: earlier submission, then id); `rank` is null until submissions close. `voteGrowthEntry` returns `{ entryId }`; refetch entries for counts. Admin: `POST /api/admin/events`, `PATCH /api/admin/events/:id` (wording any time; deadlines only while still in the future; nothing changes after an event ends). Routes live in `routes/events.ts`, not `growth.ts`.
 
 ## What I need
 

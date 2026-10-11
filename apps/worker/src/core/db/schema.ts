@@ -529,6 +529,47 @@ export const adoptionRequests = sqliteTable(
     index("adoption_requests_project_idx").on(t.projectId, t.status),
   ],
 );
+/** Launch days, Fork Friday and build jams (task 4.6). Times are UTC ms; status is derived from them. */
+export const growthEvents = sqliteTable("growth_events", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  kind: text("kind", { enum: ["launch_day", "fork_friday", "build_jam"] }).notNull(),
+  title: text("title").notNull(),
+  bodyMd: text("body_md").notNull().default(""),
+  featuredProjectId: text("featured_project_id").references(() => projects.id, { onDelete: "set null" }),
+  startsAt: integer("starts_at").notNull(),
+  submissionEndsAt: integer("submission_ends_at").notNull(),
+  votingEndsAt: integer("voting_ends_at").notNull(),
+  cancelledAt: ts("cancelled_at"),
+  /** Admin actor (user id or "access:<email>"). */
+  createdBy: text("created_by").notNull(),
+  createdAt: createdAt(),
+});
+
+export const growthEntries = sqliteTable(
+  "growth_entries",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id").notNull().references(() => growthEvents.id, { onDelete: "cascade" }),
+    projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    submittedBy: text("submitted_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+    submittedAt: integer("submitted_at").notNull(),
+    withdrawnAt: ts("withdrawn_at"),
+  },
+  (t) => [uniqueIndex("growth_entries_active_idx").on(t.eventId, t.projectId).where(sql`withdrawn_at IS NULL`), index("growth_entries_event_idx").on(t.eventId)],
+);
+
+/** One active vote per person per event. */
+export const growthBallots = sqliteTable(
+  "growth_ballots",
+  {
+    eventId: text("event_id").notNull().references(() => growthEvents.id, { onDelete: "cascade" }),
+    voterId: text("voter_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    entryId: text("entry_id").notNull().references(() => growthEntries.id, { onDelete: "cascade" }),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.voterId] }), index("growth_ballots_entry_idx").on(t.entryId)],
+);
 /** The Fork Report newsletter (task 4.10). Double opt-in; the token confirms and unsubscribes. */
 export const subscribers = sqliteTable("subscribers", {
   id: text("id").primaryKey(),
