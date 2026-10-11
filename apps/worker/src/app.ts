@@ -18,6 +18,7 @@ import { registerFeeds } from "./routes/feeds";
 import { registerGrowth } from "./routes/growth";
 import { registerMessages } from "./routes/messages";
 import { registerMcp } from "./routes/mcp";
+import { registerMirror } from "./routes/mirror";
 import { registerMeta } from "./routes/meta";
 import { registerSocial } from "./routes/social";
 import { registerStudio } from "./routes/studio";
@@ -49,6 +50,7 @@ registerCompetitions(app);
 registerFeeds(app);
 registerAdmin(app);
 registerMcp(app);
+registerMirror(app);
 registerV1(app);
 
 const missing = unmountedRoutes();

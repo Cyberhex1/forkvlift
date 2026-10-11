@@ -16,3 +16,12 @@ Not blocking Phase 1. Do these before real sign-in, uploads, or the admin consol
 - [x] **Decide:** should curated (non-author) imports include unlicensed repos? **No.** Approval is blocked when a repo has no license.
 
 FYI: `gh auth setup-git` was run so git pushes use your GitHub CLI login.
+
+## Catalog mirror (task 4.13; optional)
+
+- [ ] Create a public repo for the mirror (for example `Cyberhex1/forklift-catalog`) with a `main` branch. Copy in `data/seed/MIRROR_README.md` (as `README.md`), `data/seed/project.schema.json`, `data/seed/PROJECT_SCHEMA.md` and `scripts/seed/validate-pr.mjs`.
+- [ ] Create a fine-grained GitHub token with **Contents: read and write** and **Pull requests: read** on that repo only. From `C:\code\ForkvLift\apps\worker`:
+      `npx wrangler secret put MIRROR_GITHUB_TOKEN --env preview` (and `--env production` at launch)
+- [ ] Pick a random webhook secret: `npx wrangler secret put MIRROR_WEBHOOK_SECRET --env preview`
+- [ ] Tell Opus the repo name (it goes in `MIRROR_REPO`).
+- [ ] In the mirror repo's Settings → Webhooks, add `https://<site>/api/mirror/webhook`, content type JSON, the same secret, and only the "Pull requests" event.

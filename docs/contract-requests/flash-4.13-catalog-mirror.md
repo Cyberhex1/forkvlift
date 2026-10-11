@@ -2,7 +2,7 @@
 
 - **From:** flash
 - **For task:** 4.13
-- **Status:** open
+- **Status:** done (Opus). Nightly `catalog.export` (03:30 UTC) writes `projects/<slug>.json` (licensed, listed projects only) and `categories.json` in one commit, only when something changed, and keeps every other file. Webhook `POST /api/mirror/webhook` (signed with `MIRROR_WEBHOOK_SECRET`): when a PR into `main` merges, each added or changed `projects/*.json` goes to the review queue through the paste-a-link importer. The next export then removes files for projects that aren't approved yet. Off until the owner sets `MIRROR_REPO`, `MIRROR_GITHUB_TOKEN` and `MIRROR_WEBHOOK_SECRET` (see `docs/owner-todo.md`).
 
 ## What I need
 
