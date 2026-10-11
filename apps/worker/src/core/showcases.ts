@@ -140,9 +140,15 @@ async function rowBySlug(db: D1Database, slug: string, viewer: SessionUser | nul
 
 export async function getShowcase(db: D1Database, slug: string, viewer: SessionUser | null): Promise<ShowcaseDetail> {
   const r = await rowBySlug(db, slug, viewer);
-  const [media, links] = await db.batch<Record<string, unknown>>([
+  const [media, links, creditedProjects, creditedResources] = await db.batch<Record<string, unknown>>([
     db.prepare(`SELECT * FROM showcase_media WHERE showcase_id = ? ORDER BY position`).bind(r.id),
     db.prepare(`SELECT kind, label, url FROM showcase_links WHERE showcase_id = ? ORDER BY position`).bind(r.id),
+    db
+      .prepare(`SELECT p.id, p.slug, p.name FROM showcase_credits sc JOIN projects p ON p.id = sc.project_id WHERE sc.showcase_id = ? AND ${LISTED} ORDER BY sc.position`)
+      .bind(r.id),
+    db
+      .prepare(`SELECT r.id, r.slug, r.title FROM showcase_credits sc JOIN resources r ON r.id = sc.resource_id WHERE sc.showcase_id = ? AND r.deleted_at IS NULL ORDER BY sc.position`)
+      .bind(r.id),
   ]);
   const [card] = await toCards(db, [r], viewer?.id ?? null);
   return {
@@ -158,6 +164,10 @@ export async function getShowcase(db: D1Database, slug: string, viewer: SessionU
       alt: m.alt as string,
     })),
     links: links!.results as ShowcaseDetail["links"],
+    builtWith: {
+      projects: creditedProjects!.results.map((p) => ({ id: p.id as string, slug: p.slug as string, name: p.name as string, author: null })),
+      resources: creditedResources!.results as ShowcaseDetail["builtWith"]["resources"],
+    },
   };
 }
 
@@ -167,7 +177,16 @@ export async function listShowcases(
   db: D1Database,
   q: ListQuery,
   viewerId: string | null,
-  extra: { ownerId?: string; includeDrafts?: boolean; savedBy?: string; onlyIds?: string[]; excludeIds?: string[]; offset?: number } = {},
+  extra: {
+    ownerId?: string;
+    includeDrafts?: boolean;
+    savedBy?: string;
+    onlyIds?: string[];
+    excludeIds?: string[];
+    offset?: number;
+    creditsProject?: string;
+    creditsResource?: string;
+  } = {},
 ) {
   const limit = Math.min(q.limit ?? 24, 60);
   const cursor = extra.offset !== undefined ? { o: extra.offset } : decodeCursor(q.cursor);
@@ -185,6 +204,14 @@ export async function listShowcases(
   if (extra.ownerId) {
     where.push(`s.owner_id = ?`);
     binds.push(extra.ownerId);
+  }
+  if (extra.creditsProject) {
+    where.push(`EXISTS (SELECT 1 FROM showcase_credits sc WHERE sc.showcase_id = s.id AND sc.project_id = ?)`);
+    binds.push(extra.creditsProject);
+  }
+  if (extra.creditsResource) {
+    where.push(`EXISTS (SELECT 1 FROM showcase_credits sc WHERE sc.showcase_id = s.id AND sc.resource_id = ?)`);
+    binds.push(extra.creditsResource);
   }
   if (extra.savedBy) {
     where.push(`EXISTS (SELECT 1 FROM showcase_saves sv WHERE sv.showcase_id = s.id AND sv.user_id = ?)`);
@@ -237,6 +264,26 @@ async function checkInput(env: Env, userId: string, input: Partial<ShowcaseInput
   if (input.coverKey && mediaKindOf(input.coverKey) === "video") throw new HttpError("invalid_request", "The cover must be an image.");
 }
 
+type Credits = { projectIds: string[]; resourceIds: string[] };
+
+/** Turn "Built with" slugs into ids; unknown, hidden or removed ones are refused. */
+async function resolveCredits(db: D1Database, builtWith: ShowcaseInput["builtWith"]): Promise<Credits | undefined> {
+  if (!builtWith) return undefined;
+  const lookup = async (sql: string, slugs: string[], what: string) => {
+    const unique = [...new Set(slugs)];
+    if (!unique.length) return [];
+    const { results } = await db.prepare(sql.replace("?", unique.map(() => "?").join(","))).bind(...unique).all<{ id: string; slug: string }>();
+    const bySlug = new Map(results.map((r) => [r.slug, r.id]));
+    const missing = unique.filter((s) => !bySlug.has(s));
+    if (missing.length) throw new HttpError("invalid_request", `No ${what} "${missing[0]}" to credit.`);
+    return unique.map((s) => bySlug.get(s)!);
+  };
+  return {
+    projectIds: await lookup(`SELECT p.id, p.slug FROM projects p WHERE p.slug IN (?) AND ${LISTED}`, builtWith.projects, "project"),
+    resourceIds: await lookup(`SELECT id, slug FROM resources WHERE slug IN (?) AND deleted_at IS NULL`, builtWith.resources, "resource"),
+  };
+}
+
 /** Link to the catalog when the repo is already listed there. */
 async function catalogMatch(db: D1Database, repoUrl: string | null | undefined): Promise<string | null> {
   if (!repoUrl) return null;
@@ -246,8 +293,14 @@ async function catalogMatch(db: D1Database, repoUrl: string | null | undefined):
   return p?.id ?? null;
 }
 
-function childStatements(db: D1Database, id: string, input: Partial<ShowcaseInput>): D1PreparedStatement[] {
+function childStatements(db: D1Database, id: string, input: Partial<ShowcaseInput>, credits?: Credits): D1PreparedStatement[] {
   const out: D1PreparedStatement[] = [];
+  if (credits) {
+    out.push(db.prepare(`DELETE FROM showcase_credits WHERE showcase_id = ?`).bind(id));
+    let position = 0;
+    for (const pid of credits.projectIds) out.push(db.prepare(`INSERT INTO showcase_credits (showcase_id, project_id, position) VALUES (?, ?, ?)`).bind(id, pid, position++));
+    for (const rid of credits.resourceIds) out.push(db.prepare(`INSERT INTO showcase_credits (showcase_id, resource_id, position) VALUES (?, ?, ?)`).bind(id, rid, position++));
+  }
   if (input.media) {
     out.push(db.prepare(`DELETE FROM showcase_media WHERE showcase_id = ?`).bind(id));
     input.media.forEach((m, i) => {
@@ -270,6 +323,7 @@ export async function createShowcase(env: Env, user: SessionUser, input: Showcas
   const recent = await db.prepare(`SELECT count(*) AS n FROM showcases WHERE owner_id = ? AND created_at > ?`).bind(user.id, Date.now() - DAY_MS).first<{ n: number }>();
   if ((recent?.n ?? 0) >= MAX_NEW_PER_DAY) throw new HttpError("rate_limited", `You can create up to ${MAX_NEW_PER_DAY} showcases a day.`);
   await checkInput(env, user.id, input);
+  const credits = await resolveCredits(db, input.builtWith);
   let slug = slugify(input.title) || "showcase";
   for (let i = 2; await db.prepare(`SELECT 1 FROM showcases WHERE slug = ?`).bind(slug).first(); i++) slug = `${(slugify(input.title) || "showcase").slice(0, 70)}-${i}`;
   const id = newId("show");
@@ -285,12 +339,12 @@ export async function createShowcase(env: Env, user: SessionUser, input: Showcas
         input.repoUrl, await catalogMatch(db, input.repoUrl), JSON.stringify(input.aiTools), input.buildTime, JSON.stringify(input.tags),
         input.publish ? now : null, now, now,
       ),
-    ...childStatements(db, id, input),
+    ...childStatements(db, id, input, credits),
   ]);
   return getShowcase(db, slug, user);
 }
 
-async function ownRow(db: D1Database, slug: string, user: SessionUser): Promise<ShowcaseRow> {
+export async function ownRow(db: D1Database, slug: string, user: SessionUser): Promise<ShowcaseRow> {
   const r = await db.prepare(`${SHOWCASE_SELECT} WHERE s.slug = ? AND s.deleted_at IS NULL`).bind(slug).first<ShowcaseRow>();
   if (!r || r.owner_id !== user.id) throw notFound("Showcase not found");
   return r;
@@ -300,6 +354,7 @@ export async function updateShowcase(env: Env, user: SessionUser, slug: string, 
   const db = env.DB;
   const r = await ownRow(db, slug, user);
   await checkInput(env, user.id, input);
+  const credits = await resolveCredits(db, input.builtWith);
   const sets: string[] = [];
   const binds: unknown[] = [];
   const set = (col: string, v: unknown) => {
@@ -324,7 +379,7 @@ export async function updateShowcase(env: Env, user: SessionUser, slug: string, 
   if (input.publish === true && !r.published_at) set("published_at", Date.now());
   if (input.publish === false) set("published_at", null);
   set("updated_at", Date.now());
-  await db.batch([db.prepare(`UPDATE showcases SET ${sets.join(", ")} WHERE id = ?`).bind(...binds, r.id), ...childStatements(db, r.id, input)]);
+  await db.batch([db.prepare(`UPDATE showcases SET ${sets.join(", ")} WHERE id = ?`).bind(...binds, r.id), ...childStatements(db, r.id, input, credits)]);
   return getShowcase(db, slug, user);
 }
 

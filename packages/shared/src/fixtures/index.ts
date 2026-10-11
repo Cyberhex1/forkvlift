@@ -88,6 +88,7 @@ const fxShowcaseDetail = (over: Parameters<typeof fxShowcase>[0] = {}) => ({
   ...fxShowcase(over), bodyMd: "Dev fixture. **Not a real app.**", buildStoryMd: "Built over two weekends with Claude Code.", buildTime: "2 weekends", repoUrl: null,
   media: [{ id: "fx_smed_1", kind: "embed" as const, url: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ", alt: "Demo video" }],
   links: [{ kind: "app_store" as const, label: "App Store", url: "https://example.com/app" }],
+  builtWith: { projects: [{ id: "fx_prj_2", slug: "fixture-dungeon-toaster", name: "Fixture: Dungeon Toaster", author: null }], resources: [] },
 });
 const fxShowcaseComment = { id: "fx_scom_1", showcaseId: "fx_show_pocket-chef", parentId: null, author: fxUsers.bo, body: "Dev fixture comment.", createdAt: NOW, editedAt: null };
 const fxAdoption = { open: true, note: "Dev fixture: looking for someone to take this on.", openedAt: "2026-10-01T12:00:00.000Z", originalAuthor: fxUsers.bo, maintainer: fxUsers.bo, viewerRequest: null, canManage: false };
@@ -232,6 +233,13 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   listShowcaseComments: () => ({ items: [fxShowcaseComment], nextCursor: null }),
   createShowcaseComment: ({ body }) => ({ ...fxShowcaseComment, id: "fx_scom_2", body: body.body, parentId: body.parentId }),
   deleteShowcaseComment: () => ok,
+  listShowcaseInCatalog: ({ params }) => ({
+    showcase: { ...fxShowcaseDetail({ slug: params.slug, hasPublicCode: true }), repoUrl: "https://github.com/example/fixture" },
+    project: ref(fxProjects[0]!),
+    carriedOver: { upvotes: 0, comments: 0 },
+  }),
+  projectShowcases: () => ({ items: [fxShowcase()], nextCursor: null }),
+  resourceShowcases: () => ({ items: [fxShowcase()], nextCursor: null }),
   setShowcaseStaffPick: () => ok,
   listCompetitions: () => ({ items: [fxCompetition], nextCursor: null }),
   getCompetition: () => fxCompetition,
