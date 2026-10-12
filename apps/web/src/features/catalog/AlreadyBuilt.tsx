@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Badge, Spinner } from "@forkvlift/ui";
+import { ShowcaseCard } from "../showcases/ShowcaseCard";
 import { api } from "../../lib/api";
 
 export function AlreadyBuilt({ text, minLength = 12 }: { text: string; minLength?: number }) {
@@ -22,11 +23,11 @@ export function AlreadyBuilt({ text, minLength = 12 }: { text: string; minLength
         <Spinner label="Looking for similar projects" />
       ) : similar.isError ? (
         <p className="text-muted">Couldn't check right now.</p>
-      ) : !similar.data.items.length ? (
+      ) : !similar.data.items.length && !similar.data.showcases.length ? (
         <p className="text-muted">Nothing close yet. Looks like a fresh idea.</p>
       ) : (
         <>
-          <p className="mb-2 text-muted">These look close. Forking one might save you a rebuild:</p>
+          {similar.data.items.length ? <p className="mb-2 text-muted">These look close. Forking one might save you a rebuild:</p> : null}
           <ul className="space-y-1.5">
             {similar.data.items.map((p) => (
               <li key={p.id} className="flex flex-wrap items-center gap-2">
@@ -36,6 +37,7 @@ export function AlreadyBuilt({ text, minLength = 12 }: { text: string; minLength
               </li>
             ))}
           </ul>
+          {similar.data.showcases.length ? <section aria-label="Similar showcases" className="mt-4 space-y-3"><h3 className="font-semibold">Showcases</h3><div className="grid gap-3 sm:grid-cols-2">{similar.data.showcases.map(s => <ShowcaseCard key={s.id} showcase={s} />)}</div></section> : null}
         </>
       )}
     </section>

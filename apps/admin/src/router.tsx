@@ -8,6 +8,7 @@ export { api } from "./api";
 
 const NAV = [
   { to: "/", label: "Review queue" },
+  { to: "/showcases", label: "Showcases" },
   { to: "/moderation", label: "Moderation" },
   { to: "/categories", label: "Categories" },
   { to: "/featured", label: "Staff picks" },
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
     HydrateFallback: () => <Spinner label="Loading admin console" />,
     children: [
       { path: "/", lazy: async () => ({ Component: (await import("./ReviewQueue")).ReviewQueue }) },
+      { path: "/showcases", lazy: async () => ({ Component: (await import("./ShowcasePicks")).ShowcasePicks }) },
       { path: "/moderation", lazy: async () => ({ Component: (await import("./ModerationQueue")).ModerationQueue }) },
       { path: "/categories", Component: soon("Categories and tags") },
       { path: "/featured", Component: soon("Staff picks and featured slots") },
@@ -55,5 +57,3 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-
-
