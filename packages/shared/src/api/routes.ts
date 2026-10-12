@@ -1142,7 +1142,7 @@ export const routes = {
   }),
   suggestCandidateCategories: route({
     method: "POST", path: "/api/admin/candidates/categorize", auth: "admin", kind: "json", area: "admin",
-    summary: "Fill in a suggested category for queued candidates that have none",
+    summary: "Re-suggest categories for pending candidates (and fill in snoozed ones that have none)",
     response: z.object({ updated: z.number().int() }),
   }),
   createGrowthEvent: route({
