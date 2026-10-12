@@ -1,5 +1,5 @@
 import { expect, test } from "playwright/test";
-import type { ShowcaseCard, ShowcaseDetail } from "@forkvlift/shared";
+import type { ProjectDetail, ShowcaseCard, ShowcaseDetail } from "@forkvlift/shared";
 
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/config", async r => { const response = await r.fetch(); await r.fulfill({ json: { ...await response.json(), turnstileSiteKey: null } }); });
@@ -78,10 +78,25 @@ test("gallery, credits, signed-out gate, save/vote failures, replies and moderat
   await page.screenshot({ path: `docs/handoffs/screenshots/5.4-${info.project.name}-detail-admin.png` });
   await page.request.get("/api/dev/login?as=fx-ada"); await page.reload(); await expect(page.getByRole("button", { name: "Upvote · 12" })).toBeDisabled();
   const detail = await (await page.request.get("/api/showcases/fixture-pocket-chef")).json() as ShowcaseDetail;
+  const project = await (await page.request.get("/api/projects/fixture-pixel-planner")).json() as ProjectDetail;
+  await page.route("**/api/projects/preview", async r => { const response = await r.fetch(); await r.fulfill({ json: { ...await response.json(), license: project.license } }); });
   await page.route("**/api/showcases/fixture-pocket-chef", r => r.fulfill({ json: { ...detail, hasPublicCode: true, repoUrl: "https://github.com/example/fixture", media: [], bodyMd: "", buildStoryMd: "", builtWith: { projects: [], resources: [] } } }));
   await page.reload(); await expect(page.getByText("No credits added yet.")).toBeVisible();
   await page.getByRole("button", { name: "List in catalog" }).click(); await expect(page.getByRole("link", { name: "See the code", exact: true })).toBeVisible();
   await page.screenshot({ path: `docs/handoffs/screenshots/5.4-${info.project.name}-detail-owner.png` });
+});
+
+test("catalog action waits for licensing and recovers eligibility failures", async ({ page }) => {
+  await page.request.get("/api/dev/login?as=fx-ada");
+  const detail = await (await page.request.get("/api/showcases/fixture-pocket-chef")).json() as ShowcaseDetail;
+  await page.route("**/api/showcases/fixture-pocket-chef", r => r.fulfill({ json: { ...detail, hasPublicCode: true, repoUrl: "https://github.com/example/fixture" } }));
+  await page.goto("/showcase/fixture-pocket-chef");
+  await expect(page.getByText("Add an open-source license to this repository before listing it in the catalog.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "List in catalog" })).toHaveCount(0);
+  await page.route("**/api/projects/preview", r => r.fulfill({ status: 503, json: { error: { code: "unavailable", message: "Failed" } } }));
+  await page.reload(); await expect(page.getByText("Couldn't verify repository eligibility", { exact: true })).toBeVisible();
+  await page.unroute("**/api/projects/preview"); await page.getByRole("button", { name: "Retry repository check" }).click();
+  await expect(page.getByText("Add an open-source license to this repository before listing it in the catalog.")).toBeVisible();
 });
 
 

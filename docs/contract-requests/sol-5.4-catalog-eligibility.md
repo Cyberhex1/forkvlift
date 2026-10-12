@@ -2,7 +2,7 @@
 
 - **From:** sol
 - **For task:** 5.4
-- **Status:** open
+- **Status:** resolved in UI using existing previewSubmission route
 
 ## What I need
 
@@ -18,4 +18,4 @@ An optional `catalogEligibility` containing `eligible: boolean` and a user-facin
 
 ## Workaround until then
 
-Show the action only to the maker of a published showcase with public code and a repo, explain the open-source-license requirement, and let listShowcaseInCatalog validate ownership and licensing. Surface server errors without changing the showcase. No local license inference or entity definitions.
+The existing previewSubmission route supplies license, ownedByViewer and alreadyListed. Sol now uses it for the owner action: the button appears only after licensing and ownership verification succeeds. Missing licenses and preview errors have clear states. No new contract field is needed for correctness. listShowcaseInCatalog still revalidates at submission.
