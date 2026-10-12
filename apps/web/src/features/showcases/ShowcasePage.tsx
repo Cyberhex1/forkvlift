@@ -3,6 +3,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { Link, useParams } from "react-router";
 import { ApiError, type ShowcaseComment, type ShowcaseDetail } from "@forkvlift/shared";
 import { Button, Card, Spinner, StateMessage, buttonClasses } from "@forkvlift/ui";
+import { usePreferences } from "../../app/preferences";
 import { PageShell } from "../../app/kit";
 import { signInUrl, useSession } from "../../app/session";
 import { api } from "../../lib/api";
@@ -18,9 +19,10 @@ export function ShowcasePage() {
 }
 
 export function ShowcaseContents({ showcase, preview = false }: { showcase: ShowcaseDetail; preview?: boolean }) {
+  const { motionReduced } = usePreferences();
   return <div className="min-w-0 space-y-6"><ShowcaseLabels showcase={showcase} /><h2 className="break-words font-display text-2xl">{showcase.title}</h2><p className="break-words text-muted">{showcase.tagline}</p><p className="text-sm"><Link className="text-accent underline" to={`/u/${showcase.maker.username}`}>@{showcase.maker.username}</Link> · {showcase.category.name} · {showcase.kind}</p>{!showcase.hasPublicCode ? <p className="text-sm text-muted">Closed source: look, don't take.</p> : null}
-    {showcase.coverUrl ? <img className="max-h-[32rem] w-full rounded-card object-contain bg-surface-2" src={showcase.coverUrl} alt={showcase.title} /> : null}
-    <section aria-label="Gallery" className="grid gap-4 md:grid-cols-2">{showcase.media.map(m => <figure key={m.id} className="min-w-0">{m.kind === "embed" ? (() => { let valid = false; try { const u = new URL(m.url); valid = u.protocol === "https:" && ["www.youtube-nocookie.com", "youtube-nocookie.com", "player.vimeo.com"].includes(u.hostname); } catch { /* Invalid embeds are omitted. */ } return valid ? <iframe className="aspect-video w-full rounded-card border border-border" src={m.url} title={m.alt || "Showcase video"} loading="lazy" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-presentation" referrerPolicy="no-referrer" /> : null; })() : m.kind === "video" ? <video controls preload="metadata" className="max-h-96 w-full" aria-label={m.alt || "Showcase video"} src={m.url} /> : <img src={m.url} alt={m.alt} className="max-h-96 w-full rounded-card object-contain" loading="lazy" />}<figcaption className="mt-1 break-words text-xs text-muted">{m.alt}</figcaption></figure>)}</section>
+    {showcase.coverUrl && !(motionReduced && /\.gif(?:\?|$)/i.test(showcase.coverUrl)) ? <img className="max-h-[32rem] w-full rounded-card object-contain bg-surface-2" src={showcase.coverUrl} alt={showcase.title} /> : null}
+    <section aria-label="Gallery" className="grid gap-4 md:grid-cols-2">{showcase.media.map(m => <figure key={m.id} className="min-w-0">{m.kind === "embed" ? (() => { let valid = false; try { const u = new URL(m.url); valid = u.protocol === "https:" && ["www.youtube-nocookie.com", "youtube-nocookie.com", "player.vimeo.com"].includes(u.hostname); } catch { /* Invalid embeds are omitted. */ } return valid ? <iframe className="aspect-video w-full rounded-card border border-border" src={m.url} title={m.alt || "Showcase video"} loading="lazy" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-presentation" referrerPolicy="no-referrer" /> : null; })() : m.kind === "video" ? <video controls preload="metadata" className="max-h-96 w-full" aria-label={m.alt || "Showcase video"} src={m.url} /> : m.kind === "gif" && motionReduced ? <a href={m.url} target="_blank" rel="noopener noreferrer" className="text-accent underline">View animated image: {m.alt || "Gallery image"}</a> : <img src={m.url} alt={m.alt} className="max-h-96 w-full rounded-card object-contain" loading="lazy" />}<figcaption className="mt-1 break-words text-xs text-muted">{m.alt}</figcaption></figure>)}</section>
     <div className="flex flex-wrap gap-3">{showcase.links.map((l, i) => safeHref(l.url) ? <div key={i} className="min-w-0"><a className="break-words text-accent underline" href={l.url} target="_blank" rel="noopener noreferrer nofollow ugc">{l.label || l.kind} ↗</a>{l.kind === "download" ? <p className="text-xs text-muted">Review before running.</p> : null}</div> : null)}{showcase.catalogProject ? <Link className="text-accent underline" to={`/p/${showcase.catalogProject.slug}`}>See the code</Link> : null}</div>
     {!preview ? <ShowcaseActions showcase={showcase} /> : null}
     <Card><Markdown source={showcase.bodyMd || "No description yet."} /></Card><Card className="space-y-3"><h3 className="font-display">How I built it</h3><p className="break-words text-sm text-muted">{showcase.aiTools.join(" · ")}{showcase.buildTime ? ` · ${showcase.buildTime}` : ""}</p><Markdown source={showcase.buildStoryMd || "The maker hasn't added a build story yet."} /><p className="break-words text-xs text-muted">{showcase.tags.map(t => `#${t}`).join(" ")}</p></Card>
@@ -58,6 +60,7 @@ function ShowcaseComments({ showcase }: { showcase: ShowcaseDetail }) {
     {[post.error, del.error].filter(Boolean).map((e, i) => <p role="alert" key={i} className="text-danger">{e!.message}</p>)}
   </Card>;
 }
+
 
 
 
