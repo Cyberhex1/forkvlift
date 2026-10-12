@@ -8,6 +8,7 @@ export const pagesRoutes: RouteObject[] = [
   { path: "/privacy", lazy: async () => ({ Component: (await import("./StaticPages")).PrivacyPage }) },
   { path: "/terms", lazy: async () => ({ Component: (await import("./StaticPages")).TermsPage }) },
   { path: "/dmca", lazy: async () => ({ Component: (await import("./StaticPages")).DmcaPage }) },
+  { path: "/showcase-art-preview", lazy: async () => ({ Component: (await import("./ShowcaseArtPreview")).ShowcaseArtPreview }) },
 ];
 
 export const notFoundRoute: RouteObject = { path: "*", lazy: async () => ({ Component: (await import("./NotFoundPage")).NotFoundPage }) };

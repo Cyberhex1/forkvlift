@@ -110,6 +110,76 @@ describe("RSS feeds (task 4.9)", () => {
   });
 });
 
+describe("showcase RSS feeds (task 5.7)", () => {
+  it("serves valid RSS 2.0 for published showcases without clone or fork wording", async () => {
+    const now = Date.now();
+    // Published showcase
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, '', 'tools', 'web', 'finished', '["claude-code"]', '[]', ?, ?, ?)`,
+    )
+      .bind("shw_1", "synth-builder", "usr_ada", "Synth Builder", "A modular synth made with Claude", "Built in 3 hours with Web Audio API.", now - 1000, now, now)
+      .run();
+
+    // Draft showcase (must NOT appear)
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, '', 'tools', 'web', 'finished', '["claude-code"]', '[]', NULL, ?, ?)`,
+    )
+      .bind("shw_2", "secret-draft", "usr_ada", "Secret Draft", "Unpublished project", "Draft details.", now, now)
+      .run();
+
+    const res = await app.request("/api/feeds/showcases.rss", {}, env);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("application/rss+xml");
+    expect(res.headers.get("cache-control")).toContain("max-age=600");
+
+    const xml = await res.text();
+    expect(xml).toContain('<rss version="2.0"');
+    expect(xml).toContain("<channel>");
+    expect(xml).toContain("Synth Builder");
+    expect(xml).toContain("modular synth made with Claude");
+    expect(xml).toContain("/showcase/synth-builder");
+    // Draft must not be in feed
+    expect(xml).not.toContain("secret-draft");
+    // Strict requirement: showcases never get clone or fork wording (look, don't take)
+    expect(xml.toLowerCase()).not.toContain("clone");
+    expect(xml.toLowerCase()).not.toContain("fork this");
+    expect(xml.toLowerCase()).not.toContain("forks");
+  });
+
+  it("filters showcase RSS feed by category and user", async () => {
+    const now = Date.now();
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, '', '', 'games', 'game', 'finished', '[]', '[]', ?, ?, ?)`,
+    )
+      .bind("shw_g1", "space-vibe", "usr_ada", "Space Vibe", "Space adventure game", now - 2000, now, now)
+      .run();
+
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, '', '', 'tools', 'web', 'finished', '[]', '[]', ?, ?, ?)`,
+    )
+      .bind("shw_t1", "cli-agent", "usr_bo", "CLI Agent", "Dev terminal tool", now - 1000, now, now)
+      .run();
+
+    // Filter by category
+    const catRes = await app.request("/api/feeds/showcases.rss?category=games", {}, env);
+    expect(catRes.status).toBe(200);
+    const catXml = await catRes.text();
+    expect(catXml).toContain("Space Vibe");
+    expect(catXml).not.toContain("CLI Agent");
+
+    // Filter by user
+    const userRes = await app.request("/api/feeds/showcases.rss?user=bo", {}, env);
+    expect(userRes.status).toBe(200);
+    const userXml = await userRes.text();
+    expect(userXml).toContain("CLI Agent");
+    expect(userXml).not.toContain("Space Vibe");
+  });
+});
+
 describe("subscription savings stats (task 4.11)", () => {
   it("computes honest monthly savings from replaced paid products and forks", async () => {
     // Seed paid products
