@@ -4,6 +4,7 @@ import { SITE_NAME, SITE_TAGLINE } from "@forkvlift/shared";
 import { Badge, buttonClasses, Card } from "@forkvlift/ui";
 import { NoLicenseBanner } from "./NoLicenseDisclaimer";
 import { SavingsCounter } from "./SavingsCounter";
+import { SHOWCASE_RULES, SHOW_OFF_SATURDAY } from "./showcaseCopy";
 
 interface StaticPageLayoutProps {
   badge: string;
@@ -517,6 +518,74 @@ export function RulesPage() {
             <p className="text-sm text-muted">
               Disagree with ideas, not people. Sharing your own vibe-coded projects, tools, and open-source alternatives
               is warmly encouraged; repeated ads, unsolicited sales, or generic commercial spam are prohibited.
+            </p>
+          </Card>
+        </div>
+      </section>
+
+      <section className="space-y-4" id="showcases">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-xl font-semibold text-fg sm:text-2xl">
+            Showcase rules
+          </h2>
+          <Link
+            to="/help/showcases"
+            className="font-mono text-xs text-accent hover:underline focus:outline-none focus:ring-1 focus:ring-focus"
+          >
+            Showcase Guide &amp; FAQ →
+          </Link>
+        </div>
+        <p className="leading-relaxed text-muted">
+          Showcases are where builders show off what they created with AI, whether or not the code is public.
+          Showcases never feature clone or fork buttons: they are meant for inspiration, discovery, and learning
+          the story behind the build.
+        </p>
+
+        <div className="space-y-4">
+          <Card className="space-y-2 border-l-4 border-l-accent">
+            <h3 className="font-display text-base font-semibold text-fg">
+              {SHOWCASE_RULES.whatsAllowed.title}
+            </h3>
+            <p className="text-sm text-muted">
+              {SHOWCASE_RULES.whatsAllowed.summary}
+            </p>
+          </Card>
+
+          <Card className="space-y-2 border-l-4 border-l-accent">
+            <h3 className="font-display text-base font-semibold text-fg">
+              {SHOWCASE_RULES.honestAiUse.title}
+            </h3>
+            <p className="text-sm text-muted">
+              {SHOWCASE_RULES.honestAiUse.summary}
+            </p>
+          </Card>
+
+          <Card className="space-y-2 border-l-4 border-l-warning">
+            <h3 className="font-display text-base font-semibold text-fg">
+              {SHOWCASE_RULES.linksAndSafety.title}
+            </h3>
+            <p className="text-sm text-muted">
+              {SHOWCASE_RULES.linksAndSafety.summary}
+            </p>
+          </Card>
+
+          <Card className="space-y-2 border-l-4 border-l-accent">
+            <h3 className="font-display text-base font-semibold text-fg">
+              {SHOWCASE_RULES.lookDontTake.title}
+            </h3>
+            <p className="text-sm text-muted">
+              {SHOWCASE_RULES.lookDontTake.summary}
+            </p>
+          </Card>
+
+          <Card className="space-y-2 border-l-4 border-l-accent">
+            <h3 className="font-display text-base font-semibold text-fg">
+              5. {SHOW_OFF_SATURDAY.name}
+            </h3>
+            <p className="text-sm text-muted">
+              {SHOW_OFF_SATURDAY.description} One vote per person across the ballot; creators may not vote
+              for their own showcase. Vote manipulation, sybil accounts, or automated ballot stuffing will
+              result in disqualification.
             </p>
           </Card>
         </div>
