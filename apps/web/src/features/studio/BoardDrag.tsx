@@ -4,6 +4,7 @@ import { SortableContext, useSortable, horizontalListSortingStrategy, verticalLi
 import type { Board, BoardCard, BoardColumn } from "@forkvlift/shared";
 import { Button } from "@forkvlift/ui";
 import { usePreferences } from "../../app/preferences";
+import { Grip } from "./StudioMenu";
 
 const Busy=createContext(false);
 export function BoardDrag({board,disabled,move,reorder,children}:{board:Board;disabled:boolean;move:(id:string,col:string,pos:number)=>void;reorder:(ids:string[])=>void;children:ReactNode}) {
@@ -43,13 +44,12 @@ export function useColumnDrag(column:BoardColumn){
   const disabled=useContext(Busy),{motionReduced}=usePreferences();
   const sort=useSortable({id:`column:${column.id}`,data:{kind:'column',columnId:column.id},disabled});
   const drop=useDroppable({id:`drop:${column.id}`,data:{kind:'drop',columnId:column.id},disabled});
-  return {ref:(node:HTMLElement|null)=>{sort.setNodeRef(node);drop.setNodeRef(node);},style:{transform:sort.transform?`translate3d(${sort.transform.x}px,${sort.transform.y}px,0)`:undefined,transition:motionReduced?undefined:sort.transition},handle:<Button size="sm" variant="ghost" disabled={disabled} {...sort.attributes} {...sort.listeners} aria-label={`Drag column ${column.title}`} className="touch-none">↔</Button>};
+  return {ref:(node:HTMLElement|null)=>{sort.setNodeRef(node);drop.setNodeRef(node);},style:{transform:sort.transform?`translate3d(${sort.transform.x}px,${sort.transform.y}px,0)`:undefined,transition:motionReduced?undefined:sort.transition},handle:<Button size="sm" variant="ghost" disabled={disabled} {...sort.attributes} {...sort.listeners} aria-label={`Drag column ${column.title}`} className="h-7 w-7 cursor-grab touch-none px-0"><Grip/></Button>};
 }
 export function CardSortList({cards,children}:{cards:BoardCard[];children:ReactNode}){return <SortableContext items={cards.map(c=>`card:${c.id}`)} strategy={verticalListSortingStrategy}>{children}</SortableContext>;}
-export function DraggableStudioCard({card,children}:{card:BoardCard;children:ReactNode}) {
+export function DraggableStudioCard({card,children}:{card:BoardCard;children:(handle:ReactNode)=>ReactNode}) {
   const disabled=useContext(Busy),{motionReduced}=usePreferences();
   const sort=useSortable({id:`card:${card.id}`,data:{kind:'card',cardId:card.id,columnId:card.columnId},disabled});
   return <div ref={sort.setNodeRef} style={{transform:sort.transform?`translate3d(${sort.transform.x}px,${sort.transform.y}px,0)`:undefined,transition:motionReduced?undefined:sort.transition}} className={sort.isDragging?'relative z-20 opacity-70':'relative'}>
-    <Button size="sm" variant="secondary" disabled={disabled} {...sort.attributes} {...sort.listeners} aria-label={`Drag card ${card.title}`} className="mb-1 touch-none">Move card ↕</Button>{children}</div>;
+    {children(<Button size="sm" variant="ghost" disabled={disabled} {...sort.attributes} {...sort.listeners} aria-label={`Drag card ${card.title}`} className="h-7 w-7 shrink-0 cursor-grab touch-none px-0"><Grip/></Button>)}</div>;
 }
-

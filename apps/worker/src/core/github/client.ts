@@ -10,6 +10,13 @@ export const GITHUB_UA = "ForkLift (+https://forklift.stream)";
 
 export class GithubNotFound extends Error {}
 
+/** GitHub rejected GITHUB_TOKEN. Every call will fail the same way until the secret is replaced. */
+export class GithubAuthError extends HttpError {
+  constructor() {
+    super("unavailable", "GitHub rejected the site's GitHub token (401): it's invalid or expired. Set a new GITHUB_TOKEN secret.");
+  }
+}
+
 interface CacheEntry {
   etag: string | null;
   status: number;
@@ -65,6 +72,7 @@ export async function github<T>(env: Env, path: string, req: GithubRequest = {})
     }
   }
 
+  if (res.status === 401) throw new GithubAuthError();
   const body = await res.text();
   if (res.status !== 404 && !res.ok) {
     throw new HttpError("unavailable", `GitHub returned ${res.status} for ${path}`);
