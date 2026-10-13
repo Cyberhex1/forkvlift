@@ -1,6 +1,6 @@
 import { AlreadyBuilt } from "../catalog/AlreadyBuilt";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PROJECT_STAGE_LABELS, ProjectStage, NO_LICENSE_DISCLAIMER, type Board, type BoardCard, type BoardColumn } from "@forkvlift/shared";
 import { Badge, Button, Card, Modal, Spinner, StateMessage, buttonClasses, cn } from "@forkvlift/ui";
@@ -23,6 +23,7 @@ const input = "mt-1 block w-full rounded-pixel border border-border bg-surface p
 export const pixelClasses = ["bg-pixel-0","bg-pixel-1","bg-pixel-2","bg-pixel-3","bg-pixel-4","bg-pixel-5","bg-pixel-6","bg-pixel-7","bg-pixel-8","bg-pixel-9","bg-pixel-10","bg-pixel-11","bg-pixel-12","bg-pixel-13","bg-pixel-14","bg-pixel-15"];
 export function StudioPage() {
   const { user,isLoading,error } = useSession();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const key = ["studio",user?.id];
   const board = useQuery({ queryKey:key,queryFn:({signal}) => api.call("getBoard",{}, {signal}),enabled:!!user,retry:false,refetchOnWindowFocus:false });
@@ -62,6 +63,7 @@ export function StudioPage() {
         <div className="flex items-start gap-1"><h3 className="min-w-0 flex-1 break-words pt-1 font-display text-sm">{card.title}</h3>{handle}<StudioMenu label={`Card options for ${card.title}`} disabled={operation.isPending}>{close=><>
           <MenuItem onClick={()=>{close();setEditing(card);setTitle(card.title);setIdea(card.idea??"");setStage(card.stage);}}>Edit card</MenuItem>
           <Link className="flex w-full items-center rounded-pixel px-2 py-1.5 hover:bg-surface-2" to={`/studio/cards/${card.id}/plan`}>Open plan</Link>
+          <MenuItem onClick={()=>{close();navigate(`/showcase/new?card=${encodeURIComponent(card.id)}`);}}>Publish as showcase</MenuItem>
           <MenuDivider/>
           <label className="block px-2 py-1 text-xs text-muted">Move to column<select aria-label={`Move ${card.title}`} className={cn(input,"text-sm text-fg")} value={card.columnId} disabled={operation.isPending} onChange={e=>{close();move(card.id,e.target.value,data.cards.filter(c=>c.columnId===e.target.value&&c.id!==card.id).length);}}>{columns.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
           <MenuItem disabled={operation.isPending||i===0} aria-label={`Move ${card.title} up`} onClick={()=>move(card.id,column.id,i-1)}><span aria-hidden="true">↑</span> Move up</MenuItem>
@@ -72,7 +74,7 @@ export function StudioPage() {
         {card.idea?<p className="line-clamp-3 whitespace-pre-wrap break-words text-sm text-muted">{card.idea}</p>:null}
         {card.project?<Link to={`/p/${encodeURIComponent(card.project.slug)}`} className="flex items-center gap-2 rounded-pixel border border-border bg-surface-2 px-2 py-1.5 text-sm hover:border-accent"><span aria-hidden="true">↗</span><span className="min-w-0 truncate">{card.project.name}</span>{card.project.license?<span className="ml-auto shrink-0 text-xs text-muted">{card.project.license.spdx}</span>:null}</Link>:null}
         {card.project&&!card.project.license?<p className="text-xs text-warning">{NO_LICENSE_DISCLAIMER.title}</p>:null}
-        <div className="flex flex-wrap items-center gap-1.5"><Badge tone={card.stage==="finished"?"success":"warning"}>{PROJECT_STAGE_LABELS[card.stage]}</Badge><Button size="sm" variant="ghost" className="h-6 px-2 text-xs" disabled={operation.isPending||!card.project?.repoUrl} title={card.project?undefined:"Ideas without a repository stay private."} aria-label={`Visibility for ${card.title}`} aria-pressed={card.isPublic} onClick={()=>run(async()=>{const updated=await api.call("updateCard",{params:{id:card.id},body:{isPublic:!card.isPublic}});setBoard(b=>({...b,cards:b.cards.map(c=>c.id===card.id?updated:c)}));})}>{card.isPublic?"Public":"Private"}</Button><Link className={buttonClasses("ghost","sm","ml-auto h-6 px-2 text-xs")} to={`/studio/cards/${card.id}/plan`}>Plan</Link><Link className={buttonClasses("ghost","sm","h-6 px-2 text-xs")} to={`/showcase/new?card=${encodeURIComponent(card.id)}`}>Publish as showcase</Link></div>
+        <div className="flex flex-wrap items-center gap-1.5"><Badge tone={card.stage==="finished"?"success":"warning"}>{PROJECT_STAGE_LABELS[card.stage]}</Badge><Button size="sm" variant="ghost" className="h-6 px-2 text-xs" disabled={operation.isPending||!card.project?.repoUrl} title={card.project?undefined:"Ideas without a repository stay private."} aria-label={`Visibility for ${card.title}`} aria-pressed={card.isPublic} onClick={()=>run(async()=>{const updated=await api.call("updateCard",{params:{id:card.id},body:{isPublic:!card.isPublic}});setBoard(b=>({...b,cards:b.cards.map(c=>c.id===card.id?updated:c)}));})}>{card.isPublic?"Public":"Private"}</Button><Link className={buttonClasses("ghost","sm","ml-auto h-6 px-2 text-xs")} to={`/studio/cards/${card.id}/plan`}>Plan</Link></div>
       </Card>}</DraggableStudioCard>)}
     </StudioColumn>;})}
       {columns.length<12?<form className="w-72 shrink-0 rounded-card border border-dashed border-border p-2" onSubmit={e=>{e.preventDefault();addColumn();}}><div className="flex gap-2"><input aria-label="New column" className="min-w-0 flex-1 rounded-pixel border border-border bg-surface px-2 text-sm" placeholder="New column" maxLength={60} value={newColumn} onChange={e=>setNewColumn(e.target.value)} required/><Button size="sm" type="submit" disabled={operation.isPending||!newColumn.trim()}>Add column</Button></div></form>:null}
@@ -120,4 +122,3 @@ function StudioColumn({column,cards,disabled,onPatch,onAdd,onDelete,onReorder,in
     <div className="px-2 pb-2"><Button size="sm" variant="ghost" className="w-full justify-start text-muted hover:text-fg" disabled={disabled} onClick={onAdd}><span aria-hidden="true">+</span>Add card</Button></div>
   </section>;
 }
-
