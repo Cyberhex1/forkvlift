@@ -6,6 +6,7 @@ import { Button, Chip, Drawer, Modal, StateMessage } from "@forkvlift/ui";
 import { PageShell } from "../../app/kit";
 import { usePreferences } from "../../app/preferences";
 import { api } from "../../lib/api";
+import { ShowcaseStrip } from "../showcases/ShowcaseStrip";
 import { ProjectCard, ProjectCardSkeleton } from "./ProjectCard";
 
 const sortLabels: Record<(typeof ProjectSort.options)[number], string> = { trending: "Trending", newest: "Newest", most_forked: "Most forked", most_starred: "Most starred", recently_updated: "Recently updated", most_discussed: "Most discussed", staff_picks: "Staff picks", random: "Surprise me" };
@@ -92,6 +93,7 @@ export function FeedPage() {
       <Button type="submit">Apply filters</Button>
     </form></Drawer>
     <Modal open={disclaimer} onClose={() => setDisclaimer(false)} title={NO_LICENSE_DISCLAIMER.title} className="max-w-[calc(100%-2rem)]"><p className="my-4 text-sm leading-relaxed">{NO_LICENSE_DISCLAIMER.body}</p><div className="flex flex-wrap gap-2"><Button loading={saving} onClick={() => void setUnlicensed(true, true)}>I understand</Button><Button variant="secondary" onClick={() => setDisclaimer(false)}>Cancel</Button></div>{prefError ? <p role="alert" className="mt-3 text-danger">{prefError}</p> : null}</Modal>
+    {!params.size ? <><ShowcaseStrip title="Showcases" /><ShowcaseStrip source="week" title="Showcase of the week" /></> : null}
     <Outlet />
   </PageShell>;
 }
@@ -99,6 +101,3 @@ export function FeedPage() {
 function ChoiceGroup({ title, name, values, params, labels }: { title: string; name: string; values: readonly string[]; params: URLSearchParams; labels?: Record<string, string> }) {
   return <fieldset><legend className="font-semibold">{title}</legend>{values.map((value) => <label key={value} className="mt-2 flex items-center gap-2"><input name={name} value={value} type="checkbox" defaultChecked={(params.get(name) ?? "").split(",").includes(value)} />{labels?.[value] ?? value.replaceAll("_", " ")}</label>)}</fieldset>;
 }
-
-
-

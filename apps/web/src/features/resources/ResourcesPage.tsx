@@ -9,6 +9,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import type { Resource, ResourceDetail, ResourceType } from "@forkvlift/shared";
 import { Avatar, Badge, Button, Card, Chip, Modal, Skeleton, Spinner, StateMessage, buttonClasses, cn } from "@forkvlift/ui";
 import { PageShell } from "../../app/kit";
+import { ShowcaseStrip } from "../showcases/ShowcaseStrip";
 import { ReportButton } from "../../app/ReportButton";
 import { signInUrl, useSession, useSiteConfig } from "../../app/session";
 import { api } from "../../lib/api";
@@ -245,6 +246,7 @@ function ResourceView({ slug }: { slug: string }) {
               <ul className="space-y-1 text-sm">{d.linkedProjects.map((p) => <li key={p.id}><Link className="hover:underline" to={`/p/${p.slug}`}>{p.name}</Link>{p.author ? <span className="text-muted"> · @{p.author.username}</span> : null}</li>)}</ul>
             )}
           </Card>
+          <ShowcaseStrip source="resource" value={d.slug} title="Showcases built with this" hideEmpty />
           <ReportButton targetType="resource" targetId={d.id} label="Report this resource" />
         </aside>
       </div>

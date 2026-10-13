@@ -6,6 +6,7 @@ import { Avatar, Badge, Button, Card, Modal, Spinner, StateMessage, buttonClasse
 import { usePreferences } from "../../app/preferences";
 import { signInUrl, useSession } from "../../app/session";
 import { api } from "../../lib/api";
+import { ShowcaseStrip } from "../showcases/ShowcaseStrip";
 import { CopyText } from "./CopyText";
 import { AgentPrompt } from "./AgentPrompt";
 import { ForkTreeButton } from "./ForkTree";
@@ -84,6 +85,7 @@ function ProjectContents({ project }: { project: ProjectDetail }) {
       {project.license ? <ContinueThis project={project} /> : null}<p className="text-xs text-muted">Review code before running it.</p>{project.safety.flags.map((flag) => <p key={flag} className="text-warning">{flag}</p>)}
     </Card>
     <AgentPrompt project={project} />
+    <ShowcaseStrip source="project" value={project.slug} title="Showcases built with this" hideEmpty />
     <section className="space-y-2"><h3 className="font-display text-base">Fork lineage</h3>{project.forkedFrom ? <p>Forked from <Link to={`/p/${project.forkedFrom.slug}`} replace className="text-accent underline">{project.forkedFrom.name}</Link></p> : <p className="text-muted">No parent project listed.</p>}{project.notableForks.length ? <ul className="list-inside list-disc">{project.notableForks.map((fork) => <li key={fork.id}><Link to={`/p/${fork.slug}`} replace className="text-accent underline">{fork.name}</Link></li>)}</ul> : <p className="text-muted">No notable forks listed yet.</p>}<ForkTreeButton slug={project.slug} />{user && project.author?.id === user.id && project.license ? <ReadmeBadge slug={project.slug} /> : null}</section>
     <section className="space-y-3"><h3 className="font-display text-base">Author</h3>{project.author ? <div className="flex items-center gap-3"><Avatar src={project.author.avatarUrl} name={project.author.displayName} /><div><Link to={`/u/${project.author.username}`} className="text-accent underline">{project.author.displayName} · @{project.author.username}</Link>{project.verifiedAuthor ? <p className="text-xs text-muted">Verified repository author</p> : null}</div></div> : <p className="text-muted">Curated · unclaimed. The repository owner can claim this project.</p>}</section>
     <div className="flex flex-wrap gap-2">{user ? <><Button size="sm" variant="secondary" loading={vote.isPending} aria-pressed={project.viewer?.upvoted ?? false} onClick={() => vote.mutate()}>Upvote · {project.upvotes}</Button><Button size="sm" variant="secondary" onClick={() => setCollectionOpen(true)}>Save to collection</Button><Button size="sm" variant="ghost" onClick={() => setReportOpen(true)}>Report project</Button></> : <a href={signInUrl()} className={buttonClasses("secondary", "sm")}>Sign in to upvote, save, or report</a>}</div>{vote.isError ? <p role="alert" className="text-danger">{vote.error.message}</p> : null}<p role="status" className="text-muted">{feedback}</p>

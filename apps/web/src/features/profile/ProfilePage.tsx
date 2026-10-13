@@ -9,6 +9,7 @@ import { PageShell } from "../../app/kit";
 import { usePreferences } from "../../app/preferences";
 import { signInUrl, useSession, useSiteConfig } from "../../app/session";
 import { api } from "../../lib/api";
+import { ShowcaseStrip } from "../showcases/ShowcaseStrip";
 import { ProjectCard } from "../catalog/ProjectCard";
 import { SubmitVerification } from "../catalog/SubmitVerification";
 
@@ -124,6 +125,7 @@ function ProfileView({ profile }: { profile: Profile }) {
         onValueChange={setTab}
         items={[
           { id: "projects", label: "Projects", content: <ProjectsTab username={profile.user.username} tab="projects" isSelf={isSelf} /> },
+          { id: "showcases", label: "Showcases", content: <ShowcaseStrip source="user" value={profile.user.username} title="Published showcases" /> },
           { id: "forks", label: "Forks they made", content: <ProjectsTab username={profile.user.username} tab="forks" isSelf={isSelf} /> },
           { id: "collections", label: "Collections", content: <CollectionsTab username={profile.user.username} /> },
           { id: "resources", label: "Resources shared", content: <p className="text-muted">Resources arrive with the Resources library.</p> },
@@ -308,4 +310,3 @@ function ShowcaseDialog({ open, onClose, profile, queryKey }: { open: boolean; o
     </Modal>
   );
 }
-
