@@ -249,6 +249,8 @@ export const routeFixtures: { [K in JsonRouteId]: FixtureFn<K> } & { marker: str
   getCompetitionWinners: () => ({ competition: fxCompetition, awards: [] }),
   getCompetitionJudging: () => ({ competition: { ...fxCompetition, status: "judging" as const }, entries: [fxEntry()], scorecards: [], conflicts: [] }),
   saveCompetitionScorecard: ({ params, body }) => ({ entryId: params.entryId, scores: body.scores, note: body.note, submittedAt: body.submit ? NOW : null }),
+  listAdminCompetitions: () => ({ items: [{ ...fxCompetition, status: "draft" as const }, fxCompetition], nextCursor: null }),
+  getAdminCompetition: () => fxCompetition,
   createCompetition: ({ body }) => ({ ...fxCompetition, slug: body.slug, title: body.title, status: "draft" as const }),
   updateCompetition: ({ body }) => ({ ...fxCompetition, status: body.cancelled ? ("cancelled" as const) : fxCompetition.status }),
   getCompetitionScores: () => ({ items: [{ entry: fxEntry(), total: 0.8, scorecards: 1, judges: 1 }] }),

@@ -191,6 +191,15 @@ describe("discovery", () => {
     expect((run.body as { queued: number }).queued).toBe(1);
   });
 
+  it("stops with a clear message when GitHub rejects the token, but skips other failures", async () => {
+    vi.stubGlobal("fetch", async () => new Response("{}", { status: 401 }));
+    const run = await asAdmin("/api/admin/discovery/run", "POST");
+    expect(run.status).toBe(503);
+    expect(JSON.stringify(run.body)).toContain("invalid or expired");
+    vi.stubGlobal("fetch", async () => new Response("{}", { status: 500 }));
+    expect(await watchlistCandidates(env)).toEqual([]);
+  });
+
   it("extracts repo links from Markdown", () => {
     expect(extractRepoLinks("see https://github.com/a/b, https://github.com/a/b/tree/x and https://gitlab.com/c/d")).toEqual(["a/b"]);
   });

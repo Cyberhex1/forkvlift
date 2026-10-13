@@ -62,6 +62,8 @@ export function registerAdmin(app: Hono<AppEnv>) {
     await audit(c.env.DB, actor(c), body.cancelled ? "event.cancel" : "event.update", "event", e.id, { ...body });
     return e;
   });
+  mount(app, "listAdminCompetitions", ({ query }, c) => comps.listAdminCompetitions(c.env.DB, query));
+  mount(app, "getAdminCompetition", ({ params }, c) => comps.getAdminCompetition(c.env.DB, params.id));
   mount(app, "createCompetition", async ({ body }, c) => {
     const r = await comps.createCompetition(c.env.DB, actor(c), body);
     await audit(c.env.DB, actor(c), "competition.create", "competition", r.id, { slug: r.slug });
