@@ -38,11 +38,74 @@ test("draft management, edit/unpublish and Studio publish entry", async ({ page 
   const patch = page.waitForRequest(r => r.method() === "PATCH" && r.url().includes("/api/showcases/fixture-draft"));
   await page.getByRole("button", { name: "Publish showcase", exact: true }).click(); expect((await patch).postDataJSON().publish).toBe(true);
   await expect(page).toHaveURL(/\/showcase\/fixture-draft$/);
-  await page.goto("/studio"); await page.getByRole("link", { name: "Publish as showcase", exact: true }).first().click();
+  await page.goto("/studio");
+  await expect(page.getByRole("link", { name: "Publish as showcase", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Publish as showcase", exact: true })).toHaveCount(0);
+  const options = page.getByRole("button", { name: /^Card options for / }).first();
+  const menuLabel = await options.getAttribute("aria-label");
+  await options.click(); const menu = page.getByRole("dialog", { name: menuLabel!, exact: true });
+  await page.screenshot({ path: `docs/handoffs/screenshots/5.5-${info.project.name}-studio-menu.png` });
+  await menu.getByRole("button", { name: "Publish as showcase", exact: true }).press("Enter");
+  await expect(page).toHaveURL(/\/showcase\/new\?card=/);
   await expect(page.getByLabel("Title", { exact: true })).not.toHaveValue("");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: `docs/handoffs/screenshots/5.5-${info.project.name}-studio-composer.png`, fullPage: true });
   await page.request.get("/api/dev/login?as=fx-admin"); await page.goto("/showcase/fixture-pocket-chef/edit"); await expect(page.getByText("Only the maker can edit this showcase", { exact: true })).toBeVisible();
+});
+
+test("Enter saves a published showcase without changing its status; buttons change status explicitly", async ({ page }) => {
+  await page.request.get("/api/dev/login?as=fx-ada");
+  let saved = await (await page.request.get("/api/showcases/fixture-pocket-chef")).json() as ShowcaseDetail;
+  expect(saved.status).toBe("published");
+  const publishedAt = saved.publishedAt;
+  await page.route("**/api/showcases/fixture-pocket-chef", r => {
+    if (r.request().method() === "PATCH") {
+      const data = r.request().postDataJSON();
+      // Match the worker: omitted publish preserves status; false clears published_at.
+      saved = { ...saved, title: data.title ?? saved.title, status: data.publish === false ? "draft" : data.publish === true ? "published" : saved.status, publishedAt: data.publish === false ? null : data.publish === true ? publishedAt : saved.publishedAt };
+    }
+    return r.fulfill({ json: saved });
+  });
+  for (const [label, value] of [
+    ["Title", "Published title after Enter"],
+    ["Tagline", "Still live after Enter"],
+    ["Build time", "One afternoon"],
+    ["YouTube or Vimeo video URL", "https://youtu.be/dQw4w9WgXcQ"],
+    ["AI tools (comma separated)", "Codex, Claude"],
+    ["Tags (comma separated)", "live, keyboard"],
+  ]) {
+    await page.goto("/showcase/fixture-pocket-chef/edit");
+    const input = page.getByLabel(label, { exact: true }); await input.fill(value);
+    await expect(page.getByRole("button", { name: "Save changes", exact: true })).toBeEnabled();
+    const patched = page.waitForRequest(r => r.method() === "PATCH" && new URL(r.url()).pathname === "/api/showcases/fixture-pocket-chef");
+    await input.press("Enter");
+    const data = (await patched).postDataJSON();
+    expect(data).not.toHaveProperty("publish");
+    if (label === "Title") expect(data.title).toBe(value);
+    if (label === "AI tools (comma separated)") expect(data.aiTools).toEqual(["Codex", "Claude"]);
+    if (label === "Tags (comma separated)") expect(data.tags).toEqual(["live", "keyboard"]);
+    await expect(page).toHaveURL(/\/showcase\/fixture-pocket-chef$/);
+    await expect(page.getByRole("heading", { name: "Published title after Enter", exact: true })).toBeVisible();
+    await expect(page.getByText("Draft", { exact: true })).toHaveCount(0);
+    expect(saved.status).toBe("published"); expect(saved.publishedAt).toBe(publishedAt);
+  }
+  await page.reload(); await expect(page.getByText("Draft", { exact: true })).toHaveCount(0);
+  await page.goto("/showcase/fixture-pocket-chef/edit");
+  const unchanged = page.waitForRequest(r => r.method() === "PATCH" && r.url().endsWith("/api/showcases/fixture-pocket-chef"));
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  expect((await unchanged).postDataJSON()).not.toHaveProperty("publish");
+  await expect(page).toHaveURL(/\/showcase\/fixture-pocket-chef$/);
+  await page.goto("/showcase/fixture-pocket-chef/edit");
+  const unpublished = page.waitForRequest(r => r.method() === "PATCH" && r.url().endsWith("/api/showcases/fixture-pocket-chef"));
+  await page.getByRole("button", { name: "Unpublish to draft", exact: true }).click();
+  expect((await unpublished).postDataJSON().publish).toBe(false);
+  await expect(page.getByText("Draft", { exact: true })).toBeVisible(); expect(saved.publishedAt).toBeNull();
+  await page.goto("/showcase/fixture-pocket-chef/edit");
+  const published = page.waitForRequest(r => r.method() === "PATCH" && r.url().endsWith("/api/showcases/fixture-pocket-chef"));
+  await page.getByRole("button", { name: "Publish showcase", exact: true }).click();
+  expect((await published).postDataJSON().publish).toBe(true);
+  await expect(page).toHaveURL(/\/showcase\/fixture-pocket-chef$/);
+  await expect(page.getByText("Draft", { exact: true })).toHaveCount(0); expect(saved.status).toBe("published");
 });
 
 test("upload progress, failure, retry and media removal", async ({ page }, info) => {
