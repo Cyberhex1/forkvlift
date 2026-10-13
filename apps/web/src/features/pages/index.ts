@@ -15,6 +15,7 @@ export { AddLicenseLink, LicenseRequestActions, licenseIssueUrl } from "./Licens
 export { SavingsCounter, type SavingsCounterProps } from "./SavingsCounter";
 export { ShowcaseHelpPage } from "./ShowcaseHelpPage";
 export * from "./showcaseCopy";
+export { ShowcaseArtPreview } from "./ShowcaseArtPreview";
 export { NewsletterBox, type NewsletterBoxProps } from "./NewsletterBox";
 export { NewsletterPage } from "./NewsletterPage";
 export { NewsletterConfirmPage, type NewsletterConfirmPageProps } from "./NewsletterConfirmPage";

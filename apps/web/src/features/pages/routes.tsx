@@ -12,6 +12,9 @@ export const pagesRoutes: RouteObject[] = [
   { path: "/newsletter", lazy: async () => ({ Component: (await import("./NewsletterPage")).NewsletterPage }) },
   { path: "/newsletter/confirm", lazy: async () => ({ Component: (await import("./NewsletterConfirmPage")).NewsletterConfirmPage }) },
   { path: "/newsletter/unsubscribe", lazy: async () => ({ Component: (await import("./NewsletterUnsubscribePage")).NewsletterUnsubscribePage }) },
+  ...(import.meta.env.DEV
+    ? [{ path: "/showcase-art-preview", lazy: async () => ({ Component: (await import("./ShowcaseArtPreview")).ShowcaseArtPreview }) }]
+    : []),
 ];
 
 export const notFoundRoute: RouteObject = { path: "*", lazy: async () => ({ Component: (await import("./NotFoundPage")).NotFoundPage }) };
