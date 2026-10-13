@@ -1,4 +1,7 @@
-import { expect, test } from "playwright/test";
+import { expect, test, type Page } from "playwright/test";
+
+// Column and card settings live behind a ⋯ button; the panel opens in a portal outside the column.
+const menu=async(page:Page,name:string)=>{await page.getByRole('button',{name,exact:true}).click();return page.getByRole('dialog',{name,exact:true});};
 
 test("Studio sign-in, board, column rename, recolor, collapse and WIP warnings", async ({page},info)=>{
   await page.goto('/studio'); await expect(page.getByText('Sign in to your Studio',{exact:true})).toBeVisible();
@@ -12,11 +15,13 @@ test("Studio sign-in, board, column rename, recolor, collapse and WIP warnings",
   await idea.getByRole('button',{name:'Rename',exact:true}).click();
   const renamed=page.getByRole('region',{name:'Column Ideas for the weekend',exact:true});
   await expect(renamed).toBeVisible();
-  await renamed.getByLabel('Color for Ideas for the weekend',{exact:true}).selectOption('pixel-7');
+  const options=await menu(page,'Column options for Ideas for the weekend');
+  await options.getByRole('group',{name:'Color for Ideas for the weekend',exact:true}).getByRole('button',{name:'Pixel 7',exact:true}).click();
   await expect(renamed.locator('.bg-pixel-7')).toBeVisible();
-  await renamed.getByLabel('WIP limit for Ideas for the weekend',{exact:true}).fill('1');
-  await renamed.getByLabel('WIP limit for Ideas for the weekend',{exact:true}).press('Tab');
+  await options.getByLabel('WIP limit for Ideas for the weekend',{exact:true}).fill('1');
+  await options.getByLabel('WIP limit for Ideas for the weekend',{exact:true}).press('Tab');
   await expect(renamed.getByText('WIP limit reached · 1/1',{exact:true})).toBeVisible();
+  await page.keyboard.press('Escape'); await expect(options).toHaveCount(0);
   await page.screenshot({path:`docs/handoffs/screenshots/2.6-${info.project.name}-wip.png`});
   await renamed.getByRole('button',{name:'Collapse Ideas for the weekend',exact:true}).click();
   await expect(renamed.getByRole('button',{name:'Add card',exact:true})).toHaveCount(0);
@@ -33,19 +38,19 @@ test('add/edit/private ideas, visibility toggles, column/card deletion and reord
   const add=page.getByRole('dialog',{name:'Add Studio card',exact:true}); await add.getByLabel('Card title',{exact:true}).fill('A real local QA idea'); await add.getByLabel('Idea',{exact:true}).fill('Planning text entered during a test.'); await add.getByRole('button',{name:'Save card',exact:true}).click();
   const card=page.getByRole('article',{name:'Studio card A real local QA idea',exact:true}); await expect(card).toBeVisible(); await expect(card.getByRole('button',{name:'Visibility for A real local QA idea',exact:true})).toBeDisabled();
   const linked=page.getByRole('article',{name:'Studio card Fixture: Pixel Planner',exact:true}); await linked.getByRole('button',{name:'Visibility for Fixture: Pixel Planner',exact:true}).click(); await expect(linked.getByRole('button',{name:'Visibility for Fixture: Pixel Planner',exact:true})).toHaveText('Private');
-  await card.getByRole('button',{name:'Delete',exact:true}).click(); await page.getByRole('dialog').getByRole('button',{name:'Confirm deletion',exact:true}).click(); await expect(card).toHaveCount(0);
-  await col.getByRole('button',{name:'Delete column Weekend',exact:true}).click(); await page.getByRole('dialog').getByRole('button',{name:'Confirm deletion',exact:true}).click(); await expect(col).toHaveCount(0);
-  await page.getByRole('button',{name:'Move column Idea right',exact:true}).click(); await expect(page.getByRole('region',{name:/Column /}).first()).toHaveAccessibleName('Column Develop');
+  await (await menu(page,'Card options for A real local QA idea')).getByRole('button',{name:'Delete card',exact:true}).click(); await page.getByRole('dialog').getByRole('button',{name:'Confirm deletion',exact:true}).click(); await expect(card).toHaveCount(0);
+  await (await menu(page,'Column options for Weekend')).getByRole('button',{name:'Delete column Weekend',exact:true}).click(); await page.getByRole('dialog').getByRole('button',{name:'Confirm deletion',exact:true}).click(); await expect(col).toHaveCount(0);
+  await (await menu(page,'Column options for Idea')).getByRole('button',{name:'Move column Idea right',exact:true}).click(); await expect(page.getByRole('region',{name:/Column /}).first()).toHaveAccessibleName('Column Develop');
 });
 
 test('optimistic move rolls back on WIP refusal and retries without losing the card',async({page})=>{
   await page.goto('/api/dev/login?as=fx-ada'); await page.goto('/studio');
   let release!:()=>void; const gate=new Promise<void>(r=>{release=r;});
   await page.route('**/api/studio/cards/fx_card_1/move',async route=>{await gate;await route.fulfill({status:409,json:{error:{code:'conflict',message:'The target column WIP limit is reached.',details:{wipLimit:1}}}});});
-  await page.getByLabel('Move Fixture idea: recipe scaler',{exact:true}).selectOption('fx_col_3');
+  await (await menu(page,'Card options for Fixture idea: recipe scaler')).getByLabel('Move Fixture idea: recipe scaler',{exact:true}).selectOption('fx_col_3');
   await expect(page.getByRole('region',{name:'Column Bug fix',exact:true})).toContainText('Fixture idea: recipe scaler'); release();
   await expect(page.getByRole('region',{name:'Column Idea',exact:true})).toContainText('Fixture idea: recipe scaler'); await expect(page.getByText('The target column WIP limit is reached.',{exact:true})).toBeVisible();
-  await page.unroute('**/api/studio/cards/fx_card_1/move'); await page.getByLabel('Move Fixture idea: recipe scaler',{exact:true}).selectOption('fx_col_3'); await expect(page.getByText('Card moved.',{exact:true})).toBeVisible();
+  await page.unroute('**/api/studio/cards/fx_card_1/move'); await (await menu(page,'Card options for Fixture idea: recipe scaler')).getByLabel('Move Fixture idea: recipe scaler',{exact:true}).selectOption('fx_col_3'); await expect(page.getByText('Card moved.',{exact:true})).toBeVisible();
 });
 
 test('board loading, error retry, empty and own unlicensed project',async({page},info)=>{

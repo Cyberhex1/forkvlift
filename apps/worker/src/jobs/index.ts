@@ -6,7 +6,7 @@ import { z } from "zod";
 import { HttpError } from "../core/errors";
 import { upsertCandidate } from "../core/curation/candidates";
 import { backfillCandidateCategories } from "../core/curation/categorize";
-import { onlyNew, searchCandidates, watchlistCandidates } from "../core/curation/discovery";
+import { MAX_INTEREST_PER_RUN, MAX_NEW_PER_RUN, capTooling, interestCandidates, onlyNew, searchCandidates, watchlistCandidates } from "../core/curation/discovery";
 import { ingestRepo } from "../core/github/ingest";
 import { flushNotificationEmails, sendWeeklyDigests } from "../email/deliver";
 import { snapshotChat } from "../core/moderation";
@@ -107,7 +107,12 @@ export async function runDiscovery(env: Env): Promise<number> {
     console.warn("[jobs] discovery skipped: set the GITHUB_TOKEN secret to enable it");
     return 0;
   }
-  const found = await onlyNew(env.DB, [...(await searchCandidates(env)), ...(await watchlistCandidates(env))]);
+  // Interesting non-AI projects get a fixed share; vibe-coded ones fill the rest.
+  const interest = await onlyNew(env.DB, await interestCandidates(env), MAX_INTEREST_PER_RUN);
+  const taken = new Set(interest.map((d) => d.fullName.toLowerCase()));
+  // Look past the cap so skipped tooling repos leave room for apps and games.
+  const vibe = (await onlyNew(env.DB, [...(await searchCandidates(env)), ...(await watchlistCandidates(env))], MAX_NEW_PER_RUN * 4)).filter((d) => !taken.has(d.fullName.toLowerCase()));
+  const found = [...capTooling(vibe, MAX_NEW_PER_RUN - interest.length), ...interest];
   if (found.length) {
     await env.JOBS.sendBatch(found.map((d) => ({ body: { type: "candidate.discover", repoFullName: d.fullName, foundVia: d.foundVia } satisfies JobMessage })));
   }
