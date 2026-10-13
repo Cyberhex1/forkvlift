@@ -13,6 +13,7 @@ import { createEvent, updateEvent } from "../core/events";
 import * as moderation from "../core/moderation";
 import { setStaffPick } from "../core/showcases";
 import { setProvenOverride } from "../core/resources";
+import { runDiscovery } from "../jobs";
 
 const DAY_MS = 86_400_000;
 
@@ -31,6 +32,11 @@ export function registerAdmin(app: Hono<AppEnv>) {
     const updated = await backfillCandidateCategories(c.env);
     await audit(c.env.DB, actor(c), "candidates.categorize", "candidate", "*", { updated });
     return { updated };
+  });
+  mount(app, "runDiscovery", async (_, c) => {
+    const queued = await runDiscovery(c.env);
+    await audit(c.env.DB, actor(c), "discovery.run", "candidate", "*", { queued });
+    return { queued };
   });
   mount(app, "bulkDecideCandidates", async ({ body }, c) => {
     let updated = 0;
@@ -56,6 +62,8 @@ export function registerAdmin(app: Hono<AppEnv>) {
     await audit(c.env.DB, actor(c), body.cancelled ? "event.cancel" : "event.update", "event", e.id, { ...body });
     return e;
   });
+  mount(app, "listAdminCompetitions", ({ query }, c) => comps.listAdminCompetitions(c.env.DB, query));
+  mount(app, "getAdminCompetition", ({ params }, c) => comps.getAdminCompetition(c.env.DB, params.id));
   mount(app, "createCompetition", async ({ body }, c) => {
     const r = await comps.createCompetition(c.env.DB, actor(c), body);
     await audit(c.env.DB, actor(c), "competition.create", "competition", r.id, { slug: r.slug });
