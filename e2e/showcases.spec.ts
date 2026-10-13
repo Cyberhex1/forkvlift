@@ -1,6 +1,8 @@
 import { expect, test } from "playwright/test";
 import type { ProjectDetail, ShowcaseCard, ShowcaseDetail } from "@forkvlift/shared";
 
+test.afterEach(async ({ page }) => { await page.unrouteAll({ behavior: "wait" }); });
+
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/config", async r => { const response = await r.fetch(); await r.fulfill({ json: { ...await response.json(), turnstileSiteKey: null } }); });
 });
