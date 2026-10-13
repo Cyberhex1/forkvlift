@@ -99,4 +99,21 @@ test("catalog action waits for licensing and recovers eligibility failures", asy
   await expect(page.getByText("Add an open-source license to this repository before listing it in the catalog.")).toBeVisible();
 });
 
+test("only the comment being deleted shows a busy indicator", async ({ page }) => {
+  await page.request.get("/api/dev/login?as=fx-admin");
+  const comments = await (await page.request.get("/api/showcases/fixture-pocket-chef/comments")).json();
+  const comment = comments.items[0];
+  await page.route("**/api/showcases/fixture-pocket-chef/comments", r => r.fulfill({ json: { items: [comment, { ...comment, id: "second-comment", body: "Another comment" }], nextCursor: null } }));
+  let release!: () => void; const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route(`**/api/showcases/fixture-pocket-chef/comments/${comment.id}`, async r => { await gate; await r.fulfill({ json: { ok: true } }); });
+  await page.goto("/showcase/fixture-pocket-chef");
+  const buttons = page.getByRole("button", { name: "Delete comment", exact: true });
+  await expect(buttons).toHaveCount(2);
+  await buttons.first().click();
+  await expect(buttons.first()).toHaveAttribute("aria-busy", "true");
+  await expect(buttons.last()).not.toHaveAttribute("aria-busy", "true");
+  release();
+  await expect(buttons).toHaveCount(1);
+});
+
 
