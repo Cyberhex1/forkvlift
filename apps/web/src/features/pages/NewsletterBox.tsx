@@ -46,6 +46,7 @@ export function NewsletterBox({ variant = "section", className = "" }: Newslette
   };
 
   const needsToken = Boolean(config.data?.turnstileSiteKey);
+  // Load Turnstile only once someone starts typing: the footer box is on every page, and an idle widget there would run a challenge on every page view.
   const isSubmitDisabled =
     subscribeMutation.isPending ||
     !email.trim() ||
@@ -142,7 +143,7 @@ export function NewsletterBox({ variant = "section", className = "" }: Newslette
             </Button>
           </div>
 
-          {needsToken ? (
+          {needsToken && email.trim() ? (
             <div className="pt-1">
               <SubmitVerification
                 siteKey={config.data!.turnstileSiteKey!}
@@ -198,7 +199,7 @@ export function NewsletterBox({ variant = "section", className = "" }: Newslette
           </Button>
         </div>
 
-        {needsToken ? (
+        {needsToken && email.trim() ? (
           <SubmitVerification
             siteKey={config.data!.turnstileSiteKey!}
             onToken={setToken}
