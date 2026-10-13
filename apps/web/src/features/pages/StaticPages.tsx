@@ -597,7 +597,16 @@ export function RulesPage() {
 
           <Card className="space-y-2 border-l-4 border-l-accent">
             <h3 className="font-display text-base font-semibold text-fg">
-              5. {SHOW_OFF_SATURDAY.name}
+              {SHOWCASE_RULES.noImpersonation.title}
+            </h3>
+            <p className="text-sm text-muted">
+              {SHOWCASE_RULES.noImpersonation.summary}
+            </p>
+          </Card>
+
+          <Card className="space-y-2 border-l-4 border-l-accent">
+            <h3 className="font-display text-base font-semibold text-fg">
+              6. {SHOW_OFF_SATURDAY.name}
             </h3>
             <p className="text-sm text-muted">
               {SHOW_OFF_SATURDAY.description} One vote per person across the ballot; creators may not vote

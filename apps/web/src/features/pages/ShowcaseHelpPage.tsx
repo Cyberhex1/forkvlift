@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { SITE_NAME } from "@forkvlift/shared";
 import { Badge, buttonClasses, Card } from "@forkvlift/ui";
 import {
   SHOWCASE_RULES,
@@ -28,7 +29,7 @@ export function ShowcaseHelpPage() {
           Everything You Need to Know About Showcases
         </h1>
         <p className="text-sm leading-relaxed text-muted sm:text-base">
-          ForkLift has two sides: the <strong>Catalog</strong> for reusable open-source code you can fork,
+          {SITE_NAME} has two sides: the <strong>Catalog</strong> for reusable open-source code you can fork,
           and <strong>Showcases</strong> for celebrating what people built with AI — whether or not the code is public.
         </p>
       </div>
@@ -44,13 +45,13 @@ export function ShowcaseHelpPage() {
               <span className="font-mono text-xs font-bold uppercase tracking-wider text-muted">
                 Catalog Project
               </span>
-              <span className="rounded-pixel bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-muted">
+              <span className="rounded-pixel bg-surface-2 px-2 py-0.5 font-mono text-xs text-muted">
                 Forkable
               </span>
             </div>
             <ul className="space-y-2 text-xs text-muted leading-relaxed">
               <li>• Public GitHub repository required</li>
-              <li>• Open-source license declared</li>
+              <li>• Open-source license recommended (unlicensed projects are permitted, but hidden by default behind &ldquo;Show unlicensed projects&rdquo;)</li>
               <li>• Fork tree, clone box, and agent handoffs</li>
               <li>• Core purpose: Reusable code so nobody builds the same app twice</li>
             </ul>
@@ -61,7 +62,7 @@ export function ShowcaseHelpPage() {
               <span className="font-mono text-xs font-bold uppercase tracking-wider text-accent">
                 Showcase
               </span>
-              <span className="rounded-pixel bg-accent/15 px-2 py-0.5 font-mono text-[11px] text-accent">
+              <span className="rounded-pixel bg-accent/15 px-2 py-0.5 font-mono text-xs text-accent">
                 Look, don&apos;t take
               </span>
             </div>
@@ -115,7 +116,7 @@ export function ShowcaseHelpPage() {
           </p>
           <div className="rounded-pixel bg-surface-2 p-3 text-xs text-muted space-y-1">
             <p className="font-semibold text-fg">What to share in your build story:</p>
-            <p>1. The AI tools and foundation models you used (e.g. Claude 3.7, Cursor, Gemini, v0).</p>
+            <p>1. The AI tools and foundation models you used (e.g. Claude, Cursor, Gemini, v0).</p>
             <p>2. The prompts, architectures, or workflow setups that made the biggest difference.</p>
             <p>3. Where the model failed or required manual correction.</p>
           </div>
@@ -179,11 +180,11 @@ export function ShowcaseHelpPage() {
         <Card className="p-5 space-y-3">
           <p className="text-sm text-fg leading-relaxed">
             Yes! If you decide to release your code publicly under an open-source license, you can list
-            your showcase in the ForkLift catalog with a single click. Your project will retain all of its
+            your showcase in the {SITE_NAME} catalog with a single click. Your project will retain all of its
             community upvotes and comments, and gain full catalog features (the clone box, fork tree, and agent tools).
           </p>
           <p className="text-xs text-muted">
-            Remember: Catalog projects require an open-source license. Unlicensed code cannot be forked:
+            Remember: Authors may list unlicensed projects in the catalog, but they are hidden by default behind &ldquo;Show unlicensed projects&rdquo;. Unlicensed code cannot be forked legally without permission:
           </p>
           <div className="pt-2">
             <NoLicenseBanner />
@@ -193,7 +194,7 @@ export function ShowcaseHelpPage() {
 
       {/* Call to action */}
       <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border">
-        <Link to="/submit" className={buttonClasses("primary", "md")}>
+        <Link to="/studio" className={buttonClasses("primary", "md")}>
           Submit a showcase
         </Link>
         <Link to="/rules" className={buttonClasses("secondary", "md")}>

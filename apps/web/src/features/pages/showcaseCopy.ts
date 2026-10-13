@@ -1,4 +1,4 @@
-import { NO_LICENSE_DISCLAIMER } from "@forkvlift/shared";
+import { NO_LICENSE_DISCLAIMER, SITE_NAME } from "@forkvlift/shared";
 
 /**
  * Task 5.8: Showcase copy, Plaza auto-post strings, and community rules.
@@ -36,9 +36,6 @@ export const PLAZA_SHOWCASE_COPY = {
   /** Short label for closed source showcase disclaimer. */
   closedSourceNotice: "🔒 Closed source (look, don't take)",
 
-  /** Short label when public code is available. */
-  openCodeNotice: "📦 Public code linked in catalog",
-
   /**
    * Generates formatted message text for a Plaza chat auto-post.
    * Plain, concise, and never includes clone or fork wording.
@@ -55,14 +52,14 @@ export const PLAZA_SHOWCASE_COPY = {
       ? `\n🔒 Closed source: look, don't take`
       : `\n✨ Community showcase`;
 
-    return `✨ **${data.title}** by ${maker}${tagline}${tools}${badge}\n🔗 /showcases/${data.slug}`;
+    return `✨ **${data.title}** by ${maker}${tagline}${tools}${badge}\n🔗 /showcase/${data.slug}`;
   },
 
   /**
    * Generates a compact one-liner for chat notifications.
    */
   formatOneLiner(title: string, username: string, slug: string): string {
-    return `✨ ${title} by @${username} — /showcases/${slug}`;
+    return `✨ ${title} by @${username} — /showcase/${slug}`;
   },
 } as const;
 
@@ -105,13 +102,13 @@ export const SHOW_OFF_SATURDAY = {
   name: "Show-off Saturday",
   tagline: "The weekly community vote for favorite AI builds.",
   description:
-    "Every Saturday, the ForkLift community gathers to spotlight what builders created with AI this week. Submit your published showcase, explore other creators' builds, and cast your ballot.",
+    `Every Saturday, the ${SITE_NAME} community gathers to spotlight what builders created with AI this week. Submit your published showcase, explore other creators' builds, and cast your ballot on the community leaderboard.`,
   rules: [
     "Submissions: Enter one of your published showcases while the submission window is open.",
     "Ballot: One vote per person across the event. You cannot vote for your own showcase.",
     "Showcases only: Open-source catalog projects enter Hackathons and Fork Fridays; Show-off Saturday is exclusively for showcases.",
     "Fair play: Alt accounts, vote rings, or automated ballot stuffing will disqualify entries and may result in an account suspension.",
-    "Recognition: The highest-ranked showcase earns the 'Showcase of the Week' badge and front-page rail placement.",
+    "Leaderboard: Entries are ranked by community votes on the event leaderboard when the voting window closes.",
   ],
 } as const;
 
@@ -121,7 +118,7 @@ export const SHOW_OFF_SATURDAY = {
 export const DOWNLOAD_SAFETY_NOTICE = {
   title: "Review before running",
   message:
-    "This download link points to an external file or installer provided by the maker. ForkLift does not host or execute third-party binaries. Always inspect downloaded files and run untrusted software in an isolated environment or sandbox.",
+    `This download link points to an external file or installer provided by the maker. ${SITE_NAME} does not host or execute third-party binaries. Always inspect downloaded files and run untrusted software in an isolated environment or sandbox.`,
 } as const;
 
 // Re-export the authoritative NO_LICENSE_DISCLAIMER unchanged (never reworded)
