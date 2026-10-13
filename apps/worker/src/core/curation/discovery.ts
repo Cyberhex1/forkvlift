@@ -14,7 +14,7 @@
  * tooling (MCP servers, skills, prompt packs) is welcome but capped to a small share, so the
  * queue is mostly apps, games and creative projects.
  */
-import { github } from "../github/client";
+import { GithubAuthError, github } from "../github/client";
 import { BUILT_WITH_TEXT, keywordCategory } from "./categorize";
 import { parseRepoUrl } from "../github/repo-url";
 
@@ -106,13 +106,18 @@ interface SearchResponse {
   items: { full_name: string; stargazers_count: number; archived: boolean; private: boolean; license: { spdx_id: string | null } | null; topics?: string[]; description?: string | null; language?: string | null }[];
 }
 
+function skipUnlessAuth(what: string) {
+  return (error: unknown): null => {
+    if (error instanceof GithubAuthError) throw error;
+    console.warn(`[discovery] ${what} failed`, error);
+    return null;
+  };
+}
+
 async function searchTopic(env: Env, topic: string, query: string, sort: string, found: Map<string, Discovered>) {
   const q = encodeURIComponent(`topic:${topic} ${query} archived:false`);
-  // One failed search (rate limit, GitHub hiccup) shouldn't cost the whole run.
-  const res = await github<SearchResponse>(env, `/search/repositories?q=${q}&sort=${sort}&order=desc&per_page=${PER_PAGE}`, { freshFor: 60 * 60 * 5 }).catch((error: unknown) => {
-    console.warn(`[discovery] search failed for ${topic} by ${sort}`, error);
-    return null;
-  });
+  // One failed search (rate limit, GitHub hiccup) shouldn't cost the whole run; a bad token should stop it loudly.
+  const res = await github<SearchResponse>(env, `/search/repositories?q=${q}&sort=${sort}&order=desc&per_page=${PER_PAGE}`, { freshFor: 60 * 60 * 5 }).catch(skipUnlessAuth(`search ${topic} by ${sort}`));
   for (const item of res?.data.items ?? []) {
     if (item.private || item.archived || !item.license) continue;
     const key = item.full_name.toLowerCase();
@@ -155,7 +160,7 @@ export function extractRepoLinks(markdown: string): string[] {
 export async function watchlistCandidates(env: Env): Promise<Discovered[]> {
   const found: Discovered[] = [];
   for (const list of WATCHLIST) {
-    const res = await github<string>(env, `/repos/${list}/readme`, { accept: "application/vnd.github.raw+json", allow404: true, freshFor: 60 * 60 * 5 });
+    const res = await github<string>(env, `/repos/${list}/readme`, { accept: "application/vnd.github.raw+json", allow404: true, freshFor: 60 * 60 * 5 }).catch(skipUnlessAuth(`watchlist ${list}`));
     if (typeof res?.data !== "string") continue;
     for (const fullName of extractRepoLinks(res.data)) {
       if (fullName.toLowerCase() === list.toLowerCase()) continue;
