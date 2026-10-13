@@ -1,8 +1,9 @@
 import { Link } from "react-router";
 import { SITE_NAME, SITE_TAGLINE } from "@forkvlift/shared";
+import { NewsletterBox } from "./NewsletterBox";
 
 /**
- * Footer component — Task 1.17 final design.
+ * Footer component — Task 1.17 final design with Task 4.10 newsletter signup.
  * Features retro pixel accent stripe, structured link columns,
  * accessibility labels, and mobile-friendly responsive grid.
  */
@@ -12,6 +13,7 @@ export function Footer() {
     { to: "/submit", label: "Submit a project" },
     { to: "/resources", label: "Resources library" },
     { to: "/requests", label: "Project requests" },
+    { to: "/newsletter", label: "The Fork Report" },
   ] as const;
 
   const communityLinks = [
@@ -48,6 +50,11 @@ export function Footer() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
+        {/* Newsletter signup banner */}
+        <div className="mb-10 rounded-card border border-border bg-surface-2 p-5 sm:p-6">
+          <NewsletterBox variant="footer" />
+        </div>
+
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4 lg:gap-12">
           {/* Brand and Mission */}
           <div className="space-y-3 md:col-span-1">

@@ -110,6 +110,22 @@ export async function getCompetition(db: D1Database, slug: string): Promise<Comp
   return hydrate(db, await roundBySlug(db, slug));
 }
 
+/** Admin console: every round, drafts first, so a draft can be found again after leaving the create screen. */
+export async function listAdminCompetitions(db: D1Database, q: { cursor?: string; limit?: number }) {
+  const limit = q.limit ?? 20;
+  const cursor = decodeCursor(q.cursor);
+  const { results } = await db
+    .prepare(`SELECT r.* FROM competition_rounds r JOIN growth_events e ON e.id = r.event_id ORDER BY r.opened_at IS NOT NULL, r.published_at IS NOT NULL, e.submission_ends_at DESC, r.id LIMIT ? OFFSET ?`)
+    .bind(limit + 1, cursor.o)
+    .all<RoundRow>();
+  const items = await Promise.all(results.slice(0, limit).map((r) => hydrate(db, r)));
+  return { items, nextCursor: results.length > limit ? encodeCursor({ o: cursor.o + limit }) : null };
+}
+
+export async function getAdminCompetition(db: D1Database, id: string): Promise<CompetitionRound> {
+  return hydrate(db, await roundById(db, id));
+}
+
 async function awardsOf(db: D1Database, r: RoundRow, viewerId: string | null): Promise<Award[]> {
   if (!r.published_at) return [];
   const e = (await eventById(db, r.event_id))!;
@@ -295,6 +311,7 @@ export async function publish(db: D1Database, id: string, b: { awards: { prizeId
   const e = (await eventById(db, r.event_id))!;
   if (r.published_at) throw new HttpError("conflict", "Winners are already published.");
   if (statusOf(r, e) !== "judging") throw new HttpError("conflict", "Winners can only be published after submissions close.");
+  if (Date.now() < r.judging_ends_at) throw new HttpError("conflict", "Winners can be published once judging closes.");
   if (r.version !== b.expectedVersion) throw new HttpError("conflict", "The competition changed since you loaded it. Reload and try again.");
   const prizeIds = new Set(((await db.prepare(`SELECT id FROM competition_prizes WHERE round_id = ?`).bind(r.id).all<{ id: string }>()).results).map((p) => p.id));
   const seen = new Set<string>();
