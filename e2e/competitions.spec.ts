@@ -2,6 +2,7 @@ import { expect, test } from "playwright/test";
 import type { CompetitionRound, EventEntry, Scorecard } from "@forkvlift/shared";
 
 const slug = "fixture-tiny-tools-cup";
+test.afterEach(async ({ page }) => { await page.unrouteAll({ behavior: "wait" }); });
 test("competition rules, event entry, unannounced and published winners", async ({ page }, info) => {
   await page.emulateMedia({ reducedMotion: "reduce" }); await page.goto("/competitions");
   await page.getByRole("link", { name: "Fixture: Tiny Tools Cup", exact: true }).press("Enter"); await expect(page.getByRole("heading", { name: "Prizes", exact: true })).toBeVisible();
@@ -42,12 +43,19 @@ test("competition loading/empty/error and judging permission recovery", async ({
 
 test.describe("competition admin", () => {
   test.use({ baseURL: process.env.E2E_ADMIN_URL ?? "http://127.0.0.1:8791" });
+  test.beforeEach(async ({ page }) => {
+    await page.route(/\/api\/admin\/competitions(?:\?|$)/, async r => {
+      if (r.request().method() !== "GET") return r.continue();
+      const response = await r.fetch(); const list = await response.json();
+      await r.fulfill({ json: { ...list, items: list.items.filter((round: CompetitionRound) => round.status !== "draft") } });
+    });
+  });
   test("create a draft with prize, criteria and judges; open and edit rules", async ({ page }, info) => {
     await page.request.get("/api/dev/login?as=fx-admin"); await page.goto("/competitions"); await page.getByRole("button", { name: "Create prize round" }).click();
     await page.getByLabel("Competition title", { exact: true }).fill("Useful tiny tools prize round"); await page.getByLabel("Competition slug").fill("useful-tiny-tools"); await page.getByLabel("Project event", { exact: true }).selectOption("fx_evt_1"); await page.getByLabel("Judging deadline").fill("2030-01-04T12:00"); await page.getByLabel("Judge usernames (comma separated)").fill("fx-bo");
     await page.getByRole("button", { name: "Add prize" }).click(); await page.getByLabel("Prize 1 label").fill("Useful tool award"); await page.getByLabel("Prize 1 sponsor", { exact: true }).fill("Community");
     await page.getByRole("button", { name: "Add criterion" }).click(); await page.getByLabel("Criterion 1 label").fill("Usefulness");
-    let fail = true; await page.route("**/api/admin/competitions", r => fail ? r.fulfill({ status: 503, json: { error: { code: "unavailable", message: "Draft unavailable" } } }) : r.continue());
+    let fail = true; await page.route("**/api/admin/competitions", r => r.request().method() === "POST" && fail ? r.fulfill({ status: 503, json: { error: { code: "unavailable", message: "Draft unavailable" } } }) : r.fallback());
     await page.getByRole("button", { name: "Create draft round" }).click(); await expect(page.getByRole("alert")).toContainText("Draft unavailable"); fail = false;
     const created = page.waitForRequest(r => r.method() === "POST" && r.url().endsWith("/api/admin/competitions")); await page.getByRole("button", { name: "Create draft round" }).click(); expect((await created).postDataJSON()).toMatchObject({ prizes: [{ label: "Useful tool award" }], criteria: [{ label: "Usefulness", maxScore: 10, weight: 1 }], judgeUsernames: ["fx-bo"] });
     await page.getByRole("button", { name: "Open competition", exact: true }).click(); await expect(page.getByRole("button", { name: "Open competition" })).toHaveCount(0); await page.getByLabel("Edit rules", { exact: true }).fill("Clear rules. ".repeat(150)); await page.getByRole("button", { name: "Save rules", exact: true }).click();
@@ -63,16 +71,76 @@ test.describe("competition admin", () => {
 
   test("judge totals, award review, version conflict and final winners publication", async ({ page }, info) => {
     await page.request.get("/api/dev/login?as=fx-admin"); const list = await (await page.request.get("/api/competitions")).json();
-    await page.route(/\/api\/competitions(?:\?|$)/, r => r.fulfill({ json: { ...list, items: list.items.map((round: CompetitionRound) => ({ ...round, status: "judging", judgingEndsAt: "2020-01-01T00:00:00Z" })) } }));
+    const round = { ...list.items[0], status: "judging", judgingEndsAt: "2020-01-01T00:00:00Z" };
+    await page.route(/\/api\/admin\/competitions(?:\?|$)/, r => r.fulfill({ json: { items: [round], nextCursor: null } }));
+    await page.route("**/api/admin/competitions/fx_comp_1", r => r.fulfill({ json: round }));
     await page.goto("/competitions"); await page.getByRole("button", { name: "Manage round" }).click(); await expect(page.getByRole("cell", { name: "0.8", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Add award" }).click(); await page.getByLabel("Award 1 prize", { exact: true }).selectOption("fx_prize_1"); await page.getByLabel("Award 1 entry", { exact: true }).selectOption("fx_entry_1"); await page.getByLabel("Award 1 rationale", { exact: true }).fill("Useful and easy to run."); await page.getByRole("button", { name: "Review winners" }).click();
     const dialog = page.getByRole("dialog", { name: "Publish final winners?" }); await expect(dialog).toContainText("Fixture: Pixel Planner");
     let fail = true; await page.route("**/api/admin/competitions/fx_comp_1/publish", r => fail ? r.fulfill({ status: 409, json: { error: { code: "conflict", message: "Round changed. Reload." } } }) : r.continue());
     await dialog.getByRole("button", { name: "Publish final winners" }).click(); await expect(dialog.getByRole("alert")).toContainText("Round changed");
     await page.screenshot({ path: `docs/handoffs/screenshots/4.14-${info.project.name}-publication.png` });
-    await page.route(`**/api/competitions/${slug}`, r => r.fulfill({ json: { ...list.items[0], status: "judging", version: 3, judgingEndsAt: "2020-01-01T00:00:00Z" } })); await dialog.getByRole("button", { name: "Reload round" }).click(); await expect(dialog).toHaveCount(0);
+    await page.route("**/api/admin/competitions/fx_comp_1", r => r.fulfill({ json: { ...round, version: 3 } })); await dialog.getByRole("button", { name: "Reload round" }).click(); await expect(dialog).toHaveCount(0);
     await page.getByRole("button", { name: "Add award" }).click(); await page.getByLabel("Award 1 prize", { exact: true }).selectOption("fx_prize_1"); await page.getByLabel("Award 1 entry", { exact: true }).selectOption("fx_entry_1"); await page.getByRole("button", { name: "Review winners" }).click();
     fail = false; const published = page.waitForRequest(r => r.method() === "POST" && r.url().includes("/publish")); await dialog.getByRole("button", { name: "Publish final winners" }).click(); expect((await published).postDataJSON()).toMatchObject({ expectedVersion: 3, awards: [{ prizeId: "fx_prize_1", entryId: "fx_entry_1" }] });
     await expect(page.getByRole("link", { name: "View published winners on the public site" })).toBeVisible(); await expect(page.getByRole("button", { name: "Review winners" })).toHaveCount(0);
+  });
+
+  test("admin draft list pages and reopens a draft through the read route", async ({ page }, info) => {
+    await page.request.get("/api/dev/login?as=fx-admin");
+    const round = await (await page.request.get("/api/admin/competitions/fx_comp_1")).json() as CompetitionRound;
+    const draft = { ...round, id: "draft-round", slug: "private-draft", title: "Private draft round", status: "draft", rulesMd: "Fresh draft rules", version: 7 };
+    await page.route(/\/api\/admin\/competitions(?:\?|$)/, r => r.fulfill({ json: new URL(r.request().url()).searchParams.has("cursor") ? { items: [round], nextCursor: null } : { items: [draft], nextCursor: "next-rounds" } }));
+    let release!: () => void; let gate = new Promise<void>(resolve => { release = resolve; });
+    let fail = false; let reads = 0; let writes = 0;
+    await page.route("**/api/admin/competitions/draft-round", async r => {
+      if (r.request().method() !== "GET") { writes++; return r.fulfill({ status: 500, json: { error: { code: "unexpected", message: "Read must not write" } } }); }
+      reads++; await gate;
+      return fail ? r.fulfill({ status: 503, json: { error: { code: "unavailable", message: "Draft read unavailable" } } }) : r.fulfill({ json: { ...draft, rulesMd: `Fresh rules ${reads}` } });
+    });
+    await page.goto("/competitions");
+    await expect(page.getByRole("heading", { name: draft.title, exact: true })).toBeVisible();
+    const more = page.waitForRequest(r => new URL(r.url()).pathname === "/api/admin/competitions" && new URL(r.url()).searchParams.get("cursor") === "next-rounds");
+    await page.getByRole("button", { name: "More rounds" }).click(); await more;
+    await expect(page.getByRole("button", { name: "Manage round" })).toHaveCount(2);
+    await page.getByRole("button", { name: "Manage round" }).first().click();
+    await expect(page.getByRole("button", { name: "Manage round" }).first()).toHaveAttribute("aria-busy", "true");
+    release(); await expect(page.getByLabel("Edit rules", { exact: true })).toHaveValue("Fresh rules 1");
+    await expect(page.getByRole("button", { name: "Open competition", exact: true })).toBeVisible();
+    await page.screenshot({ path: `docs/handoffs/screenshots/4.14-${info.project.name}-admin-draft.png`, fullPage: true });
+    await page.getByRole("button", { name: "Close round", exact: true }).click();
+    fail = true; gate = Promise.resolve();
+    await page.getByRole("button", { name: "Manage round" }).first().click();
+    await expect(page.getByText("Couldn't open round", { exact: true })).toBeVisible();
+    fail = false; await page.getByRole("button", { name: "Retry round", exact: true }).click();
+    await expect(page.getByLabel("Edit rules", { exact: true })).toHaveValue("Fresh rules 3");
+    expect(writes).toBe(0);
+    await page.reload(); await page.getByRole("button", { name: "Manage round" }).first().click();
+    await expect(page.getByLabel("Edit rules", { exact: true })).toHaveValue("Fresh rules 4");
+  });
+
+  test("admin list handles loading, empty and error recovery", async ({ page }) => {
+    await page.request.get("/api/dev/login?as=fx-admin");
+    let release!: () => void; const gate = new Promise<void>(resolve => { release = resolve; });
+    await page.route(/\/api\/admin\/competitions(?:\?|$)/, async r => { await gate; await r.fulfill({ json: { items: [], nextCursor: null } }); });
+    await page.goto("/competitions"); await expect(page.getByText("Loading competition rounds", { exact: true })).toBeAttached();
+    release(); await expect(page.getByText("No competition rounds", { exact: true })).toBeVisible();
+    await page.unroute(/\/api\/admin\/competitions(?:\?|$)/);
+    await page.route(/\/api\/admin\/competitions(?:\?|$)/, r => r.fulfill({ status: 503, json: { error: { code: "unavailable", message: "Admin list unavailable" } } }));
+    await page.reload(); await expect(page.getByText("Couldn't load rounds", { exact: true })).toBeVisible();
+    await page.unroute(/\/api\/admin\/competitions(?:\?|$)/);
+    await page.getByRole("button", { name: "Try again", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Manage round" }).first()).toBeVisible();
+  });
+
+  test("winner review stays disabled until the judging deadline", async ({ page }) => {
+    await page.request.get("/api/dev/login?as=fx-admin");
+    const round = await (await page.request.get("/api/admin/competitions/fx_comp_1")).json() as CompetitionRound;
+    await page.route("**/api/admin/competitions/fx_comp_1", r => r.fulfill({ json: { ...round, status: "judging", judgingEndsAt: "2099-01-01T00:00:00Z" } }));
+    await page.goto("/competitions"); await page.getByRole("button", { name: "Manage round", exact: true }).click();
+    await page.getByRole("button", { name: "Add award", exact: true }).click();
+    await page.getByLabel("Award 1 prize", { exact: true }).selectOption("fx_prize_1");
+    await page.getByLabel("Award 1 entry", { exact: true }).selectOption("fx_entry_1");
+    await expect(page.getByRole("button", { name: "Review winners", exact: true })).toBeDisabled();
   });
 });

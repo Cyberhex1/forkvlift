@@ -2,7 +2,11 @@
 
 - **From:** sol
 - **For task:** 4.14
-- **Status:** open
+- **Status:** resolved in [PR #85](https://github.com/Cyberhex1/forkvlift/pull/85), merged 2026-10-13
+
+## Resolution
+
+`listAdminCompetitions` lists all rounds with drafts first; `getAdminCompetition` reads a round by id, including drafts. Both routes enforce admin authorization. Winner publication now enforces `judgingEndsAt` on the server. The 4.14 console uses these reads for listing, opening and conflict reloads after merging main into its branch.
 
 ## What I need
 
