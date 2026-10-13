@@ -1172,7 +1172,20 @@ export const routes = {
       cancelled: z.boolean().optional(),
     }),
     response: GrowthEvent,
-  }),  createCompetition: route({
+  }),
+  listAdminCompetitions: route({
+    method: "GET", path: "/api/admin/competitions", auth: "admin", kind: "json", area: "admin",
+    summary: "Every competition, drafts first",
+    query: PageQuery,
+    response: page(CompetitionRound),
+  }),
+  getAdminCompetition: route({
+    method: "GET", path: "/api/admin/competitions/:id", auth: "admin", kind: "json", area: "admin",
+    summary: "One competition by id, including drafts",
+    params: IdParams,
+    response: CompetitionRound,
+  }),
+  createCompetition: route({
     method: "POST", path: "/api/admin/competitions", auth: "admin", kind: "json", area: "admin",
     summary: "Draft a competition on an existing event",
     body: z.object({
@@ -1203,7 +1216,7 @@ export const routes = {
   }),
   publishCompetitionWinners: route({
     method: "POST", path: "/api/admin/competitions/:id/publish", auth: "admin", kind: "json", area: "admin",
-    summary: "Publish awards once, after judging closes",
+    summary: "Publish awards once, after judging closes (judgingEndsAt)",
     params: IdParams,
     body: z.object({ awards: z.array(z.object({ prizeId: Id, entryId: Id, rationaleMd: z.string().max(5000) })).min(1).max(20), expectedVersion: z.number().int().positive() }),
     response: z.object({ competition: CompetitionRound, awards: z.array(Award) }),

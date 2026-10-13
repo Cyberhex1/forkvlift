@@ -40,8 +40,19 @@ async function setup() {
 }
 const enter = (as: string, projectId: string) => call<EventEntry>("/api/events/cup-jam/entries", "POST", as, { projectId, turnstileToken: "t" });
 const toJudging = () => env.DB.prepare(`UPDATE growth_events SET submission_ends_at = ?`).bind(Date.now() - 1000).run();
+const closeJudging = () => env.DB.prepare(`UPDATE competition_rounds SET judging_ends_at = ?`).bind(Date.now() - 1000).run();
 
 describe("competitions", () => {
+  it("admins can list and reopen drafts; the public and members can't", async () => {
+    const { comp } = await setup();
+    const list = await call<{ items: CompetitionRound[] }>("/api/admin/competitions", "GET", admin);
+    expect(list.body.items.map((r) => [r.slug, r.status])).toEqual([["tiny-cup", "draft"]]);
+    expect((await call<CompetitionRound>(`/api/admin/competitions/${comp.id}`, "GET", admin)).body.status).toBe("draft");
+    expect((await call("/api/admin/competitions", "GET", ada)).status).toBe(403);
+    expect((await call(`/api/admin/competitions/${comp.id}`, "GET", ada)).status).toBe(403);
+    expect((await api<{ items: CompetitionRound[] }>("/api/competitions")).body.items).toEqual([]);
+  });
+
   it("drafts stay hidden until opened, and prizes freeze once open", async () => {
     const { comp } = await setup();
     expect(comp.status).toBe("draft");
@@ -89,6 +100,8 @@ describe("competitions", () => {
     const prize = opened.prizes[0]!.id;
     expect((await call(`/api/admin/competitions/${comp.id}/publish`, "POST", admin, { awards: [{ prizeId: prize, entryId: a.id, rationaleMd: "" }], expectedVersion: opened.version })).status).toBe(409); // still open
     await toJudging();
+    expect((await call(`/api/admin/competitions/${comp.id}/publish`, "POST", admin, { awards: [{ prizeId: prize, entryId: a.id, rationaleMd: "" }], expectedVersion: opened.version })).status).toBe(409); // judging still open
+    await closeJudging();
     expect((await call(`/api/admin/competitions/${comp.id}/publish`, "POST", admin, { awards: [{ prizeId: prize, entryId: a.id, rationaleMd: "" }], expectedVersion: 1 })).status).toBe(409); // stale
     const pub = await call<{ awards: Award[] }>(`/api/admin/competitions/${comp.id}/publish`, "POST", admin, { awards: [{ prizeId: prize, entryId: a.id, rationaleMd: "Clean and useful" }], expectedVersion: opened.version });
     expect(pub.status).toBe(200);
