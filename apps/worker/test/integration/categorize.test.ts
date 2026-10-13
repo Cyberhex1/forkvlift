@@ -38,6 +38,23 @@ describe("category suggestions", () => {
     ]);
   });
 
+  it("re-scores pending candidates but keeps a category saved on a snoozed one", async () => {
+    await seedCategory("ai-and-agents");
+    fakeGithub({ "ada/kart": { owner: "ada", topics: ["ai-generated", "claude", "game", "kart-racer"] }, "ada/later": { owner: "ada", topics: ["game"] } });
+    for (const name of ["kart", "later"]) await asAdmin("/api/admin/candidates", "POST", { repoUrl: `https://github.com/ada/${name}`, foundViaUrl: null });
+    // What the old keyword rules picked, plus an admin's choice on a snoozed one.
+    await env.DB.prepare(`UPDATE candidates SET proposed = json_set(proposed, '$.categorySlug', 'ai-and-agents')`).run();
+    await env.DB.prepare(`UPDATE candidates SET status = 'snoozed' WHERE repo_full_name = 'ada/later'`).run();
+
+    const res = await asAdmin<{ updated: number }>("/api/admin/candidates/categorize", "POST");
+    expect(res.body.updated).toBe(1);
+    const rows = await env.DB.prepare(`SELECT repo_full_name AS r, json_extract(proposed, '$.categorySlug') AS cat FROM candidates ORDER BY r`).all<{ r: string; cat: string | null }>();
+    expect(rows.results).toEqual([
+      { r: "ada/kart", cat: "games" },
+      { r: "ada/later", cat: "ai-and-agents" },
+    ]);
+  });
+
   it("is admin-only", async () => {
     const user = await seedUser("usr_ada", "ada");
     expect((await api("/api/admin/candidates/categorize", { method: "POST", as: user })).status).toBe(403);

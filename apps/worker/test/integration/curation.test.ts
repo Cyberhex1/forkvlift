@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AdminStats, Candidate, ProjectDetail } from "@forkvlift/shared";
-import { extractRepoLinks, onlyNew, searchCandidates, watchlistCandidates } from "../../src/core/curation/discovery";
+import { INTEREST_TOPICS, MAX_NEW_PER_RUN, MAX_TOOLING_PER_RUN, capTooling, extractRepoLinks, interestCandidates, interestTopicsFor, onlyNew, searchCandidates, watchlistCandidates } from "../../src/core/curation/discovery";
 import { fakeGithub } from "./github-fake";
 import { api, env, resetDb, seedCategory, seedUser } from "./helpers";
 
@@ -143,6 +143,52 @@ describe("discovery", () => {
     await importRepo("https://github.com/ada/neat");
     const fresh = await onlyNew(env.DB, found);
     expect(fresh.map((f) => f.fullName)).not.toContain("ada/neat");
+  });
+
+  it("skips unlicensed search results, which can't be curated", async () => {
+    fakeGithub({}, { search: ["new/one", "new/nolicense"], unlicensed: ["new/nolicense"] });
+    expect((await searchCandidates(env)).map((f) => f.fullName)).toEqual(["new/one"]);
+  });
+
+  it("marks AI-coding tooling and keeps it to a small share of each run", async () => {
+    fakeGithub({}, { search: ["new/app", "new/mcp-thing"], tooling: ["new/mcp-thing"] });
+    expect((await searchCandidates(env)).map((f) => [f.fullName, f.tooling])).toEqual([["new/app", false], ["new/mcp-thing", true]]);
+    const via = { kind: "github_search" as const, url: null };
+    const mixed = [...Array.from({ length: 10 }, (_, i) => ({ fullName: `t/${i}`, foundVia: via, tooling: true })), ...Array.from({ length: 30 }, (_, i) => ({ fullName: `a/${i}`, foundVia: via, tooling: false }))];
+    const run = capTooling(mixed, MAX_NEW_PER_RUN);
+    expect(run).toHaveLength(MAX_NEW_PER_RUN);
+    expect(run.filter((d) => d.tooling)).toHaveLength(MAX_TOOLING_PER_RUN);
+  });
+
+  it("searches a rotating slice of interest topics by recent activity and stars", async () => {
+    const queries: string[] = [];
+    fakeGithub({}, { search: ["gimp-ish/editor"], queries });
+    const found = await interestCandidates(env, 0);
+    expect(found.map((f) => f.fullName)).toEqual(["gimp-ish/editor"]);
+    expect(queries).toHaveLength(4);
+    expect(queries.every((q) => q.includes("pushed:>") && q.includes("stars:>=25") && q.endsWith("sort:stars"))).toBe(true);
+    const day = Array.from({ length: 8 }, (_, i) => interestTopicsFor(i * 6 * 3_600_000)).flat();
+    expect(new Set(day)).toEqual(new Set(INTEREST_TOPICS));
+  });
+
+  it("checks known repos in chunks, drops duplicates and caps each run", async () => {
+    await importRepo("https://github.com/ada/neat");
+    const many = [{ fullName: "Ada/Neat" }, { fullName: "x/dup" }, { fullName: "X/DUP" }, ...Array.from({ length: 120 }, (_, i) => ({ fullName: `bulk/r${i}` }))].map((d) => ({
+      ...d,
+      foundVia: { kind: "github_search" as const, url: null },
+    }));
+    const fresh = await onlyNew(env.DB, many);
+    expect(fresh).toHaveLength(MAX_NEW_PER_RUN);
+    expect(fresh.map((f) => f.fullName.toLowerCase())).not.toContain("ada/neat");
+    expect(fresh.filter((f) => f.fullName.toLowerCase() === "x/dup")).toHaveLength(1);
+  });
+
+  it("admins can run discovery on demand", async () => {
+    fakeGithub({}, { search: ["new/app"] });
+    expect((await api("/api/admin/discovery/run", { method: "POST", as: ada })).status).toBe(403);
+    const run = await asAdmin("/api/admin/discovery/run", "POST");
+    expect(run.status).toBe(200);
+    expect((run.body as { queued: number }).queued).toBe(1);
   });
 
   it("extracts repo links from Markdown", () => {
