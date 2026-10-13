@@ -16,6 +16,15 @@ function escapeXml(str: string | null | undefined): string {
     .replace(/'/g, "&apos;");
 }
 
+function escapeSqlLike(str: string): string {
+  return str.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
+function truncateText(str: string, maxLen = 500): string {
+  if (str.length <= maxLen) return str;
+  return `${str.slice(0, maxLen).trimEnd()}…`;
+}
+
 export function renderReadmeBadge(origin: string, slug: string, forks: number, upvotes: number): string {
   const label = SITE_NAME;
   const value = `${forks} fork${forks === 1 ? "" : "s"} · ${upvotes} upvote${upvotes === 1 ? "" : "s"}`;
@@ -200,6 +209,121 @@ ${itemsXml}
     });
   };
 
+  const showcasesRss = async (
+    query: { category?: string; user?: string; kind?: string; tool?: string },
+    c: Context<AppEnv>,
+  ) => {
+    const origin = new URL(c.req.url).origin;
+    const conditions = [
+      "s.published_at IS NOT NULL",
+      "s.hidden_at IS NULL",
+      "s.deleted_at IS NULL",
+      "u.deleted_at IS NULL",
+      "u.banned_at IS NULL",
+    ];
+    const bindings: unknown[] = [];
+
+    if (query.category) {
+      conditions.push("s.category_slug = ?");
+      bindings.push(query.category);
+    }
+    if (query.user) {
+      conditions.push("(u.username = ? OR u.github_login = ?)");
+      bindings.push(query.user, query.user);
+    }
+    if (query.kind) {
+      conditions.push("s.kind = ?");
+      bindings.push(query.kind);
+    }
+    if (query.tool) {
+      conditions.push("s.ai_tools LIKE ? ESCAPE '\\'");
+      bindings.push(`%"${escapeSqlLike(query.tool)}"%`);
+    }
+
+    const { results } = await c.env.DB.prepare(
+      `SELECT s.slug, s.title, s.tagline, s.body_md, s.published_at, s.created_at,
+              c.name AS category_name, u.display_name AS author_name, u.username AS author_username
+       FROM showcases s
+       JOIN users u ON u.id = s.owner_id
+       LEFT JOIN categories c ON c.slug = s.category_slug
+       WHERE ${conditions.join(" AND ")}
+       ORDER BY s.published_at DESC, s.created_at DESC
+       LIMIT 50`,
+    )
+      .bind(...bindings)
+      .all<{
+        slug: string;
+        title: string;
+        tagline: string;
+        body_md: string;
+        category_name: string | null;
+        author_name: string | null;
+        author_username: string | null;
+        published_at: number | null;
+        created_at: number;
+      }>();
+
+    let channelTitle = `${SITE_NAME}: new showcases`;
+    let channelLink = `${origin}/showcase`;
+    let channelDescription = `What builders made with AI on ${SITE_NAME}. Look, get inspired, and see how they built it.`;
+
+    if (query.category) {
+      const catName = results[0]?.category_name ?? query.category;
+      channelTitle = `${SITE_NAME}: ${catName} showcases`;
+      channelLink = `${origin}/showcase?category=${encodeURIComponent(query.category)}`;
+      channelDescription = `New vibe-coded showcases in ${catName} on ${SITE_NAME}.`;
+    } else if (query.user) {
+      const authorName = results[0]?.author_name ?? query.user;
+      channelTitle = `${SITE_NAME}: showcases by ${authorName}`;
+      channelLink = `${origin}/u/${encodeURIComponent(query.user)}`;
+      channelDescription = `Showcases created by ${authorName} on ${SITE_NAME}.`;
+    }
+
+    const feedUrl = c.req.url;
+    const nowRfc822 = new Date().toUTCString();
+
+    const itemsXml = results
+      .map((item) => {
+        const itemUrl = `${origin}/showcase/${encodeURIComponent(item.slug)}`;
+        const pubDate = new Date(item.published_at ?? item.created_at).toUTCString();
+        // Showcases never get clone or fork wording. Truncate body_md to around 500 characters.
+        const bodyTruncated = truncateText(item.body_md || "", 500);
+        const desc = item.tagline ? `${item.tagline} — ${bodyTruncated}` : bodyTruncated;
+        const author = item.author_name ? `<author>${escapeXml(item.author_name)}</author>` : "";
+        const category = item.category_name ? `<category>${escapeXml(item.category_name)}</category>` : "";
+
+        return `    <item>
+      <title>${escapeXml(item.title)}</title>
+      <link>${itemUrl}</link>
+      <guid isPermaLink="true">${itemUrl}</guid>
+      <description>${escapeXml(desc)}</description>
+      <pubDate>${pubDate}</pubDate>
+      ${author}
+      ${category}
+    </item>`;
+      })
+      .join("\n");
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${escapeXml(channelTitle)}</title>
+    <link>${channelLink}</link>
+    <description>${escapeXml(channelDescription)}</description>
+    <language>en</language>
+    <lastBuildDate>${nowRfc822}</lastBuildDate>
+    <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml"/>
+${itemsXml}
+  </channel>
+</rss>`;
+
+    return c.body(xml, 200, {
+      "content-type": "application/rss+xml; charset=utf-8",
+      "cache-control": "public, max-age=600, stale-while-revalidate=86400",
+      "x-content-type-options": "nosniff",
+    });
+  };
+
   mount(app, "subscribeNewsletter", async ({ body }, c) => {
     await verifyTurnstile(c.env, body.turnstileToken, clientIp(c.req.raw));
     return newsletter.subscribe(c.env, body.email);
@@ -216,6 +340,9 @@ ${itemsXml}
   mount(app, "projectsRss", ({ query }, c) => projectsRss(query, c));
   mount(app, "categoryRss", ({ params }, c) => projectsRss({ category: params.slug }, c));
   mount(app, "userRss", ({ params }, c) => projectsRss({ user: params.username }, c));
+
+  // Task 5.7: Showcase RSS feed. Never uses clone or fork wording.
+  app.get("/api/feeds/showcases.rss", (c) => showcasesRss(c.req.query(), c));
 
   mount(app, "readmeBadge", async ({ params }, c) => {
     const row = await c.env.DB.prepare(

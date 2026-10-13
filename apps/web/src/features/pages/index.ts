@@ -13,6 +13,7 @@ export {
 } from "./States";
 export { AddLicenseLink, LicenseRequestActions, licenseIssueUrl } from "./LicenseRequestActions";
 export { SavingsCounter, type SavingsCounterProps } from "./SavingsCounter";
+export { ShowcaseArtPreview } from "./ShowcaseArtPreview";
 export { NewsletterBox, type NewsletterBoxProps } from "./NewsletterBox";
 export { NewsletterPage } from "./NewsletterPage";
 export { NewsletterConfirmPage, type NewsletterConfirmPageProps } from "./NewsletterConfirmPage";
