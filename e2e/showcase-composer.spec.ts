@@ -67,7 +67,7 @@ test("my-showcases loading, empty and error recovery", async ({ page }, info) =>
   await page.unroute("**/api/me/showcases*"); await page.getByRole("button", { name: "Try again" }).click(); await expect(page.getByRole("link", { name: "Edit draft" })).toBeVisible();
 });
 
-test("credit limits and open-source-later catalog action", async ({ page }) => {
+test("credit limits and catalog action stays on the showcase page", async ({ page }) => {
   await page.request.get("/api/dev/login?as=fx-ada");
   const projects = await (await page.request.get("/api/projects")).json();
   await page.route(/\/api\/projects(?:\?|$)/, r => r.fulfill({ json: { ...projects, items: Array.from({ length: 11 }, (_, i) => ({ ...projects.items.find((p: { license: unknown }) => p.license), id: `credit-${i}`, slug: `credit-${i}`, name: `Credit project ${i}` })) } }));
@@ -76,8 +76,78 @@ test("credit limits and open-source-later catalog action", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Add Credit project 10", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: "Remove credit-0", exact: true }).click(); await expect(page.getByRole("button", { name: "Add Credit project 10", exact: true })).toBeEnabled();
   await page.goto("/showcase/fixture-pocket-chef/edit"); await page.getByLabel("Public GitHub repo (optional)").fill("https://github.com/example/fixture");
-  await page.getByRole("button", { name: "List in catalog", exact: true }).click();
-  await expect(page.getByRole("link", { name: "See the code", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "List in catalog", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "List the code in the catalog" })).toHaveCount(0);
+});
+
+test("Enter searches credits without saving or publishing the showcase", async ({ page }) => {
+  await page.request.get("/api/dev/login?as=fx-ada");
+  const submissions: unknown[] = [];
+  await page.route(/\/api\/showcases$/, r => {
+    if (r.request().method() !== "POST") return r.continue();
+    submissions.push(r.request().postDataJSON());
+    return r.fulfill({ status: 503, json: { error: { code: "unavailable", message: "Unexpected submission" } } });
+  });
+  await page.goto("/showcase/new");
+  await page.getByLabel("Title", { exact: true }).fill("Keyboard search regression");
+  await page.getByLabel("Category", { exact: true }).selectOption("home-and-life");
+  await expect(page.getByRole("button", { name: "Publish showcase", exact: true })).toBeEnabled();
+  for (const [kind, query] of [["projects", "toaster"], ["resources", "workflow"]]) {
+    const search = page.getByRole("searchbox", { name: `Find ${kind}` });
+    await search.fill(query);
+    const response = page.waitForResponse(r => new URL(r.url()).pathname === `/api/${kind}` && new URL(r.url()).searchParams.get("q") === query);
+    await search.press("Enter");
+    await response;
+    await expect(page.getByText(`Loading ${kind}`, { exact: true })).toHaveCount(0);
+    expect(submissions).toEqual([]);
+    await expect(page).toHaveURL(/\/showcase\/new$/);
+  }
+});
+
+test("Enter only saves drafts and includes AI tools and tags before blur", async ({ page }) => {
+  await page.request.get("/api/dev/login?as=fx-ada"); await page.goto("/showcase/new");
+  await page.getByLabel("Title", { exact: true }).fill("Keyboard draft regression");
+  await page.getByLabel("Category", { exact: true }).selectOption("home-and-life");
+  await page.route(/\/api\/showcases$/, r => r.fulfill({ status: 503, json: { error: { code: "unavailable", message: "Draft retained for inspection" } } }));
+  for (const [label, value, key, expected] of [
+    ["AI tools (comma separated)", "Codex, Claude", "aiTools", ["Codex", "Claude"]],
+    ["Tags (comma separated)", "keyboard, draft", "tags", ["keyboard", "draft"]],
+    ["Title", "Updated keyboard draft", "title", "Updated keyboard draft"],
+    ["YouTube or Vimeo video URL", "https://youtu.be/dQw4w9WgXcQ", "title", "Updated keyboard draft"],
+  ] as const) {
+    const input = page.getByLabel(label, { exact: true });
+    await input.fill(value);
+    const posted = page.waitForRequest(r => r.method() === "POST" && new URL(r.url()).pathname === "/api/showcases");
+    await input.press("Enter");
+    const data = (await posted).postDataJSON();
+    expect(data.publish).toBe(false);
+    expect(data[key]).toEqual(expected);
+    await expect(page.getByRole("alert")).toContainText("Draft retained for inspection");
+    await expect(page.getByRole("button", { name: "Save draft", exact: true })).toBeEnabled();
+  }
+  await page.getByRole("button", { name: "Preview showcase" }).click();
+  await page.getByRole("button", { name: "Back to editing" }).click();
+  await expect(page.getByLabel("AI tools (comma separated)")).toHaveValue("Codex, Claude");
+  await expect(page.getByLabel("Tags (comma separated)")).toHaveValue("keyboard, draft");
+});
+
+test("preview uses upload content type for extensionless keys", async ({ page }) => {
+  await page.request.get("/api/dev/login?as=fx-ada"); await page.goto("/showcase/new");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/uploads", r => {
+    const kind = r.request().postDataJSON().contentType === "video/mp4" ? "movie" : "animation";
+    return r.fulfill({ json: { key: `media/ada/${kind}`, uploadUrl: `/api/uploads/media/ada/${kind}`, expiresAt: "2030-01-01T00:00:00Z" } });
+  });
+  await page.route("**/api/uploads/media/ada/*", r => r.fulfill({ json: {} }));
+  await page.getByLabel("Gallery images or videos (25 MB each)").setInputFiles([
+    { name: "demo.mp4", mimeType: "video/mp4", buffer: Buffer.from("test video") },
+    { name: "demo.gif", mimeType: "image/gif", buffer: Buffer.from("test gif") },
+  ]);
+  await expect(page.getByRole("button", { name: "Remove media 2", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Gallery images or videos (25 MB each)")).toBeEnabled();
+  await page.getByRole("button", { name: "Preview showcase" }).click();
+  await expect(page.locator("video")).toHaveAttribute("src", "/api/media/media/ada/movie");
+  await expect(page.getByRole("link", { name: "View animated image: demo.gif" })).toBeVisible();
 });
 
 
