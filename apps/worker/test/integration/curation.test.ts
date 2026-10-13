@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AdminStats, Candidate, ProjectDetail } from "@forkvlift/shared";
-import { INTEREST_TOPICS, MAX_NEW_PER_RUN, extractRepoLinks, interestCandidates, interestTopicsFor, onlyNew, searchCandidates, watchlistCandidates } from "../../src/core/curation/discovery";
+import { INTEREST_TOPICS, MAX_NEW_PER_RUN, MAX_TOOLING_PER_RUN, capTooling, extractRepoLinks, interestCandidates, interestTopicsFor, onlyNew, searchCandidates, watchlistCandidates } from "../../src/core/curation/discovery";
 import { fakeGithub } from "./github-fake";
 import { api, env, resetDb, seedCategory, seedUser } from "./helpers";
 
@@ -145,9 +145,19 @@ describe("discovery", () => {
     expect(fresh.map((f) => f.fullName)).not.toContain("ada/neat");
   });
 
-  it("skips unlicensed search results, which can't be curated, and AI-coding tooling", async () => {
-    fakeGithub({}, { search: ["new/one", "new/nolicense", "new/mcp-thing"], unlicensed: ["new/nolicense"], tooling: ["new/mcp-thing"] });
+  it("skips unlicensed search results, which can't be curated", async () => {
+    fakeGithub({}, { search: ["new/one", "new/nolicense"], unlicensed: ["new/nolicense"] });
     expect((await searchCandidates(env)).map((f) => f.fullName)).toEqual(["new/one"]);
+  });
+
+  it("marks AI-coding tooling and keeps it to a small share of each run", async () => {
+    fakeGithub({}, { search: ["new/app", "new/mcp-thing"], tooling: ["new/mcp-thing"] });
+    expect((await searchCandidates(env)).map((f) => [f.fullName, f.tooling])).toEqual([["new/app", false], ["new/mcp-thing", true]]);
+    const via = { kind: "github_search" as const, url: null };
+    const mixed = [...Array.from({ length: 10 }, (_, i) => ({ fullName: `t/${i}`, foundVia: via, tooling: true })), ...Array.from({ length: 30 }, (_, i) => ({ fullName: `a/${i}`, foundVia: via, tooling: false }))];
+    const run = capTooling(mixed, MAX_NEW_PER_RUN);
+    expect(run).toHaveLength(MAX_NEW_PER_RUN);
+    expect(run.filter((d) => d.tooling)).toHaveLength(MAX_TOOLING_PER_RUN);
   });
 
   it("searches a rotating slice of interest topics by recent activity and stars", async () => {

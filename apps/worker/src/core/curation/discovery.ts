@@ -10,35 +10,34 @@
  *
  * A second, smaller track looks for interesting open projects that aren't tagged as
  * AI-built: free alternatives to big paid apps, game decompilations and the like.
- * Unlicensed repos are skipped everywhere, since curated imports must be licensed, and so
- * are repos tagged as AI-coding tooling (MCP servers, skills, prompt packs): the owner
- * wants apps, games and creative projects, not tools for building them.
+ * Unlicensed repos are skipped everywhere, since curated imports must be licensed. AI-coding
+ * tooling (MCP servers, skills, prompt packs) is welcome but capped to a small share, so the
+ * queue is mostly apps, games and creative projects.
  */
 import { github } from "../github/client";
 import { parseRepoUrl } from "../github/repo-url";
 
-/** Topics authors use to say a project was built with AI, not topics for AI tools themselves. */
+/** Topics authors use to say a project was built with AI. */
 export const TOPICS = [
   "vibe-coding",
   "vibecoding",
   "vibe-coded",
   "built-with-claude",
   "made-with-claude",
+  "claude-code",
   "built-with-cursor",
   "made-with-cursor",
   "built-with-ai",
   "ai-built",
   "ai-generated",
 ];
-/**
- * Repos tagged with any of these are tooling for AI coding (MCP servers, skills, prompt packs),
- * not the apps, games and creative projects the owner wants in the queue.
- */
+/** Topics that mark tooling for AI coding (MCP servers, skills, prompt packs). Allowed, but only a small share of each run. */
 export const TOOLING_TOPICS = new Set([
   "mcp", "mcp-server", "mcp-servers", "model-context-protocol", "claude-code-plugin", "claude-code-plugins", "claude-skills", "claude-skill",
   "agent-skills", "skills", "subagents", "claude-code-agents", "cursor-rules", "cursorrules", "prompt", "prompts", "prompt-engineering",
-  "system-prompt", "ai-agent-framework", "agent-framework", "llm-tools", "coding-agent", "ai-coding-assistant", "claude-code-hooks",
+  "system-prompt", "agent-framework", "llm-tools", "coding-agent", "ai-coding-assistant", "claude-code-hooks",
 ]);
+export const MAX_TOOLING_PER_RUN = 3;
 const SORTS = ["stars", "updated"] as const;
 const PER_PAGE = 50;
 const SEARCH_WINDOW_DAYS = 180;
@@ -80,6 +79,8 @@ export const WATCHLIST = ["0xWelt/Awesome-Vibe-Coding"];
 export interface Discovered {
   fullName: string;
   foundVia: { kind: "github_search" | "watchlist"; url: string | null };
+  /** Tagged as AI-coding tooling rather than an app, game or creative project. */
+  tooling?: boolean;
 }
 
 interface SearchResponse {
@@ -95,9 +96,9 @@ async function searchTopic(env: Env, topic: string, query: string, sort: string,
   });
   for (const item of res?.data.items ?? []) {
     if (item.private || item.archived || !item.license) continue;
-    if ((item.topics ?? []).some((t) => TOOLING_TOPICS.has(t.toLowerCase()))) continue;
     const key = item.full_name.toLowerCase();
-    if (!found.has(key)) found.set(key, { fullName: item.full_name, foundVia: { kind: "github_search", url: `https://github.com/topics/${topic}` } });
+    const tooling = (item.topics ?? []).some((t) => TOOLING_TOPICS.has(t.toLowerCase()));
+    if (!found.has(key)) found.set(key, { fullName: item.full_name, foundVia: { kind: "github_search", url: `https://github.com/topics/${topic}` }, tooling });
   }
 }
 
@@ -143,6 +144,21 @@ export async function watchlistCandidates(env: Env): Promise<Discovered[]> {
     }
   }
   return found;
+}
+
+/** Most of a run goes to apps, games and creative projects; tooling fills at most a few slots. */
+export function capTooling(items: Discovered[], total: number, maxTooling = MAX_TOOLING_PER_RUN): Discovered[] {
+  const out: Discovered[] = [];
+  let tooling = 0;
+  for (const item of items) {
+    if (out.length >= total) break;
+    if (item.tooling) {
+      if (tooling >= maxTooling) continue;
+      tooling++;
+    }
+    out.push(item);
+  }
+  return out;
 }
 
 /** Drop repos already queued, rejected or listed. Checks in chunks of 40 (D1 allows 100 bound values per query); a run can find over a thousand repos. */
