@@ -91,7 +91,7 @@
         "ADMIN_EMAILS": "kdlindsey25@gmail.com",
         "ACCESS_TEAM_DOMAIN": "tight-night-bcaf.cloudflareaccess.com",
         "ACCESS_AUD": "",
-        "TURNSTILE_SITE_KEY": ""
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAFTEAzMVae-6aBXu"
       },
       "d1_databases": [
         { "binding": "DB", "database_name": "forkvlift-prod", "database_id": "f97beb0e-a078-405f-8d18-81065cfc2ebe", "migrations_dir": "migrations" }
