@@ -11,10 +11,10 @@ type Repo = Pick<RepoSnapshot, "name" | "description" | "topics" | "language">;
 
 /** slug → keywords. Hyphenated keywords also match as spaced phrases. */
 const RULES: Record<string, string[]> = {
-  "ai-and-agents": ["ai", "llm", "llms", "gpt", "chatgpt", "openai", "ollama", "llama", "agent", "agents", "ai-agent", "ai-agents", "agent-skill", "agent-skills", "claude-code-plugin", "coding-agent", "chatbot", "rag", "prompt", "prompts", "langchain", "embeddings", "local-llm", "machine-learning", "stable-diffusion", "whisper"],
+  "ai-and-agents": ["ai", "llm", "llms", "gpt", "chatgpt", "openai", "ollama", "llama", "agent", "agents", "ai-agent", "ai-agents", "agent-skill", "agent-skills", "claude-code-plugin", "coding-agent", "chatbot", "rag", "prompt", "prompts", "langchain", "embeddings", "local-llm", "machine-learning", "stable-diffusion", "whisper", "harness", "agent-harness", "coding-agents", "agent-workspace", "agent-orchestration", "multi-agent", "claude-code-skill", "claude-skills", "claude-plugin", "codex-plugin", "codex-skill", "context-engineering", "ai-coding-assistant"],
   "developer-tools": ["developer-tools", "devtools", "ide", "code-editor", "vscode", "vscode-extension", "neovim", "vim", "linter", "lint", "formatter", "api-client", "devops", "ci", "github-actions", "git", "mcp", "mcp-server", "sdk", "debugger", "terminal", "code-review", "testing", "compiler", "language-server"],
   "tools-and-utilities": ["utility", "utilities", "tool", "tools", "cli", "converter", "file-converter", "browser-extension", "chrome-extension", "firefox-extension", "extension", "window-manager", "clipboard", "screenshot", "pdf", "downloader", "launcher"],
-  productivity: ["productivity", "notes", "note-taking", "todo", "to-do", "todo-list", "tasks", "task-manager", "calendar", "habit", "habit-tracker", "pomodoro", "focus", "kanban", "journal", "bookmarks", "time-tracking", "markdown-editor"],
+  productivity: ["productivity", "notes", "note-taking", "todo", "to-do", "todo-list", "tasks", "task-manager", "calendar", "habit", "habit-tracker", "pomodoro", "focus", "kanban", "journal", "bookmarks", "time-tracking", "markdown-editor", "wiki", "knowledge-base", "knowledge-management", "pkm", "personal-knowledge-management", "second-brain", "documentation", "project-management", "task-management", "whiteboard", "meeting-notes", "team-collaboration"],
   games: ["game", "games", "gamedev", "game-development", "godot", "unity", "phaser", "pygame", "love2d", "chess", "platformer", "rpg", "browser-game", "fps", "racing", "kart-racer", "city-builder", "open-world", "roguelike", "puzzle-game", "multiplayer-game"],
   production: ["music", "audio", "daw", "synth", "synthesizer", "video", "video-editor", "video-editing", "streaming", "obs", "podcast", "podcasting", "3d", "blender", "music-production"],
   suites: ["office", "office-suite", "suite", "all-in-one"],
@@ -36,6 +36,25 @@ const RULES: Record<string, string[]> = {
   "fun-and-experiments": ["fun", "toy", "experiment", "experiments", "joke", "meme", "creative-coding", "generative-art", "art"],
 };
 
+/**
+ * "X-alternative" topics name what a project replaces, which says what it is.
+ * Matched on the part before "-alternative".
+ */
+const ALTERNATIVES: Record<string, string[]> = {
+  productivity: ["notion", "obsidian", "logseq", "confluence", "mem", "evernote", "onenote", "roam", "todoist", "trello", "jira", "asana", "clickup", "linear", "miro", "google-docs", "coda"],
+  "creative-and-design": ["figma", "photoshop", "canva", "illustrator", "lightroom", "procreate", "sketch"],
+  "data-and-analytics": ["airtable", "excel", "google-sheets", "tableau", "metabase"],
+  production: ["premiere", "after-effects", "davinci-resolve", "ableton", "fl-studio", "audacity"],
+  "media-and-entertainment": ["spotify", "netflix", "plex", "youtube", "kindle"],
+};
+
+/**
+ * Generic AI words. Plenty of notes apps, wikis and editors add an AI feature
+ * and tag it "ai" or "llm"; that shouldn't outweigh what the app is. As topics
+ * they count like a word in the description.
+ */
+const WEAK_TOPICS = new Set(["ai", "llm", "llms", "ai-agent", "ai-agents", "agent", "agents", "chatbot", "openai", "rag", "embeddings", "generative-ai", "agentic", "agentic-ai", "ai-tools", "mcp", "tool", "tools", "utility"]);
+
 /** Inside Games, the more specific shelf when its words show up. */
 const GAME_SUBS: Record<string, string[]> = {
   roguelikes: ["roguelike", "roguelite", "dungeon", "dungeon-crawler"],
@@ -52,7 +71,7 @@ const GAME_SUBS: Record<string, string[]> = {
  * filed games and dev tools under AI and agents. They're dropped before scoring.
  */
 const BUILT_WITH = new Set(["claude", "claude-ai", "claude-code", "anthropic", "cursor", "cursor-ai", "codex", "codex-cli", "openai-codex", "copilot", "github-copilot", "gemini", "gemini-ai", "gemini-flash", "gemini-cli", "antigravity", "antigravity-ai", "antigravity-ide", "opencode", "windsurf", "bolt", "lovable", "v0", "ai-generated", "ai-assisted", "ai-coded", "ai-made", "made-with-ai", "built-with-ai", "vibe-coding", "vibecoding", "vibe-coded", "vibecoded", "vibecode", "vibecoders", "ai-assisted-development", "ai-coding", "agentic-coding"]);
-const BUILT_WITH_TEXT = /\b(?:(?:built|made|written|coded|generated|created)(?: entirely| fully| mostly)? (?:with|by|using|in)(?: the help of)? (?:ai(?: agents?)?|claude(?: code)?|cursor|codex|copilot|chatgpt|gpt-?\d*|gemini|an? (?:ai|llm))|ai[- ]generated|vibe[- ]coded|vibe[- ]coding)\b/gi;
+export const BUILT_WITH_TEXT = /\b(?:(?:built|made|written|coded|generated|created)(?: entirely| fully| mostly)? (?:with|by|using|in)(?: the help of)? (?:ai(?: agents?)?|claude(?: code)?|cursor|codex|copilot|chatgpt|gpt-?\d*|gemini|an? (?:ai|llm))|ai[- ]generated|vibe[- ]coded|vibe[- ]coding)\b/gi;
 
 const LANGUAGE_HINTS: Record<string, string> = { Swift: "mobile-apps", Kotlin: "mobile-apps", Dart: "mobile-apps", GDScript: "games" };
 
@@ -65,7 +84,7 @@ function scoreRules(rules: Record<string, string[]>, repo: Repo): Map<string, nu
   for (const [slug, words] of Object.entries(rules)) {
     let score = 0;
     for (const w of words) {
-      if (topics.has(w)) score += 3;
+      if (topics.has(w)) score += WEAK_TOPICS.has(w) ? 1 : 3;
       else if (text.includes(norm(w))) score += 1;
     }
     if (score) scores.set(slug, score);
@@ -88,6 +107,11 @@ function best(scores: Map<string, number>, min: number): string | null {
 /** Keyword-only guess; null when nothing is convincing (one topic hit or two words). */
 export function keywordCategory(repo: Repo): string | null {
   const scores = scoreRules(RULES, repo);
+  for (const t of repo.topics) {
+    const m = /^(.+)-alternatives?$/.exec(t.toLowerCase());
+    if (!m) continue;
+    for (const [slug, names] of Object.entries(ALTERNATIVES)) if (names.includes(m[1]!)) scores.set(slug, (scores.get(slug) ?? 0) + 3);
+  }
   const hint = repo.language ? LANGUAGE_HINTS[repo.language] : undefined;
   if (hint) scores.set(hint, (scores.get(hint) ?? 0) + 1);
   // "AI" and "tool" are everywhere; let a more specific category win a tie.
