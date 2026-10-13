@@ -16,6 +16,15 @@ function escapeXml(str: string | null | undefined): string {
     .replace(/'/g, "&apos;");
 }
 
+function escapeSqlLike(str: string): string {
+  return str.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
+function truncateText(str: string, maxLen = 500): string {
+  if (str.length <= maxLen) return str;
+  return `${str.slice(0, maxLen).trimEnd()}…`;
+}
+
 export function renderReadmeBadge(origin: string, slug: string, forks: number, upvotes: number): string {
   const label = SITE_NAME;
   const value = `${forks} fork${forks === 1 ? "" : "s"} · ${upvotes} upvote${upvotes === 1 ? "" : "s"}`;
@@ -227,8 +236,8 @@ ${itemsXml}
       bindings.push(query.kind);
     }
     if (query.tool) {
-      conditions.push("s.ai_tools LIKE ?");
-      bindings.push(`%"${query.tool}"%`);
+      conditions.push("s.ai_tools LIKE ? ESCAPE '\\'");
+      bindings.push(`%"${escapeSqlLike(query.tool)}"%`);
     }
 
     const { results } = await c.env.DB.prepare(
@@ -277,8 +286,9 @@ ${itemsXml}
       .map((item) => {
         const itemUrl = `${origin}/showcase/${encodeURIComponent(item.slug)}`;
         const pubDate = new Date(item.published_at ?? item.created_at).toUTCString();
-        // Showcases never get clone or fork wording.
-        const desc = item.tagline ? `${item.tagline} — ${item.body_md}` : item.body_md;
+        // Showcases never get clone or fork wording. Truncate body_md to around 500 characters.
+        const bodyTruncated = truncateText(item.body_md || "", 500);
+        const desc = item.tagline ? `${item.tagline} — ${bodyTruncated}` : bodyTruncated;
         const author = item.author_name ? `<author>${escapeXml(item.author_name)}</author>` : "";
         const category = item.category_name ? `<category>${escapeXml(item.category_name)}</category>` : "";
 

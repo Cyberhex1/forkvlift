@@ -178,6 +178,106 @@ describe("showcase RSS feeds (task 5.7)", () => {
     expect(userXml).toContain("CLI Agent");
     expect(userXml).not.toContain("Space Vibe");
   });
+
+  it("excludes hidden or removed showcases from the feed", async () => {
+    const now = Date.now();
+    // Normal published showcase
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, '', '', 'tools', 'web', 'finished', '[]', '[]', ?, ?, ?)`,
+    )
+      .bind("shw_vis", "visible-showcase", "usr_ada", "Visible Showcase", "Visible", now - 3000, now, now)
+      .run();
+
+    // Hidden showcase (hidden_at IS NOT NULL)
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, hidden_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, '', '', 'tools', 'web', 'finished', '[]', '[]', ?, ?, ?, ?)`,
+    )
+      .bind("shw_hid", "hidden-showcase", "usr_ada", "Hidden Showcase", "Hidden", now - 2000, now - 500, now, now)
+      .run();
+
+    // Removed/deleted showcase (deleted_at IS NOT NULL)
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, deleted_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, '', '', 'tools', 'web', 'finished', '[]', '[]', ?, ?, ?, ?)`,
+    )
+      .bind("shw_del", "deleted-showcase", "usr_ada", "Deleted Showcase", "Deleted", now - 1000, now - 100, now, now)
+      .run();
+
+    const res = await app.request("/api/feeds/showcases.rss", {}, env);
+    expect(res.status).toBe(200);
+    const xml = await res.text();
+    expect(xml).toContain("Visible Showcase");
+    expect(xml).not.toContain("Hidden Showcase");
+    expect(xml).not.toContain("Deleted Showcase");
+  });
+
+  it("escapes < and & in showcase titles in RSS XML", async () => {
+    const now = Date.now();
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, '', '', 'games', 'game', 'finished', '[]', '[]', ?, ?, ?)`,
+    )
+      .bind(
+        "shw_xml",
+        "dungeons-and-dragons",
+        "usr_ada",
+        "Dungeons & Dragons <2026>",
+        "Hack & Slash <fast>",
+        now - 1000,
+        now,
+        now,
+      )
+      .run();
+
+    const res = await app.request("/api/feeds/showcases.rss", {}, env);
+    expect(res.status).toBe(200);
+    const xml = await res.text();
+    expect(xml).toContain("<title>Dungeons &amp; Dragons &lt;2026&gt;</title>");
+    expect(xml).not.toContain("Dungeons & Dragons <2026>");
+  });
+
+  it("truncates body_md in description to around 500 characters", async () => {
+    const now = Date.now();
+    const longBody = "A".repeat(800);
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, '', ?, '', 'tools', 'web', 'finished', '[]', '[]', ?, ?, ?)`,
+    )
+      .bind("shw_long", "long-post", "usr_ada", "Long Post", longBody, now - 1000, now, now)
+      .run();
+
+    const res = await app.request("/api/feeds/showcases.rss", {}, env);
+    expect(res.status).toBe(200);
+    const xml = await res.text();
+    expect(xml).toContain(`${"A".repeat(500)}…`);
+    expect(xml).not.toContain("A".repeat(501));
+  });
+
+  it("escapes SQL LIKE wildcards (% and _) when filtering by tool", async () => {
+    const now = Date.now();
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, '', '', '', 'tools', 'web', 'finished', '["tool_v1"]', '[]', ?, ?, ?)`,
+    )
+      .bind("shw_t_under", "tool-under", "usr_ada", "Tool Underscore", now - 2000, now, now)
+      .run();
+
+    await env.DB.prepare(
+      `INSERT INTO showcases (id, slug, owner_id, title, tagline, body_md, build_story_md, category_slug, kind, stage, ai_tools, tags, published_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, '', '', '', 'tools', 'web', 'finished', '["tool-v1"]', '[]', ?, ?, ?)`,
+    )
+      .bind("shw_t_dash", "tool-dash", "usr_ada", "Tool Dash", now - 1000, now, now)
+      .run();
+
+    // Query for tool_v1: should not match tool-v1 even though '_' is a single-char wildcard in SQL
+    const res = await app.request("/api/feeds/showcases.rss?tool=tool_v1", {}, env);
+    expect(res.status).toBe(200);
+    const xml = await res.text();
+    expect(xml).toContain("Tool Underscore");
+    expect(xml).not.toContain("Tool Dash");
+  });
 });
 
 describe("subscription savings stats (task 4.11)", () => {

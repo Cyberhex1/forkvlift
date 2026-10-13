@@ -35,10 +35,12 @@ export function renderShowcaseOgSvg(opts: ShowcaseOgOptions): string {
   const tagline = escapeXml(opts.tagline || "");
   const makerName = escapeXml(opts.maker.displayName || opts.maker.username);
   const username = escapeXml(opts.maker.username);
-  const category = escapeXml(opts.category || "Showcase");
+  const rawCategory = (opts.category || "Showcase").toUpperCase();
+  const category = escapeXml(rawCategory);
   const upvotes = Math.max(0, opts.upvotes || 0);
-  const isClosed = opts.isClosedSource ?? true;
-  const stage = opts.stage === "wip" ? "Work in progress" : "Finished";
+  const isClosed = opts.isClosedSource ?? false;
+  const rawStage = (opts.stage === "wip" ? "Work in progress" : "Finished").toUpperCase();
+  const stage = escapeXml(rawStage);
   const tools = (opts.aiTools || []).slice(0, 3).map(escapeXml);
 
   const licenseLabel = isClosed ? "Closed source: look, don't take" : "Showcase";
@@ -103,7 +105,7 @@ export function renderShowcaseOgSvg(opts: ShowcaseOgOptions): string {
   <!-- Showcase Content Area -->
   <g transform="translate(60, 160)">
     <!-- Category & Stage -->
-    <text x="0" y="0" class="display" font-size="15" fill="#ffcd75">★ ${category.toUpperCase()} · ${stage.toUpperCase()}</text>
+    <text x="0" y="0" class="display" font-size="15" fill="#ffcd75">★ ${category} · ${stage}</text>
 
     <!-- Title (Large & Prominent) -->
     <text x="0" y="70" class="display" font-size="48" fill="#ffffff">${title}</text>
