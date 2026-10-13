@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AdminStats, Candidate, ProjectDetail } from "@forkvlift/shared";
-import { extractRepoLinks, onlyNew, searchCandidates, watchlistCandidates } from "../../src/core/curation/discovery";
+import { INTEREST_TOPICS, MAX_NEW_PER_RUN, extractRepoLinks, interestCandidates, interestTopicsFor, onlyNew, searchCandidates, watchlistCandidates } from "../../src/core/curation/discovery";
 import { fakeGithub } from "./github-fake";
 import { api, env, resetDb, seedCategory, seedUser } from "./helpers";
 
@@ -143,6 +143,34 @@ describe("discovery", () => {
     await importRepo("https://github.com/ada/neat");
     const fresh = await onlyNew(env.DB, found);
     expect(fresh.map((f) => f.fullName)).not.toContain("ada/neat");
+  });
+
+  it("skips unlicensed search results, which can't be curated, and AI-coding tooling", async () => {
+    fakeGithub({}, { search: ["new/one", "new/nolicense", "new/mcp-thing"], unlicensed: ["new/nolicense"], tooling: ["new/mcp-thing"] });
+    expect((await searchCandidates(env)).map((f) => f.fullName)).toEqual(["new/one"]);
+  });
+
+  it("searches a rotating slice of interest topics by recent activity and stars", async () => {
+    const queries: string[] = [];
+    fakeGithub({}, { search: ["gimp-ish/editor"], queries });
+    const found = await interestCandidates(env, 0);
+    expect(found.map((f) => f.fullName)).toEqual(["gimp-ish/editor"]);
+    expect(queries).toHaveLength(4);
+    expect(queries.every((q) => q.includes("pushed:>") && q.includes("stars:>=25") && q.endsWith("sort:stars"))).toBe(true);
+    const day = Array.from({ length: 8 }, (_, i) => interestTopicsFor(i * 6 * 3_600_000)).flat();
+    expect(new Set(day)).toEqual(new Set(INTEREST_TOPICS));
+  });
+
+  it("checks known repos in chunks, drops duplicates and caps each run", async () => {
+    await importRepo("https://github.com/ada/neat");
+    const many = [{ fullName: "Ada/Neat" }, { fullName: "x/dup" }, { fullName: "X/DUP" }, ...Array.from({ length: 120 }, (_, i) => ({ fullName: `bulk/r${i}` }))].map((d) => ({
+      ...d,
+      foundVia: { kind: "github_search" as const, url: null },
+    }));
+    const fresh = await onlyNew(env.DB, many);
+    expect(fresh).toHaveLength(MAX_NEW_PER_RUN);
+    expect(fresh.map((f) => f.fullName.toLowerCase())).not.toContain("ada/neat");
+    expect(fresh.filter((f) => f.fullName.toLowerCase() === "x/dup")).toHaveLength(1);
   });
 
   it("extracts repo links from Markdown", () => {

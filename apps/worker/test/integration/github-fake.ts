@@ -13,18 +13,21 @@ export interface FakeRepo {
 }
 
 /** Stub fetch with a tiny fake GitHub (+ always-pass Turnstile). */
-export function fakeGithub(repos: Record<string, FakeRepo>, opts: { publicMembers?: string[]; search?: string[]; awesomeReadme?: string } = {}) {
+export function fakeGithub(repos: Record<string, FakeRepo>, opts: { publicMembers?: string[]; search?: string[]; unlicensed?: string[]; tooling?: string[]; queries?: string[]; awesomeReadme?: string } = {}) {
   vi.stubGlobal("fetch", async (input: RequestInfo) => {
     const url = typeof input === "string" ? input : input.url;
     if (url.startsWith("https://challenges.cloudflare.com/")) return Response.json({ success: true });
-    const { hostname, pathname } = new URL(url);
+    const { hostname, pathname, searchParams } = new URL(url);
     if (hostname === "raw.githubusercontent.com") {
       const [, owner, name, , ...rest] = pathname.split("/");
       const content = repos[`${owner}/${name}`]?.files?.[rest.map(decodeURIComponent).join("/")];
       return content === undefined ? new Response("", { status: 404 }) : new Response(content);
     }
     if (pathname === "/search/repositories") {
-      return Response.json({ items: (opts.search ?? []).map((full_name) => ({ full_name, stargazers_count: 10, archived: false, private: false })) });
+      opts.queries?.push(`${searchParams.get("q")} sort:${searchParams.get("sort")}`);
+      return Response.json({
+        items: (opts.search ?? []).map((full_name) => ({ full_name, stargazers_count: 10, archived: false, private: false, license: opts.unlicensed?.includes(full_name) ? null : { spdx_id: "MIT" }, topics: opts.tooling?.includes(full_name) ? ["vibe-coding", "MCP-Server"] : ["vibe-coding"] })),
+      });
     }
     const member = pathname.match(/^\/orgs\/([^/]+)\/public_members\/([^/]+)$/);
     if (member) return new Response(null, { status: (opts.publicMembers ?? []).includes(`${member[1]}/${member[2]}`) ? 204 : 404 });
