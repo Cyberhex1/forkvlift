@@ -1145,6 +1145,11 @@ export const routes = {
     summary: "Re-suggest categories for pending candidates (and fill in snoozed ones that have none)",
     response: z.object({ updated: z.number().int() }),
   }),
+  runDiscovery: route({
+    method: "POST", path: "/api/admin/discovery/run", auth: "admin", kind: "json", area: "admin",
+    summary: "Run GitHub discovery now instead of waiting for the 6-hour schedule. New repos join the queue as they're checked.",
+    response: z.object({ queued: z.number().int() }),
+  }),
   createGrowthEvent: route({
     method: "POST", path: "/api/admin/events", auth: "admin", kind: "json", area: "admin",
     summary: "Schedule an event",

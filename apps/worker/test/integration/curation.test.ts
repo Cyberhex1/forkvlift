@@ -183,6 +183,14 @@ describe("discovery", () => {
     expect(fresh.filter((f) => f.fullName.toLowerCase() === "x/dup")).toHaveLength(1);
   });
 
+  it("admins can run discovery on demand", async () => {
+    fakeGithub({}, { search: ["new/app"] });
+    expect((await api("/api/admin/discovery/run", { method: "POST", as: ada })).status).toBe(403);
+    const run = await asAdmin("/api/admin/discovery/run", "POST");
+    expect(run.status).toBe(200);
+    expect((run.body as { queued: number }).queued).toBe(1);
+  });
+
   it("extracts repo links from Markdown", () => {
     expect(extractRepoLinks("see https://github.com/a/b, https://github.com/a/b/tree/x and https://gitlab.com/c/d")).toEqual(["a/b"]);
   });
