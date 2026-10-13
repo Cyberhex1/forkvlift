@@ -5,6 +5,7 @@ import { Badge, buttonClasses, Card } from "@forkvlift/ui";
 import { NoLicenseBanner } from "./NoLicenseDisclaimer";
 import { SavingsCounter } from "./SavingsCounter";
 import { SHOWCASE_RULES, SHOW_OFF_SATURDAY } from "./showcaseCopy";
+import { NewsletterBox } from "./NewsletterBox";
 
 interface StaticPageLayoutProps {
   badge: string;
@@ -182,6 +183,22 @@ export function AboutPage() {
             adopt unfinished gems left by fellow vibe-coders.
           </li>
         </ol>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone="accent">The Fork Report</Badge>
+          <span className="font-mono text-xs text-muted">Weekly Dispatch</span>
+        </div>
+        <h2 className="font-display text-xl font-semibold text-fg sm:text-2xl">
+          Subscribe to The Fork Report
+        </h2>
+        <p className="leading-relaxed text-muted">
+          Every Friday, we send a digest of the best vibe-coded projects, trending fork lineage, and
+          free alternatives that help people avoid costly software subscriptions. Double opt-in,
+          no spam, and one-click unsubscribe at any time.
+        </p>
+        <NewsletterBox variant="section" />
       </section>
 
       <section className="rounded-card border border-border bg-surface-2 p-6">
