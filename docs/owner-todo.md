@@ -6,7 +6,7 @@ Things only the owner can do (accounts, secrets, approvals). Agents keep this li
 
 Run the `wrangler` commands from `C:\code\ForkvLift\apps\worker`.
 
-- [ ] **Approve at least 100 real projects** in the review queue at https://forkvlift-admin-preview.kdlindsey25.workers.dev. Discovery adds candidates every 6 hours; the paste-a-link importer adds more on demand. Opus starts the launch once this is done.
+- [ ] **Approve at least 100 real projects** in the review queue at https://forkvlift-admin-preview.kdlindsey25.workers.dev. Discovery adds candidates once a day; the paste-a-link importer adds more on demand. Opus starts the launch once this is done.
 - [ ] **GitHub OAuth app (production):** GitHub → Settings → Developer settings → OAuth Apps → New. Homepage `https://forklift.stream`, callback `https://forklift.stream/api/auth/github/callback`. Then:
       `npx wrangler secret put GITHUB_CLIENT_ID --env production` and `npx wrangler secret put GITHUB_CLIENT_SECRET --env production`
 - [ ] **Turnstile:** in the Cloudflare dashboard → Turnstile → your widget → Hostnames, add `forklift.stream`. Then `npx wrangler secret put TURNSTILE_SECRET --env production` (same secret as preview if you reuse the widget).

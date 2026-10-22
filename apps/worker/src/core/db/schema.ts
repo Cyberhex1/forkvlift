@@ -984,3 +984,19 @@ export const paidProducts = sqliteTable("paid_products", {
   name: text("name").notNull(),
   monthlyPriceUsd: integer("monthly_price_usd_cents"),
 });
+
+// ── Caches ───────────────────────────────────────────────────────────────
+
+/** GitHub API responses with their ETags (core/github/client.ts). D1, not KV: KV's free plan allows only 1,000 writes a day. */
+export const githubCache = sqliteTable(
+  "github_cache",
+  {
+    key: text("key").primaryKey(),
+    etag: text("etag"),
+    status: integer("status").notNull(),
+    body: text("body").notNull(),
+    link: text("link"),
+    fetchedAt: integer("fetched_at").notNull(),
+  },
+  (t) => [index("github_cache_fetched").on(t.fetchedAt)],
+);

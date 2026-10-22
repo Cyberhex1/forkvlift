@@ -459,7 +459,7 @@ Pages still works and isn't being shut off, but new Cloudflare features land on 
 | Thumbnails, avatars, uploads | R2 (no egress fees) |
 | Live chat, Plaza, presence, live threads | Durable Objects with WebSocket hibernation |
 | GitHub discovery, stat refresh | Cron Triggers + Queues |
-| Caching GitHub API responses, sessions | KV |
+| Caching GitHub API responses | D1 (`github_cache`; KV's free plan allows only 1,000 writes a day) |
 | Semantic search, "has this been built?" | Vectorize + Workers AI embeddings |
 | Bot protection | Turnstile |
 | Lock down the admin console | Cloudflare Access (Zero Trust, free up to 50 users) |
