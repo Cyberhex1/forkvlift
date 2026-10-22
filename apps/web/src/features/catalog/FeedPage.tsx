@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Outlet, useSearchParams } from "react-router";
+import { Link, Outlet, useSearchParams } from "react-router";
 import { AiTool, Difficulty, ListProjectsQuery, NO_LICENSE_DISCLAIMER, Platform, PROJECT_STAGE_LABELS, ProjectSort, ProjectStage, SITE_TAGLINE } from "@forkvlift/shared";
 import { Button, Chip, Drawer, Modal, StateMessage } from "@forkvlift/ui";
 import { PageShell } from "../../app/kit";
@@ -53,7 +53,7 @@ export function FeedPage() {
     finally { setSaving(false); }
   }
   function requestUnlicensed(on: boolean) { if (on && !prefs.disclaimerAccepted) setDisclaimer(true); else void setUnlicensed(on); }
-  return <PageShell title={SITE_TAGLINE}>
+  return <PageShell title={SITE_TAGLINE} actions={<Link className="text-accent underline" to="/events">Community events</Link>}>
     <p className="mb-6 max-w-2xl text-sm text-muted">Public code, a clear license, and a head start for your next build.</p>
     <div className="sticky top-[6.5rem] z-10 md:top-14 mb-4 space-y-3 rounded-card border border-border bg-surface p-3" aria-label="Feed toolbar">
       <div className="flex flex-wrap items-end gap-3">
