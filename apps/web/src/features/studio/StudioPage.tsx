@@ -1,6 +1,6 @@
 import { AlreadyBuilt } from "../catalog/AlreadyBuilt";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PROJECT_STAGE_LABELS, ProjectStage, NO_LICENSE_DISCLAIMER, type Board, type BoardCard, type BoardColumn } from "@forkvlift/shared";
 import { Badge, Button, Card, Modal, Spinner, StateMessage, buttonClasses, cn } from "@forkvlift/ui";
@@ -23,6 +23,7 @@ const input = "mt-1 block w-full rounded-pixel border border-border bg-surface p
 export const pixelClasses = ["bg-pixel-0","bg-pixel-1","bg-pixel-2","bg-pixel-3","bg-pixel-4","bg-pixel-5","bg-pixel-6","bg-pixel-7","bg-pixel-8","bg-pixel-9","bg-pixel-10","bg-pixel-11","bg-pixel-12","bg-pixel-13","bg-pixel-14","bg-pixel-15"];
 export function StudioPage() {
   const { user,isLoading,error } = useSession();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const key = ["studio",user?.id];
   const board = useQuery({ queryKey:key,queryFn:({signal}) => api.call("getBoard",{}, {signal}),enabled:!!user,retry:false,refetchOnWindowFocus:false });
@@ -62,6 +63,7 @@ export function StudioPage() {
         <div className="flex items-start gap-1"><h3 className="min-w-0 flex-1 break-words pt-1 font-display text-sm">{card.title}</h3>{handle}<StudioMenu label={`Card options for ${card.title}`} disabled={operation.isPending}>{close=><>
           <MenuItem onClick={()=>{close();setEditing(card);setTitle(card.title);setIdea(card.idea??"");setStage(card.stage);}}>Edit card</MenuItem>
           <Link className="flex w-full items-center rounded-pixel px-2 py-1.5 hover:bg-surface-2" to={`/studio/cards/${card.id}/plan`}>Open plan</Link>
+          <MenuItem onClick={()=>{close();navigate(`/showcase/new?card=${encodeURIComponent(card.id)}`);}}>Publish as showcase</MenuItem>
           <MenuDivider/>
           <label className="block px-2 py-1 text-xs text-muted">Move to column<select aria-label={`Move ${card.title}`} className={cn(input,"text-sm text-fg")} value={card.columnId} disabled={operation.isPending} onChange={e=>{close();move(card.id,e.target.value,data.cards.filter(c=>c.columnId===e.target.value&&c.id!==card.id).length);}}>{columns.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
           <MenuItem disabled={operation.isPending||i===0} aria-label={`Move ${card.title} up`} onClick={()=>move(card.id,column.id,i-1)}><span aria-hidden="true">↑</span> Move up</MenuItem>
