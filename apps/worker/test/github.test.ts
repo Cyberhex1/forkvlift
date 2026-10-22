@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { countFromLink } from "../src/core/github/client";
+import { countFromLink, github } from "../src/core/github/client";
 import { ingestRepo } from "../src/core/github/ingest";
 import { parseRepoUrl } from "../src/core/github/repo-url";
 import { readmeHasImages, sanitizeReadme } from "../src/core/github/sanitize";
@@ -72,17 +72,28 @@ describe("countFromLink", () => {
 describe("ingestRepo", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  /** Just enough D1 for the github_cache queries in client.ts. */
   function fakeEnv() {
-    const store = new Map<string, string>();
-    return {
-      store,
-      env: {
-        CACHE: {
-          get: async (k: string) => (store.has(k) ? JSON.parse(store.get(k)!) : null),
-          put: async (k: string, v: string) => void store.set(k, v),
+    const rows = new Map<string, { etag: string | null; status: number; body: string; link: string | null; fetched_at: number }>();
+    const writes: string[] = [];
+    const prepare = (sql: string) => ({
+      bind: (...args: unknown[]) => ({
+        first: async () => (sql.startsWith("SELECT") ? (rows.get(args[0] as string) ?? null) : null),
+        run: async () => {
+          if (sql.startsWith("INSERT")) {
+            const [key, etag, status, body, link, fetched_at] = args as [string, string | null, number, string, string | null, number];
+            rows.set(key, { etag, status, body, link, fetched_at });
+            writes.push(`insert ${key}`);
+          } else if (sql.startsWith("UPDATE")) {
+            const row = rows.get(args[1] as string);
+            if (row) row.fetched_at = args[0] as number;
+            writes.push(`touch ${args[1] as string}`);
+          }
+          return { meta: { changes: 1 } };
         },
-      } as unknown as Env,
-    };
+      }),
+    });
+    return { rows, writes, env: { DB: { prepare } } as unknown as Env };
   }
 
   const ghRepo = {
@@ -121,7 +132,7 @@ describe("ingestRepo", () => {
       return new Response("nope", { status: 404 });
     });
 
-    const { env } = fakeEnv();
+    const { env, writes } = fakeEnv();
     const s = await ingestRepo(env, "https://github.com/octo/app");
     expect(s).toMatchObject({
       fullName: "octo/app",
@@ -136,6 +147,27 @@ describe("ingestRepo", () => {
     calls.length = 0;
     await ingestRepo(env, "octo/app");
     expect(calls.every((c) => c.etag)).toBe(true); // second run revalidates only
+    expect(writes.filter((w) => w.startsWith("insert"))).toHaveLength(3); // 304s only touch the timestamp
+  });
+
+  it("serves fresh entries without asking GitHub", async () => {
+    let fetches = 0;
+    vi.stubGlobal("fetch", async () => {
+      fetches++;
+      return Response.json({ ok: true }, { headers: { etag: '"x"' } });
+    });
+    const { env } = fakeEnv();
+    await github(env, "/rate_limit", { freshFor: 60 });
+    await github(env, "/rate_limit", { freshFor: 60 });
+    expect(fetches).toBe(1);
+  });
+
+  it("never caches searches", async () => {
+    vi.stubGlobal("fetch", async () => Response.json({ items: [] }, { headers: { etag: '"s"' } }));
+    const { env, writes } = fakeEnv();
+    await github(env, "/search/repositories?q=x", { noCache: true });
+    await github(env, "/search/repositories?q=x", { noCache: true });
+    expect(writes).toEqual([]);
   });
 
   it("reports missing repos as not found", async () => {
