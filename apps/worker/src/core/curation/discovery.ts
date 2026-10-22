@@ -15,6 +15,7 @@
  * queue is mostly apps, games and creative projects.
  */
 import { GithubAuthError, github } from "../github/client";
+import { BUILT_WITH_TEXT, keywordCategory } from "./categorize";
 import { parseRepoUrl } from "../github/repo-url";
 
 /** Topics authors use to say a project was built with AI. */
@@ -36,7 +37,25 @@ export const TOOLING_TOPICS = new Set([
   "mcp", "mcp-server", "mcp-servers", "model-context-protocol", "claude-code-plugin", "claude-code-plugins", "claude-skills", "claude-skill",
   "agent-skills", "skills", "subagents", "claude-code-agents", "cursor-rules", "cursorrules", "prompt", "prompts", "prompt-engineering",
   "system-prompt", "agent-framework", "llm-tools", "coding-agent", "ai-coding-assistant", "claude-code-hooks",
+  "coding-agents", "agent-skill", "claude-code-skill", "claude-plugin", "codex-plugin", "codex-skill", "opencode-plugin", "harness",
+  "agent-harness", "harness-engineering", "context-engineering", "agents-md", "agent-orchestration", "agent-workspace", "ai-coding",
 ]);
+
+/**
+ * Descriptions that pitch a repo as an add-on for coding agents ("a harness for
+ * Claude Code", "sandbox for running Codex"). "Built with Claude Code" is about
+ * how a project was made, so those phrases are removed before matching.
+ */
+const TOOLING_TEXT = /\b(?:claude code|codex|opencode|coding agents?|ai coding (?:assistant|agent|tool)s?|agent harness)\b/i;
+
+export function isTooling(repo: { name: string; description: string | null; topics: string[]; language?: string | null }): boolean {
+  const description = repo.description ?? "";
+  const signal = repo.topics.some((t) => TOOLING_TOPICS.has(t.toLowerCase())) || TOOLING_TEXT.test(description.replace(BUILT_WITH_TEXT, " "));
+  if (!signal) return false;
+  // A notes app or wiki that ships an MCP server is still an app.
+  const category = keywordCategory({ name: repo.name, description, topics: repo.topics, language: repo.language ?? null });
+  return category === null || category === "ai-and-agents" || category === "developer-tools";
+}
 export const MAX_TOOLING_PER_RUN = 3;
 const SORTS = ["stars", "updated"] as const;
 const PER_PAGE = 50;
@@ -84,7 +103,7 @@ export interface Discovered {
 }
 
 interface SearchResponse {
-  items: { full_name: string; stargazers_count: number; archived: boolean; private: boolean; license: { spdx_id: string | null } | null; topics?: string[] }[];
+  items: { full_name: string; stargazers_count: number; archived: boolean; private: boolean; license: { spdx_id: string | null } | null; topics?: string[]; description?: string | null; language?: string | null }[];
 }
 
 function skipUnlessAuth(what: string) {
@@ -98,11 +117,11 @@ function skipUnlessAuth(what: string) {
 async function searchTopic(env: Env, topic: string, query: string, sort: string, found: Map<string, Discovered>) {
   const q = encodeURIComponent(`topic:${topic} ${query} archived:false`);
   // One failed search (rate limit, GitHub hiccup) shouldn't cost the whole run; a bad token should stop it loudly.
-  const res = await github<SearchResponse>(env, `/search/repositories?q=${q}&sort=${sort}&order=desc&per_page=${PER_PAGE}`, { freshFor: 60 * 60 * 5 }).catch(skipUnlessAuth(`search ${topic} by ${sort}`));
+  const res = await github<SearchResponse>(env, `/search/repositories?q=${q}&sort=${sort}&order=desc&per_page=${PER_PAGE}`, { noCache: true }).catch(skipUnlessAuth(`search ${topic} by ${sort}`));
   for (const item of res?.data.items ?? []) {
     if (item.private || item.archived || !item.license) continue;
     const key = item.full_name.toLowerCase();
-    const tooling = (item.topics ?? []).some((t) => TOOLING_TOPICS.has(t.toLowerCase()));
+    const tooling = isTooling({ name: item.full_name.split("/")[1] ?? item.full_name, description: item.description ?? null, topics: item.topics ?? [], language: item.language ?? null });
     if (!found.has(key)) found.set(key, { fullName: item.full_name, foundVia: { kind: "github_search", url: `https://github.com/topics/${topic}` }, tooling });
   }
 }

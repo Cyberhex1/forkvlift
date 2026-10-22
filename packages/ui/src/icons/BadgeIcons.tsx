@@ -89,6 +89,29 @@ const ART: Record<string, Px[]> = {
     [9, 7, 2, 2, p(0)],
     [7, 9, 2, 3, p(0)],
   ],
+  // 16x16 Showcase badge: golden crystal atop an exhibition pedestal
+  "badge-showcase": [
+    [6, 1, 4, 2, p(4)],
+    [5, 3, 6, 3, p(10)],
+    [6, 3, 4, 2, p(12)],
+    [4, 6, 8, 2, p(11)],
+    [5, 8, 6, 2, p(13)],
+    [3, 10, 10, 2, p(14)],
+    [2, 12, 12, 3, p(15)],
+    [4, 13, 8, 1, p(13)],
+  ],
+  // 16x16 Closed source badge: crimson/coral padlock ("look, don't take")
+  "badge-closed-source": [
+    [5, 2, 6, 2, p(14)],
+    [4, 4, 2, 4, p(14)],
+    [10, 4, 2, 4, p(14)],
+    [5, 4, 6, 4, p(12)],
+    [3, 7, 10, 8, p(2)],
+    [4, 8, 8, 6, p(3)],
+    [7, 9, 2, 2, p(0)],
+    [7, 11, 2, 2, p(0)],
+    [11, 8, 1, 6, p(15)],
+  ],
 };
 
 const STAR: Px[] = [
