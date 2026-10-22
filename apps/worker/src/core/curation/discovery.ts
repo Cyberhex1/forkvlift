@@ -117,7 +117,7 @@ function skipUnlessAuth(what: string) {
 async function searchTopic(env: Env, topic: string, query: string, sort: string, found: Map<string, Discovered>) {
   const q = encodeURIComponent(`topic:${topic} ${query} archived:false`);
   // One failed search (rate limit, GitHub hiccup) shouldn't cost the whole run; a bad token should stop it loudly.
-  const res = await github<SearchResponse>(env, `/search/repositories?q=${q}&sort=${sort}&order=desc&per_page=${PER_PAGE}`, { freshFor: 60 * 60 * 5 }).catch(skipUnlessAuth(`search ${topic} by ${sort}`));
+  const res = await github<SearchResponse>(env, `/search/repositories?q=${q}&sort=${sort}&order=desc&per_page=${PER_PAGE}`, { noCache: true }).catch(skipUnlessAuth(`search ${topic} by ${sort}`));
   for (const item of res?.data.items ?? []) {
     if (item.private || item.archived || !item.license) continue;
     const key = item.full_name.toLowerCase();

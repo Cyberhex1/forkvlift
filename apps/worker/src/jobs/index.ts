@@ -7,6 +7,7 @@ import { HttpError } from "../core/errors";
 import { upsertCandidate } from "../core/curation/candidates";
 import { backfillCandidateCategories } from "../core/curation/categorize";
 import { MAX_INTEREST_PER_RUN, MAX_NEW_PER_RUN, capTooling, interestCandidates, onlyNew, searchCandidates, watchlistCandidates } from "../core/curation/discovery";
+import { pruneGithubCache } from "../core/github/client";
 import { ingestRepo } from "../core/github/ingest";
 import { flushNotificationEmails, sendWeeklyDigests } from "../email/deliver";
 import { snapshotChat } from "../core/moderation";
@@ -34,7 +35,7 @@ export type JobMessage = z.infer<typeof JobMessage>;
 
 /** Cron expressions from wrangler.jsonc → jobs to enqueue. */
 const SCHEDULE: Record<string, JobMessage[]> = {
-  "0 */6 * * *": [{ type: "discovery.run" }],
+  "0 6 * * *": [{ type: "discovery.run" }],
   "30 3 * * *": [{ type: "stats.refresh" }, { type: "chat.snapshot" }, { type: "catalog.export" }],
   "*/15 * * * *": [{ type: "email.flush" }, { type: "vectors.sync" }],
   "0 15 * * 1": [{ type: "email.digest" }],
@@ -60,6 +61,7 @@ export async function handleQueue(batch: MessageBatch<unknown>, env: Env): Promi
           await runRepoIngest(env, job);
           break;
         case "stats.refresh":
+          await pruneGithubCache(env);
           await enqueueStatsRefresh(env);
           break;
         case "discovery.run":
