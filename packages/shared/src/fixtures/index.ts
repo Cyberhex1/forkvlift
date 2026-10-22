@@ -71,7 +71,7 @@ const fxEntry = () => ({
 const fxCompetition = {
   id: "fx_comp_1", slug: "fixture-tiny-tools-cup", eventSlug: "fixture-build-jam", title: "Fixture: Tiny Tools Cup",
   rulesMd: "Dev fixture rules.", eligibilityMd: "Public, openly licensed projects.", submissionEndsAt: "2026-10-12T00:00:00.000Z",
-  judgingEndsAt: "2030-01-20T00:00:00.000Z", publishedAt: null, status: "open" as const,
+  judgingEndsAt: "2026-10-20T00:00:00.000Z", publishedAt: null, status: "open" as const,
   prizes: [{ id: "fx_prize_1", label: "Best tiny tool", descriptionMd: "Bragging rights.", sponsorName: null, sponsorUrl: null, place: 1 }],
   criteria: [{ id: "fx_crit_1", label: "Usefulness", description: "Does it help?", maxScore: 10, weight: 1 }],
   judges: [fxUsers.bo], version: 2,
