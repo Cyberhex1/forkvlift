@@ -1,0 +1,22 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import type { CompetitionRound, EventEntry, RouteInput, Routes, Scorecard } from "@forkvlift/shared";
+import { Button, Card, Modal } from "@forkvlift/ui";
+
+type Body = RouteInput<Routes["saveCompetitionScorecard"]>["body"];
+const field = "mt-1 block w-full rounded-pixel border border-border bg-surface p-2 text-sm";
+/** Pure scorecard UI, reused by the public judge page and admin console. */
+export function CompetitionScorecard({ round, entry, existing, locked, save, projectHref }: { round: CompetitionRound; entry: EventEntry; existing?: Scorecard; locked: boolean; projectHref?: string; save: (body: Body) => Promise<Scorecard> }) {
+  const [scores, setScores] = useState<Record<string, string>>(() => Object.fromEntries((existing?.scores ?? []).map(s => [s.criterionId, String(s.score)])));
+  const [note, setNote] = useState(existing?.note ?? ""); const [saved, setSaved] = useState(existing); const [error, setError] = useState(""); const [confirm, setConfirm] = useState<Body | null>(null);
+  const mutation = useMutation({ mutationFn: save, onSuccess: r => { setSaved(r); setConfirm(null); } });
+  const frozen = locked || Boolean(saved?.submittedAt);
+  function validate(submit: boolean) { const values = round.criteria.filter(c => scores[c.id]?.trim()).map(c => ({ criterionId: c.id, score: Number(scores[c.id]) }));
+    if (values.some(s => !Number.isInteger(s.score) || s.score < 0 || s.score > round.criteria.find(c => c.id === s.criterionId)!.maxScore)) { setError("Use whole-number scores within each criterion's range."); return; }
+    if (submit && values.length !== round.criteria.length) { setError("Score every criterion before submitting."); return; } setError(""); const body = { scores: values, note, submit }; if (submit) setConfirm(body); else mutation.mutate(body);
+  }
+  return <Card className="space-y-4"><h3 className="break-words font-display text-sm">{entry.project.name}</h3><a className="text-sm text-accent underline" href={projectHref ?? `/p/${entry.project.slug}`} target="_blank" rel="noopener noreferrer">Review project and license</a>{frozen ? <p className="text-sm text-muted">{saved?.submittedAt ? "Scorecard submitted. Scores are final." : "This entry cannot be scored by you, or judging is closed."}</p> : null}<form className="space-y-4" onSubmit={e => { e.preventDefault(); if (!frozen && !mutation.isPending) validate(false); }}><fieldset disabled={frozen || mutation.isPending} className="space-y-3">{round.criteria.map(c => <label className="block text-sm" key={c.id}>{c.label} (0–{c.maxScore}, weight {c.weight})<span className="block text-xs text-muted">{c.description}</span><input aria-label={`Score ${c.label}`} type="number" min={0} max={c.maxScore} step={1} className={field} value={scores[c.id] ?? ""} onChange={e => setScores(s => ({ ...s, [c.id]: e.target.value }))} /></label>)}<label className="block text-sm">Judge note<textarea aria-label="Judge note" rows={3} maxLength={2000} className={field} value={note} onChange={e => setNote(e.target.value)} /></label></fieldset>{error || mutation.error ? <p role="alert" className="text-danger">{error || mutation.error?.message}</p> : null}{mutation.isSuccess ? <p role="status" className="text-sm text-muted">{saved?.submittedAt ? "Scorecard submitted." : "Scorecard draft saved."}</p> : null}{!frozen ? <div className="flex flex-wrap gap-2"><Button type="submit" loading={mutation.isPending}>Save scorecard draft</Button><Button variant="secondary" disabled={mutation.isPending} onClick={() => validate(true)}>Submit final scorecard</Button></div> : null}</form>
+    <Modal open={Boolean(confirm)} onClose={() => { if (!mutation.isPending) setConfirm(null); }} title="Submit final scorecard?"><div className="mt-4 space-y-4"><p>Submitted scores are final. Review them before submitting.</p><ul className="space-y-1">{confirm?.scores.map(s => <li key={s.criterionId}>{round.criteria.find(c => c.id === s.criterionId)?.label}: {s.score}</li>)}</ul><p className="whitespace-pre-wrap break-words">{confirm?.note}</p>{mutation.error ? <p role="alert" className="text-danger">{mutation.error.message}</p> : null}<div className="flex flex-wrap gap-2"><Button loading={mutation.isPending} onClick={() => { if (confirm) mutation.mutate(confirm); }}>Confirm final scores</Button><Button variant="secondary" disabled={mutation.isPending} onClick={() => setConfirm(null)}>Keep editing</Button></div></div></Modal>
+  </Card>;
+}
+

@@ -7,6 +7,8 @@ export { api } from "./api";
 
 
 const NAV = [
+  { to: "/competitions", label: "Competitions" },
+  { to: "/events", label: "Events" },
   { to: "/", label: "Review queue" },
   { to: "/showcases", label: "Showcases" },
   { to: "/moderation", label: "Moderation" },
@@ -46,6 +48,8 @@ export const router = createBrowserRouter([
     element: <Shell />,
     HydrateFallback: () => <Spinner label="Loading admin console" />,
     children: [
+      { path: "/competitions", lazy: async () => ({ Component: (await import("./CompetitionConsole")).CompetitionConsole }) },
+      { path: "/events", lazy: async () => ({ Component: (await import("./EventSchedule")).EventSchedule }) },
       { path: "/", lazy: async () => ({ Component: (await import("./ReviewQueue")).ReviewQueue }) },
       { path: "/showcases", lazy: async () => ({ Component: (await import("./ShowcasePicks")).ShowcasePicks }) },
       { path: "/moderation", lazy: async () => ({ Component: (await import("./ModerationQueue")).ModerationQueue }) },
